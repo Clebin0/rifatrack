@@ -568,6 +568,19 @@ export type Database = {
         Returns: string
       }
       admin_financial_dashboard: { Args: never; Returns: Json }
+      admin_orders_page: {
+        Args: {
+          p_campaign_id?: string
+          p_from?: string
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_seller_id?: string
+          p_status?: string
+          p_to?: string
+        }
+        Returns: Json
+      }
       admin_set_campaign_status: {
         Args: { p_id: string; p_status: string }
         Returns: boolean
