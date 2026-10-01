@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { orderSchema } from "@/lib/validation";
+import { asaasAutomaticEnabled, createAsaasPixQr } from "@/lib/asaas";
 
 export async function POST(req: Request) {
   try {
@@ -27,7 +28,34 @@ export async function POST(req: Request) {
     });
 
     if (error) return NextResponse.json({ error: "Não foi possível reservar. Atualize a página e tente novamente." }, { status: 409 });
-    return NextResponse.json({ order: data }, { status: 201, headers: { "Cache-Control": "no-store" } });
+
+    const order = data as {id:string;public_token:string;amount_cents:number;payment_reference:string};
+    if (asaasAutomaticEnabled()) {
+      try {
+        const qr = await createAsaasPixQr({
+          orderId: order.id,
+          reference: order.payment_reference,
+          amountCents: order.amount_cents,
+          description: `RifaTrack ${order.payment_reference}`,
+        });
+        const { error: attachError } = await supabaseServer().rpc("attach_asaas_qr", {
+          p_internal_secret: secret,
+          p_order_id: order.id,
+          p_qr_id: qr.id,
+          p_payload: qr.payload || "",
+        });
+        if (attachError) throw attachError;
+      } catch {
+        await supabaseServer().rpc("cancel_order_internal", {
+          p_internal_secret: secret,
+          p_order_id: order.id,
+          p_reason: "asaas_qr_creation_failed",
+        });
+        return NextResponse.json({ error: "Não foi possível gerar a cobrança Pix agora. Tente novamente em instantes." }, { status: 502 });
+      }
+    }
+
+    return NextResponse.json({ order }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
   }
