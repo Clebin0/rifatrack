@@ -6,6 +6,11 @@ import { asaasAutomaticEnabled, createAsaasPixQr } from "@/lib/asaas";
 
 export async function POST(req: Request) {
   try {
+    if(!(req.headers.get("content-type")||"").toLowerCase().startsWith("application/json")){
+      return NextResponse.json({error:"Formato inválido."},{status:415});
+    }
+    const contentLength=Number(req.headers.get("content-length")||"0");
+    if(contentLength>16384) return NextResponse.json({error:"Requisição muito grande."},{status:413});
     const parsed = orderSchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Confira os dados informados." }, { status: 400 });
 
@@ -55,7 +60,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ order }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ order }, { status: 201, headers: { "Cache-Control": "no-store", "Pragma":"no-cache" } });
   } catch {
     return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
   }
