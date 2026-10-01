@@ -1,1 +1,32 @@
-{"name":"rifatrack","version":"1.0.0","private":true,"scripts":{"dev":"next dev","build":"next build","start":"next start","typecheck":"tsc --noEmit"},"dependencies":{"@supabase/supabase-js":"latest","lucide-react":"latest","next":"latest","qrcode":"latest","react":"latest","react-dom":"latest","xlsx":"latest","zod":"latest"},"devDependencies":{"@types/node":"latest","@types/qrcode":"latest","@types/react":"latest","@types/react-dom":"latest","autoprefixer":"latest","postcss":"latest","tailwindcss":"^3.4.17","typescript":"latest"}}
+{
+  "name": "rifatrack",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "asaas:webhook": "node scripts/setup-asaas-webhook.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
+    "qrcode": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "xlsx": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/qrcode": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "tailwindcss": "^3.4.17",
+    "typescript": "latest"
+  }
+}
