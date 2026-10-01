@@ -404,6 +404,79 @@ export type Database = {
           },
         ]
       }
+      seller_accounts: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          seller_id: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          seller_id: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          seller_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_accounts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: true
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_invites: {
+        Row: {
+          code_hash: string
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          seller_id: string
+          used_at: string | null
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          seller_id: string
+          used_at?: string | null
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          seller_id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_invites_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sellers: {
         Row: {
           active: boolean
@@ -414,6 +487,7 @@ export type Database = {
           name: string
           team: string | null
           updated_at: string
+          whatsapp: string
         }
         Insert: {
           active?: boolean
@@ -424,6 +498,7 @@ export type Database = {
           name: string
           team?: string | null
           updated_at?: string
+          whatsapp?: string
         }
         Update: {
           active?: boolean
@@ -434,6 +509,7 @@ export type Database = {
           name?: string
           team?: string | null
           updated_at?: string
+          whatsapp?: string
         }
         Relationships: []
       }
@@ -442,6 +518,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_audit_dashboard: { Args: never; Returns: Json }
+      admin_bulk_sellers: {
+        Args: { p_campaign_id: string; p_rows: Json }
+        Returns: number
+      }
       admin_create_campaign: {
         Args: {
           p_description: string
@@ -465,8 +546,28 @@ export type Database = {
         }
         Returns: string
       }
+      admin_create_seller_invite: {
+        Args: { p_email: string; p_seller_id: string }
+        Returns: Json
+      }
+      admin_create_seller_v2: {
+        Args: {
+          p_campaign_id: string
+          p_code: string
+          p_goal: number
+          p_name: string
+          p_team: string
+          p_whatsapp: string
+        }
+        Returns: string
+      }
       admin_dashboard: { Args: never; Returns: Json }
       admin_draw_campaign: { Args: { p_campaign_id: string }; Returns: Json }
+      admin_duplicate_campaign: {
+        Args: { p_id: string; p_name: string; p_slug: string }
+        Returns: string
+      }
+      admin_financial_dashboard: { Args: never; Returns: Json }
       admin_set_campaign_status: {
         Args: { p_id: string; p_status: string }
         Returns: boolean
@@ -495,6 +596,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_update_seller: {
+        Args: {
+          p_name: string
+          p_seller_id: string
+          p_team: string
+          p_whatsapp: string
+        }
+        Returns: boolean
+      }
       attach_asaas_qr: {
         Args: {
           p_internal_secret: string
@@ -514,8 +624,10 @@ export type Database = {
         Returns: boolean
       }
       claim_first_admin: { Args: { p_code: string }; Returns: boolean }
+      claim_seller_access: { Args: { p_code: string }; Returns: boolean }
       internal_secret_ok: { Args: { p_secret: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_seller: { Args: never; Returns: boolean }
       process_asaas_event: {
         Args: {
           p_event_id: string
@@ -560,6 +672,7 @@ export type Database = {
         }
         Returns: Json
       }
+      seller_dashboard: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never
