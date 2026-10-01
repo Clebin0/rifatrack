@@ -14,7 +14,7 @@ const input="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-no
 const panel="bg-zinc-900 border border-zinc-800 rounded-3xl p-5";
 
 export default function AdminClient(){
-  const sb=supabaseBrowser();
+  const getSb=()=>supabaseBrowser();
   const [data,setData]=useState<Dashboard|null>(null);
   const [loading,setLoading]=useState(true);
   const [unauthorized,setUnauthorized]=useState(false);
@@ -27,9 +27,9 @@ export default function AdminClient(){
 
   async function load(){
     setLoading(true); setMessage("");
-    const {data:auth}=await sb.auth.getSession();
+    const {data:auth}=await getSb().auth.getSession();
     if(!auth.session){location.href="/admin/login";return;}
-    const {data:dashboard,error}=await sb.rpc("admin_dashboard");
+    const {data:dashboard,error}=await getSb().rpc("admin_dashboard");
     if(error){setUnauthorized(true);setData(null);}else{
       const d=dashboard as Dashboard; setData(d);setUnauthorized(false);
       if(!sellerForm.campaign_id&&d.campaigns[0]) setSellerForm(x=>({...x,campaign_id:d.campaigns[0].id}));
@@ -42,14 +42,14 @@ export default function AdminClient(){
 
   async function claimAdmin(e:FormEvent){
     e.preventDefault();setMessage("");
-    const {error}=await sb.rpc("claim_first_admin",{p_code:setupCode});
+    const {error}=await getSb().rpc("claim_first_admin",{p_code:setupCode});
     if(error)setMessage("Código inválido ou implantação já concluída.");
     else{setMessage("Administrador ativado.");await load();}
   }
 
   async function createCampaign(e:FormEvent){
     e.preventDefault();setMessage("");
-    const {error}=await sb.rpc("admin_create_campaign",{
+    const {error}=await getSb().rpc("admin_create_campaign",{
       p_name:campaignForm.name,p_slug:campaignForm.slug.toLowerCase().replace(/[^a-z0-9-]/g,"-"),
       p_description:campaignForm.description,p_price_cents:Math.round(Number(campaignForm.price.replace(",","."))*100),
       p_total_numbers:Number(campaignForm.total),p_pix_key:campaignForm.pix_key,p_pix_receiver:campaignForm.pix_receiver
@@ -60,18 +60,18 @@ export default function AdminClient(){
 
   async function saveCampaign(e:FormEvent){
     e.preventDefault();setMessage("");
-    const {error}=await sb.rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver});
+    const {error}=await getSb().rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver});
     if(error)setMessage("Falha ao salvar campanha."); else{setMessage("Campanha atualizada.");await load();}
   }
 
   async function statusCampaign(id:string,status:"draft"|"active"|"closed"){
-    const {error}=await sb.rpc("admin_set_campaign_status",{p_id:id,p_status:status});
+    const {error}=await getSb().rpc("admin_set_campaign_status",{p_id:id,p_status:status});
     if(error)setMessage("Falha ao alterar status."); else await load();
   }
 
   async function drawCampaign(id:string,name:string){
     if(!confirm(`Sortear agora a campanha "${name}"? O resultado ficará registrado e não poderá ser refeito.`)) return;
-    const {data:result,error}=await sb.rpc("admin_draw_campaign",{p_campaign_id:id});
+    const {data:result,error}=await getSb().rpc("admin_draw_campaign",{p_campaign_id:id});
     if(error){setMessage("Não foi possível realizar o sorteio: "+error.message);return;}
     const number=(result as {number?:number}|null)?.number;
     setMessage(number ? "Número sorteado: "+String(number).padStart(3,"0") : "Sorteio concluído.");
@@ -80,19 +80,19 @@ export default function AdminClient(){
 
   async function createSeller(e:FormEvent){
     e.preventDefault();setMessage("");
-    const {error}=await sb.rpc("admin_create_seller",{p_campaign_id:sellerForm.campaign_id,p_name:sellerForm.name,p_code:sellerForm.code,p_team:sellerForm.team,p_goal:Number(sellerForm.goal)});
+    const {error}=await getSb().rpc("admin_create_seller",{p_campaign_id:sellerForm.campaign_id,p_name:sellerForm.name,p_code:sellerForm.code,p_team:sellerForm.team,p_goal:Number(sellerForm.goal)});
     if(error)setMessage("Não foi possível cadastrar o vendedor: "+error.message);
     else{setSellerForm(x=>({...x,name:"",code:"",team:"",goal:"30"}));setMessage("Vendedor cadastrado.");await load();}
   }
 
   async function toggleSeller(s:Seller){
-    const {error}=await sb.rpc("admin_set_seller_active",{p_campaign_id:s.campaign_id,p_seller_id:s.id,p_active:!s.active});
+    const {error}=await getSb().rpc("admin_set_seller_active",{p_campaign_id:s.campaign_id,p_seller_id:s.id,p_active:!s.active});
     if(error)setMessage("Falha ao alterar vendedor."); else await load();
   }
 
   async function orderStatus(id:string,status:"paid"|"cancelled"){
     if(status==="paid"&&!confirm("Confirmar recebimento do pagamento deste pedido?"))return;
-    const {error}=await sb.rpc("admin_set_order_status",{p_order_id:id,p_status:status});
+    const {error}=await getSb().rpc("admin_set_order_status",{p_order_id:id,p_status:status});
     if(error)setMessage("Não foi possível alterar o pedido. A reserva pode ter expirado."); else await load();
   }
 
@@ -107,7 +107,7 @@ export default function AdminClient(){
     const ws=XLSX.utils.json_to_sheet(rows),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Pedidos");XLSX.writeFile(wb,"rifatrack-pedidos.xlsx");
   }
 
-  async function logout(){await sb.auth.signOut();location.href="/admin/login";}
+  async function logout(){await getSb().auth.signOut();location.href="/admin/login";}
   const filtered=useMemo(()=>data?.orders.filter(o=>[o.buyer_name,o.buyer_phone,o.payment_reference,o.seller_name||""].join(" ").toLowerCase().includes(search.toLowerCase()))||[],[data,search]);
 
   if(loading)return <main className="min-h-screen grid place-items-center"><RefreshCw className="animate-spin"/></main>;
