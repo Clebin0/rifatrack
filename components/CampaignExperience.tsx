@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, Clock3, RefreshCw, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock3, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
 
-type SellerRef={name:string;code:string;team:string|null};
+type SellerRef={name:string;code:string;team:string|null;whatsapp:string};
 type Campaign = {
   id: string; name: string; slug: string; description: string; price_cents: number;
   total_numbers: number; pix_key: string; pix_receiver: string; ends_at: string | null; status:"active"|"closed";
-  seller_name: string | null; sellers: SellerRef[]; unavailable: number[]; sold_numbers: number; reserved_numbers: number;
+  seller_name: string | null; seller_whatsapp:string|null; sellers: SellerRef[]; unavailable: number[]; sold_numbers: number; reserved_numbers: number;
   draw_result:{number:number;drawn_at:string}|null;
 };
 
@@ -49,6 +49,8 @@ export default function CampaignExperience({ slug }: { slug: string }) {
   const amount = (campaign?.price_cents || 0) * selected.length;
   const sellerCode = referralSeller || selectedSeller;
   const needsSeller = Boolean(campaign?.sellers?.length) && !campaign?.seller_name;
+  const chosenSeller = campaign?.seller_name ? {name:campaign.seller_name,whatsapp:campaign.seller_whatsapp||""} : campaign?.sellers?.find(s=>s.code===selectedSeller) || null;
+  const sellerWhatsApp = chosenSeller?.whatsapp?.replace(/\D/g,"") || "";
 
   function toggle(n: number) {
     if (campaign?.status!=="active" || unavailable.has(n)) return;
@@ -97,7 +99,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
             <span className={campaign.status==="active"?"text-emerald-400 text-sm font-semibold uppercase tracking-wider":"text-amber-400 text-sm font-semibold uppercase tracking-wider"}>{campaign.status==="active"?"Campanha ativa":"Campanha encerrada"}</span>
             <h1 className="text-4xl md:text-5xl font-black mt-2">{campaign.name}</h1>
             <p className="text-zinc-400 mt-3 max-w-2xl">{campaign.description || "Escolha seus números e acompanhe a confirmação do pedido em tempo real."}</p>
-            {campaign.seller_name && <div className="mt-4 inline-flex items-center gap-2 bg-emerald-950 border border-emerald-800 rounded-full px-4 py-2 text-sm">Indicação de <strong>{campaign.seller_name}</strong> <CheckCircle2 size={15}/></div>}
+            {campaign.seller_name && <div className="mt-4 flex flex-wrap gap-2 items-center"><div className="inline-flex items-center gap-2 bg-emerald-950 border border-emerald-800 rounded-full px-4 py-2 text-sm">Indicação de <strong>{campaign.seller_name}</strong> <CheckCircle2 size={15}/></div>{sellerWhatsApp&&<a target="_blank" rel="noreferrer" href={"https://wa.me/"+sellerWhatsApp} className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm"><MessageCircle size={15}/> Falar com vendedor</a>}</div>}
             {campaign.draw_result && <div className="mt-5 rounded-2xl border border-amber-700 bg-amber-950/50 p-5"><p className="text-amber-300 text-sm font-bold uppercase tracking-wider">Resultado oficial</p><p className="text-4xl font-black mt-2">Número {String(campaign.draw_result.number).padStart(3,"0")}</p><p className="text-zinc-400 text-sm mt-1">Sorteado em {new Date(campaign.draw_result.drawn_at).toLocaleString("pt-BR")}.</p></div>}
           </div>
 
@@ -137,8 +139,9 @@ export default function CampaignExperience({ slug }: { slug: string }) {
             <input value={phone} onChange={(e)=>setPhone(e.target.value)} maxLength={20} placeholder="WhatsApp / telefone" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
             <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} maxLength={180} placeholder="E-mail (opcional)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
             {needsSeller && <select required value={selectedSeller} onChange={e=>setSelectedSeller(e.target.value)} className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"><option value="">Quem te indicou / vendedor</option>{campaign.sellers.map(s=><option key={s.code} value={s.code}>{s.name}{s.team?" — "+s.team:""}</option>)}</select>}
+            {chosenSeller&&<div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm"><span className="text-zinc-500">Venda atribuída a</span><div className="font-bold mt-1">{chosenSeller.name}</div>{sellerWhatsApp&&<a target="_blank" rel="noreferrer" href={"https://wa.me/"+sellerWhatsApp} className="text-emerald-400 text-xs inline-flex gap-1 items-center mt-2"><MessageCircle size={13}/> WhatsApp do vendedor</a>}</div>}
             <input value={website} onChange={(e)=>setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true"/>
-            <label className="flex gap-2 text-xs text-zinc-400"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/> Concordo com o uso destes dados somente para identificação e gestão deste pedido.</label>
+            <label className="flex gap-2 text-xs text-zinc-400"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>Concordo com o uso destes dados somente para identificação e gestão deste pedido, conforme a <a href="/privacidade" target="_blank" className="text-emerald-400 underline">Política de Privacidade</a>.</span></label>
           </div>
           <button onClick={submit} disabled={submitting || selected.length===0 || name.trim().length<2 || phone.trim().length<8 || (needsSeller&&!selectedSeller) || !consent}
             className="w-full mt-5 bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 text-emerald-950 rounded-xl p-3 font-black">
