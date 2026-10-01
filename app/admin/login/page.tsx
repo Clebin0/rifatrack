@@ -35,7 +35,7 @@ export default function AdminLogin(){
         <p className="text-zinc-500 text-sm mt-2">O cadastro não concede privilégios automaticamente. O primeiro administrador precisa validar o código de implantação.</p>
         <form onSubmit={submit} className="space-y-3 mt-6">
           <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="E-mail" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
-          <input type="password" required minLength={8} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha (mínimo 8 caracteres)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
+          <input type="password" required minLength={12} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha (mínimo 12 caracteres)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
           <button disabled={loading} className="w-full bg-emerald-400 text-emerald-950 rounded-xl p-3 font-black disabled:opacity-50">{loading?"Aguarde...":mode==="login"?"Entrar":"Criar conta"}</button>
         </form>
         {message&&<p className="text-sm text-zinc-300 mt-4">{message}</p>}
