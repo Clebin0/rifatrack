@@ -3,21 +3,24 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Clock3, RefreshCw, ShieldCheck } from "lucide-react";
 
+type SellerRef={name:string;code:string;team:string|null};
 type Campaign = {
   id: string; name: string; slug: string; description: string; price_cents: number;
   total_numbers: number; pix_key: string; pix_receiver: string; ends_at: string | null; status:"active"|"closed";
-  seller_name: string | null; unavailable: number[]; sold_numbers: number; reserved_numbers: number;
+  seller_name: string | null; sellers: SellerRef[]; unavailable: number[]; sold_numbers: number; reserved_numbers: number;
   draw_result:{number:number;drawn_at:string}|null;
 };
 
 export default function CampaignExperience({ slug }: { slug: string }) {
   const query = useSearchParams();
   const router = useRouter();
-  const seller = (query.get("vendedor") || "").toUpperCase();
+  const referralSeller = (query.get("vendedor") || "").toUpperCase();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [selected, setSelected] = useState<number[]>([]);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [selectedSeller,setSelectedSeller]=useState("");
   const [consent, setConsent] = useState(false);
   const [website, setWebsite] = useState("");
   const [message, setMessage] = useState("");
@@ -26,7 +29,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
 
   async function load() {
     try {
-      const suffix = seller ? "?vendedor=" + encodeURIComponent(seller) : "";
+      const suffix = referralSeller ? "?vendedor=" + encodeURIComponent(referralSeller) : "";
       const res = await fetch("/api/campaigns/" + encodeURIComponent(slug) + suffix, { cache: "no-store" });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -40,10 +43,12 @@ export default function CampaignExperience({ slug }: { slug: string }) {
     load();
     const timer = setInterval(load, 20000);
     return () => clearInterval(timer);
-  }, [slug, seller]);
+  }, [slug, referralSeller]);
 
   const unavailable = useMemo(() => new Set(campaign?.unavailable || []), [campaign]);
   const amount = (campaign?.price_cents || 0) * selected.length;
+  const sellerCode = referralSeller || selectedSeller;
+  const needsSeller = Boolean(campaign?.sellers?.length) && !campaign?.seller_name;
 
   function toggle(n: number) {
     if (campaign?.status!=="active" || unavailable.has(n)) return;
@@ -63,7 +68,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
     try {
       const res = await fetch("/api/orders", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ campaignSlug: slug, sellerCode: seller, buyerName: name, buyerPhone: phone, numbers: selected, website })
+        body: JSON.stringify({ campaignSlug: slug, sellerCode, buyerName: name, buyerPhone: phone, buyerEmail: email, numbers: selected, website })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Falha na reserva");
@@ -130,15 +135,17 @@ export default function CampaignExperience({ slug }: { slug: string }) {
           <div className="space-y-3 mt-5">
             <input value={name} onChange={(e)=>setName(e.target.value)} maxLength={100} placeholder="Nome completo" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
             <input value={phone} onChange={(e)=>setPhone(e.target.value)} maxLength={20} placeholder="WhatsApp / telefone" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
+            <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} maxLength={180} placeholder="E-mail (opcional)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
+            {needsSeller && <select required value={selectedSeller} onChange={e=>setSelectedSeller(e.target.value)} className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"><option value="">Quem te indicou / vendedor</option>{campaign.sellers.map(s=><option key={s.code} value={s.code}>{s.name}{s.team?" — "+s.team:""}</option>)}</select>}
             <input value={website} onChange={(e)=>setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true"/>
             <label className="flex gap-2 text-xs text-zinc-400"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/> Concordo com o uso destes dados somente para identificação e gestão deste pedido.</label>
           </div>
-          <button onClick={submit} disabled={submitting || selected.length===0 || name.trim().length<2 || phone.trim().length<8 || !consent}
+          <button onClick={submit} disabled={submitting || selected.length===0 || name.trim().length<2 || phone.trim().length<8 || (needsSeller&&!selectedSeller) || !consent}
             className="w-full mt-5 bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 text-emerald-950 rounded-xl p-3 font-black">
             {submitting ? "Reservando..." : "Reservar números"}
           </button>
           {message && <p className="text-sm text-rose-300 mt-3">{message}</p>}
-          <p className="mt-4 text-xs text-zinc-500 flex gap-2"><Clock3 size={15}/> A reserva expira em 15 minutos se não for confirmada.</p>
+          <p className="mt-4 text-xs text-zinc-500 flex gap-2"><Clock3 size={15}/> A reserva e o código deste pedido expiram em 10 minutos se o pagamento não for confirmado.</p>
           </>}
         </aside>
       </section>
