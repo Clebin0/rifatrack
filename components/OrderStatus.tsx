@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import { CheckCircle2, Clock3, Copy, RefreshCw, Upload, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Copy, MessageCircle, Printer, RefreshCw, Share2, Upload, XCircle } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 type Order = {
@@ -14,6 +14,7 @@ type Order = {
   campaign_slug: string;
   buyer_name: string;
   seller_name: string|null;
+  seller_whatsapp:string|null;
   pix_key: string;
   pix_receiver: string;
   pix_payload: string;
@@ -67,6 +68,12 @@ export default function OrderStatus({ token }: { token: string }) {
     : order.status==="pending"
     ? {label:"Aguardando confirmação",icon:<Clock3/>,cls:"text-amber-300 bg-amber-950 border-amber-800"}
     : {label:order.status==="expired"?"Reserva expirada":"Pedido cancelado",icon:<XCircle/>,cls:"text-rose-300 bg-rose-950 border-rose-800"};
+
+  async function shareOrder(){
+    const text=`RifaTrack — ${order?.campaign_name}\nPedido: ${order?.payment_reference}\nNúmeros: ${order?.numbers.map(n=>String(n).padStart(3,"0")).join(", ")}\nStatus: ${order?.status==="paid"?"Pagamento confirmado":"Aguardando pagamento"}`;
+    if(navigator.share){try{await navigator.share({title:"RifaTrack",text,url:location.href});return}catch{}}
+    await navigator.clipboard.writeText(text+"\n"+location.href);setUploadMessage("Resumo do pedido copiado.");
+  }
 
   async function copyPix(){
     const value=order?.pix_payload||order?.pix_key;
@@ -140,6 +147,7 @@ export default function OrderStatus({ token }: { token: string }) {
           </>}
         </div>}
 
+        {order.status==="paid"&&<div className="mt-6 border-t border-zinc-800 pt-6"><h2 className="text-xl font-bold">Recibo digital</h2><div className="mt-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-sm space-y-2"><div className="flex justify-between gap-4"><span className="text-zinc-500">Pedido</span><b>{order.payment_reference}</b></div><div className="flex justify-between gap-4"><span className="text-zinc-500">Comprador</span><b>{order.buyer_name}</b></div>{order.seller_name&&<div className="flex justify-between gap-4"><span className="text-zinc-500">Vendedor</span><b>{order.seller_name}</b></div>}<div className="flex justify-between gap-4"><span className="text-zinc-500">Valor</span><b>R$ {(order.amount_cents/100).toFixed(2).replace(".",",")}</b></div><div className="flex justify-between gap-4"><span className="text-zinc-500">Números</span><b className="text-right">{order.numbers.map(n=>String(n).padStart(3,"0")).join(", ")}</b></div>{order.provider_payment_id&&<div className="flex justify-between gap-4"><span className="text-zinc-500">Transação</span><b className="font-mono text-xs break-all text-right">{order.provider_payment_id}</b></div>}{order.provider_paid_at&&<div className="flex justify-between gap-4"><span className="text-zinc-500">Confirmado em</span><b>{new Date(order.provider_paid_at).toLocaleString("pt-BR")}</b></div>}</div><div className="flex flex-wrap gap-2 mt-4"><button onClick={()=>window.print()} className="inline-flex gap-2 items-center rounded-xl bg-white text-black px-4 py-2 font-bold"><Printer size={16}/> Imprimir / salvar PDF</button><button onClick={shareOrder} className="inline-flex gap-2 items-center rounded-xl bg-zinc-800 px-4 py-2 font-bold"><Share2 size={16}/> Compartilhar</button>{order.seller_whatsapp&&<a target="_blank" rel="noreferrer" href={"https://wa.me/"+order.seller_whatsapp.replace(/\D/g,"")} className="inline-flex gap-2 items-center rounded-xl bg-emerald-950 text-emerald-300 px-4 py-2 font-bold"><MessageCircle size={16}/> Vendedor</a>}</div></div>}
         <button onClick={load} className="mt-6 inline-flex gap-2 items-center bg-zinc-800 hover:bg-zinc-700 rounded-xl px-4 py-2"><RefreshCw size={16}/> Atualizar status</button>
       </section>
     </div>
