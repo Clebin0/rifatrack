@@ -1,3 +1,12 @@
 import "./globals.css";
-export const metadata={title:"RifaTrack",description:"Gestão de campanhas, vendedores e vendas"};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="pt-BR"><body>{children}</body></html>}
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: { default: "RifaTrack", template: "%s | RifaTrack" },
+  description: "Gestão profissional de campanhas, vendedores, números e pagamentos.",
+  robots: { index: true, follow: true },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return <html lang="pt-BR"><body>{children}</body></html>;
+}

@@ -1,2 +1,0 @@
-export const sellers=[{name:"Maria Silva",team:"Atletismo",sold:63,goal:70},{name:"João Santos",team:"Atletismo",sold:51,goal:70},{name:"Cledson Santos",team:"CWB",sold:47,goal:70},{name:"Ana Souza",team:"CWB",sold:31,goal:70}];
-export const sales=[{id:281,buyer:"Lucas",qty:5,seller:"Cledson Santos",status:"Pago"},{id:280,buyer:"Bruno",qty:2,seller:"Maria Silva",status:"Pago"},{id:279,buyer:"Carlos",qty:8,seller:"Ana Souza",status:"Pendente"}];

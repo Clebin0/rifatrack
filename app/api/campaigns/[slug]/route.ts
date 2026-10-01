@@ -1,0 +1,15 @@
+import { NextResponse } from "next/server";
+import { supabaseServer } from "@/lib/supabase";
+
+export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  if (!/^[a-z0-9-]{2,80}$/.test(slug)) return NextResponse.json({ error: "Campanha inválida" }, { status: 400 });
+  const seller = new URL(req.url).searchParams.get("vendedor") || "";
+  try {
+    const { data, error } = await supabaseServer().rpc("public_campaign", { p_slug: slug, p_seller_code: seller });
+    if (error || !data) return NextResponse.json({ error: "Campanha não encontrada" }, { status: 404 });
+    return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
+  }
+}
