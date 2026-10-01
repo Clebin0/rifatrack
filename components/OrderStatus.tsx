@@ -19,6 +19,12 @@ type Order = {
   pix_payload: string;
   proof_status:"none"|"submitted"|"approved"|"rejected";
   proof_uploaded_at:string|null;
+  payment_provider:"manual"|"asaas"|string;
+  provider_payment_id:string|null;
+  provider_status:string|null;
+  provider_paid_at:string|null;
+  provider_net_value_cents:number|null;
+  pix_transaction_id:string|null;
   numbers: number[];
 };
 
@@ -100,6 +106,7 @@ export default function OrderStatus({ token }: { token: string }) {
         <h1 className="text-3xl font-black mt-5">{order.campaign_name}</h1>
         <p className="text-zinc-500 text-sm mt-1">Pedido {order.payment_reference}</p>
         <p className="text-zinc-400 text-sm mt-2">Comprador: <strong>{order.buyer_name}</strong>{order.seller_name?<> · Vendedor: <strong>{order.seller_name}</strong></>:null}</p>
+        {order.status==="paid" && <div className="mt-5 rounded-2xl border border-emerald-800 bg-emerald-950/40 p-4 text-sm"><p className="font-bold text-emerald-300">Pagamento conciliado automaticamente</p><div className="mt-2 space-y-1 text-zinc-300">{order.provider_payment_id&&<p>ID da transação: <span className="font-mono">{order.provider_payment_id}</span></p>}{order.pix_transaction_id&&<p>Pix transaction ID: <span className="font-mono">{order.pix_transaction_id}</span></p>}{order.provider_paid_at&&<p>Pago em: {new Date(order.provider_paid_at).toLocaleString("pt-BR")}</p>}</div></div>}
 
         <div className="grid sm:grid-cols-2 gap-3 mt-6">
           <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><p className="text-zinc-500 text-sm">Total</p><p className="text-2xl font-black mt-1">R$ {(order.amount_cents/100).toFixed(2).replace(".",",")}</p></div>
@@ -108,7 +115,7 @@ export default function OrderStatus({ token }: { token: string }) {
 
         {order.status==="pending" && <div className="mt-6 border-t border-zinc-800 pt-6">
           <div className="flex items-center justify-between gap-4"><h2 className="font-bold text-xl">Pagamento por Pix</h2><div className="font-mono text-lg font-black text-amber-300">{mm}:{ss}</div></div>
-          <p className="text-sm text-zinc-400 mt-2">Pague dentro do tempo acima. Depois do vencimento, os números voltam a ficar disponíveis.</p>
+          <p className="text-sm text-zinc-400 mt-2">{order.payment_provider==="asaas"?"Este QR Code é individual, expira com este pedido e a confirmação ocorre automaticamente após o Pix.":"Pague dentro do tempo acima. Depois do vencimento, os números voltam a ficar disponíveis."}</p>
 
           {order.pix_payload ? <>
             {qr&&<div className="mt-5 bg-white rounded-2xl p-4 w-fit mx-auto"><img src={qr} alt="QR Code Pix" className="w-56 h-56"/></div>}
@@ -121,8 +128,8 @@ export default function OrderStatus({ token }: { token: string }) {
           </> : <p className="text-sm text-zinc-400 mt-3">A organização ainda não cadastrou uma chave Pix nesta campanha.</p>}
 
           <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-            <h3 className="font-bold">Enviar comprovante</h3>
-            <p className="text-sm text-zinc-500 mt-1">JPG, PNG ou PDF, até 5 MB. O arquivo fica privado e aparece no painel administrativo deste pedido.</p>
+            <h3 className="font-bold">{order.payment_provider==="asaas"?"Comprovante opcional":"Enviar comprovante"}</h3>
+            <p className="text-sm text-zinc-500 mt-1">{order.payment_provider==="asaas"?"O pagamento é confirmado automaticamente pelo provedor. Se quiser, envie o comprovante apenas como registro adicional.":"JPG, PNG ou PDF, até 5 MB. O arquivo fica privado e aparece no painel administrativo deste pedido."}</p>
             {order.proof_status==="none" ? <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-zinc-800 px-4 py-3 font-bold"><Upload size={18}/>{uploading?"Enviando...":"Selecionar comprovante"}<input disabled={uploading} type="file" accept="image/jpeg,image/png,application/pdf" className="hidden" onChange={e=>{const file=e.target.files?.[0];if(file)uploadProof(file)}}/></label> :
             <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-950 border border-emerald-800 px-4 py-3 text-emerald-300"><CheckCircle2 size={18}/> Comprovante recebido · {order.proof_status==="approved"?"aprovado":order.proof_status==="rejected"?"rejeitado":"aguardando conferência"}</div>}
             {uploadMessage&&<p className="text-sm mt-3 text-zinc-300">{uploadMessage}</p>}
