@@ -14,7 +14,7 @@ const input="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-no
 const panel="bg-zinc-900 border border-zinc-800 rounded-3xl p-5";
 
 export default function AdminClient(){
-  const sb=supabaseBrowser();
+  const sb:any=supabaseBrowser();
   const [data,setData]=useState<Dashboard|null>(null);
   const [loading,setLoading]=useState(true);
   const [unauthorized,setUnauthorized]=useState(false);
