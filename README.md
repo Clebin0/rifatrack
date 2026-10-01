@@ -21,7 +21,7 @@ Aplicação: https://rifatrack.vercel.app
 - Gestão de campanhas, vendedores, metas e pedidos
 - Confirmação automática por webhook, com idempotência por evento
 - IDs de transação, valor líquido, horário do pagamento e status do provedor
-- Exportação de pedidos em XLSX
+- Exportação de pedidos em CSV compatível com Excel
 - Sorteio auditado entre números pagos após encerramento da campanha
 - Resultado do sorteio persistente e público
 - Log de ações administrativas
