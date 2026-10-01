@@ -17,7 +17,11 @@ Aplicação: https://rifatrack.vercel.app
 - Atribuição automática da origem de cada venda
 - Página pública de acompanhamento do pedido
 - Pix manual com comprovante ou Pix automático via Asaas
-- Painel autenticado com Supabase Auth
+- Painel administrativo autenticado com Supabase Auth
+- Portal separado para vendedores, com acesso somente às próprias vendas
+- Convites de vendedor de uso único vinculados ao e-mail
+- Área financeira com receita bruta/líquida, rankings e alertas
+- Área de auditoria para ações administrativas e eventos de pagamento
 - Gestão de campanhas, vendedores, metas e pedidos
 - Confirmação automática por webhook, com idempotência por evento
 - IDs de transação, valor líquido, horário do pagamento e status do provedor
@@ -25,7 +29,11 @@ Aplicação: https://rifatrack.vercel.app
 - Sorteio auditado entre números pagos após encerramento da campanha
 - Resultado do sorteio persistente e público
 - Log de ações administrativas
-- CI com typecheck e build
+- CI com auditoria de dependências, typecheck e build
+- Dependências fixadas e atualizações via Dependabot
+- CSP por requisição com nonce, HSTS e headers de segurança
+- Política de Privacidade e Termos de Uso
+- Recibo digital imprimível/compartilhável
 
 ## Segurança
 
@@ -91,3 +99,18 @@ Requer `ASAAS_API_KEY`, `ASAAS_PIX_ADDRESS_KEY` e `ASAAS_WEBHOOK_TOKEN`. Cada pe
 O endpoint valida o header `asaas-access-token`, persiste o ID do evento antes de processá-lo e trata reenvios de forma idempotente. Eventos de recebimento vinculam o ID da cobrança, status do provedor, valor líquido, horário do pagamento e identificador da transação Pix ao pedido e confirmam os números automaticamente.
 
 Use uma conta Sandbox do Asaas para homologação e altere `ASAAS_ENV=production` somente com credenciais produtivas.
+
+
+## Portais
+
+- Administração: `/admin`
+- Financeiro: `/admin/financeiro`
+- Auditoria: `/admin/auditoria`
+- Vendedor: `/vendedor/login`
+
+## Documentação
+
+- `docs/ARCHITECTURE.md`
+- `docs/OPERATIONS.md`
+- `docs/SECURITY-CHECKLIST.md`
+- `SECURITY.md`
