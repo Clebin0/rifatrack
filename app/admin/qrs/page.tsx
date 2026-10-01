@@ -1,0 +1,1 @@
+import QrBatchClient from "@/components/QrBatchClient";export default function QrsPage(){return <QrBatchClient/>}
