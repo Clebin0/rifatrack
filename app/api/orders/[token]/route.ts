@@ -11,7 +11,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ token: str
     const { data, error } = await supabaseServer().rpc("public_order", { p_token: token });
     if (error || !data) return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 });
     const order = data as any;
-    const pix_payload = order?.pix_key ? buildPixPayload({key:order.pix_key,receiver:order.pix_receiver||"RECEBEDOR",city:order.pix_city||"CURITIBA",amountCents:order.amount_cents||0,txid:order.pix_txid||"***"}) : "";
+    const pix_payload = order?.provider_qr_payload || (order?.pix_key ? buildPixPayload({key:order.pix_key,receiver:order.pix_receiver||"RECEBEDOR",city:order.pix_city||"CURITIBA",amountCents:order.amount_cents||0,txid:order.pix_txid||"***"}) : "");
     return NextResponse.json({...order,pix_payload}, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
