@@ -141,6 +141,7 @@ export type Database = {
           ends_at: string | null
           id: string
           name: string
+          pix_city: string
           pix_key: string
           pix_receiver: string
           price_cents: number
@@ -155,6 +156,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           name: string
+          pix_city?: string
           pix_key?: string
           pix_receiver?: string
           price_cents: number
@@ -169,6 +171,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           name?: string
+          pix_city?: string
           pix_key?: string
           pix_receiver?: string
           price_cents?: number
@@ -224,6 +227,7 @@ export type Database = {
       orders: {
         Row: {
           amount_cents: number
+          buyer_email: string
           buyer_name: string
           buyer_phone: string
           campaign_id: string
@@ -231,12 +235,17 @@ export type Database = {
           expires_at: string
           id: string
           payment_reference: string | null
+          pix_txid: string
+          proof_path: string | null
+          proof_status: string
+          proof_uploaded_at: string | null
           public_token: string
           seller_id: string | null
           status: string
         }
         Insert: {
           amount_cents: number
+          buyer_email?: string
           buyer_name: string
           buyer_phone: string
           campaign_id: string
@@ -244,12 +253,17 @@ export type Database = {
           expires_at?: string
           id?: string
           payment_reference?: string | null
+          pix_txid: string
+          proof_path?: string | null
+          proof_status?: string
+          proof_uploaded_at?: string | null
           public_token?: string
           seller_id?: string | null
           status?: string
         }
         Update: {
           amount_cents?: number
+          buyer_email?: string
           buyer_name?: string
           buyer_phone?: string
           campaign_id?: string
@@ -257,6 +271,10 @@ export type Database = {
           expires_at?: string
           id?: string
           payment_reference?: string | null
+          pix_txid?: string
+          proof_path?: string | null
+          proof_status?: string
+          proof_uploaded_at?: string | null
           public_token?: string
           seller_id?: string | null
           status?: string
@@ -391,6 +409,10 @@ export type Database = {
         Args: { p_order_id: string; p_status: string }
         Returns: boolean
       }
+      admin_set_proof_status: {
+        Args: { p_order_id: string; p_status: string }
+        Returns: boolean
+      }
       admin_set_seller_active: {
         Args: { p_active: boolean; p_campaign_id: string; p_seller_id: string }
         Returns: boolean
@@ -407,6 +429,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_upload_payment_proof: { Args: { p_name: string }; Returns: boolean }
       claim_first_admin: { Args: { p_code: string }; Returns: boolean }
       internal_secret_ok: { Args: { p_secret: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
@@ -417,12 +440,17 @@ export type Database = {
       }
       public_draw_result: { Args: { p_slug: string }; Returns: Json }
       public_order: { Args: { p_token: string }; Returns: Json }
+      register_payment_proof: {
+        Args: { p_path: string; p_token: string }
+        Returns: boolean
+      }
       release_expired_reservations: {
         Args: { p_campaign_id?: string }
         Returns: undefined
       }
       reserve_raffle_numbers: {
         Args: {
+          p_buyer_email: string
           p_buyer_name: string
           p_buyer_phone: string
           p_campaign_slug: string
