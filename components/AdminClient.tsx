@@ -21,12 +21,14 @@ export default function AdminClient(){
   const [setupCode,setSetupCode]=useState("");
   const [message,setMessage]=useState("");
   const [search,setSearch]=useState("");
+  const [paymentHealth,setPaymentHealth]=useState<{provider:string;environment:string;configured:boolean;automatic:boolean}|null>(null);
   const [campaignForm,setCampaignForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:""});
   const [sellerForm,setSellerForm]=useState({campaign_id:"",name:"",code:"",team:"",goal:"30"});
   const [edit,setEdit]=useState({id:"",name:"",description:"",price:"",pix_key:"",pix_receiver:""});
 
   async function load(){
     setLoading(true); setMessage("");
+    fetch("/api/integrations/payment-status",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(setPaymentHealth).catch(()=>setPaymentHealth(null));
     const {data:auth}=await getSb().auth.getSession();
     if(!auth.session){location.href="/admin/login";return;}
     const {data:dashboard,error}=await getSb().rpc("admin_dashboard");
@@ -134,6 +136,7 @@ export default function AdminClient(){
     <div className="max-w-7xl mx-auto px-5 py-8 space-y-8">
       <div><p className="text-emerald-400 text-sm font-semibold">PAINEL ADMINISTRATIVO</p><h1 className="text-4xl font-black mt-1">Visão geral</h1></div>
       {message&&<div className="border border-zinc-700 bg-zinc-900 rounded-xl p-3 text-sm">{message}</div>}
+      {paymentHealth&&<div className={"rounded-2xl border p-4 text-sm "+(paymentHealth.automatic?"border-emerald-800 bg-emerald-950/30":"border-amber-800 bg-amber-950/20")}><b>Pagamentos:</b> {paymentHealth.automatic?"Pix automático ativo":"Pix manual ativo"} · provedor {paymentHealth.provider}{paymentHealth.provider==="asaas"?" · "+paymentHealth.environment:""}{!paymentHealth.configured&&<span className="text-amber-300"> · integração incompleta</span>}</div>}
 
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
