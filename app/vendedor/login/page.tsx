@@ -29,7 +29,7 @@ export default function SellerLogin(){
         <p className="text-sm text-zinc-500 mt-2">O acesso aos dados de vendas só é liberado após vincular o código individual fornecido pelo administrador.</p>
         <form onSubmit={submit} className="space-y-3 mt-6">
           <input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="E-mail" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
-          <input type="password" required minLength={10} autoComplete={mode==="login"?"current-password":"new-password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha (mínimo 10 caracteres)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
+          <input type="password" required minLength={12} autoComplete={mode==="login"?"current-password":"new-password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha (mínimo 12 caracteres)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
           <button disabled={loading} className="w-full rounded-xl bg-emerald-400 text-emerald-950 p-3 font-black disabled:opacity-50">{loading?"Aguarde...":mode==="login"?"Entrar":"Criar conta"}</button>
         </form>
         {message&&<p className="mt-4 text-sm text-zinc-300">{message}</p>}
