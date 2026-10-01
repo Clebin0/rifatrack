@@ -179,6 +179,48 @@ export type Database = {
         }
         Relationships: []
       }
+      draws: {
+        Row: {
+          actor_email: string
+          campaign_id: string
+          drawn_at: string
+          id: string
+          number: number
+          order_id: string
+        }
+        Insert: {
+          actor_email: string
+          campaign_id: string
+          drawn_at?: string
+          id?: string
+          number: number
+          order_id: string
+        }
+        Update: {
+          actor_email?: string
+          campaign_id?: string
+          drawn_at?: string
+          id?: string
+          number?: number
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draws_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "draws_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           amount_cents: number
@@ -340,6 +382,7 @@ export type Database = {
         Returns: string
       }
       admin_dashboard: { Args: never; Returns: Json }
+      admin_draw_campaign: { Args: { p_campaign_id: string }; Returns: Json }
       admin_set_campaign_status: {
         Args: { p_id: string; p_status: string }
         Returns: boolean
@@ -372,6 +415,7 @@ export type Database = {
         Args: { p_seller_code?: string; p_slug: string }
         Returns: Json
       }
+      public_draw_result: { Args: { p_slug: string }; Returns: Json }
       public_order: { Args: { p_token: string }; Returns: Json }
       release_expired_reservations: {
         Args: { p_campaign_id?: string }
