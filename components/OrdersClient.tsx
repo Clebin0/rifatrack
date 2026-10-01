@@ -15,7 +15,7 @@ export default function OrdersClient(){
  async function load(next=page){
   setLoading(true);const client=sb();const {data:auth}=await client.auth.getSession();if(!auth.session){location.href="/admin/login";return}
   if(!meta){const {data:d}=await client.rpc("admin_dashboard");if(d){const x=d as any;setMeta({campaigns:x.campaigns,sellers:Array.from(new Map((x.sellers as any[]).map(s=>[s.id,{id:s.id,name:s.name}])).values()) as Seller[]})}}
-  const {data:d,error}=await client.rpc("admin_orders_page",{p_page:next,p_page_size:25,p_search:search,p_status:status,p_campaign_id:campaign||null,p_seller_id:seller||null,p_from:from?new Date(from+"T00:00:00").toISOString():null,p_to:to?new Date(new Date(to+"T00:00:00").getTime()+86400000).toISOString():null});
+  const {data:d,error}=await client.rpc("admin_orders_page",{p_page:next,p_page_size:25,p_search:search,p_status:status,p_campaign_id:campaign||undefined,p_seller_id:seller||undefined,p_from:from?new Date(from+"T00:00:00").toISOString():undefined,p_to:to?new Date(new Date(to+"T00:00:00").getTime()+86400000).toISOString():undefined});
   if(!error){setData(d as PageData);setPage(next)}setLoading(false);
  }
  useEffect(()=>{load(1)},[]);
