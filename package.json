@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "asaas:webhook": "node scripts/setup-asaas-webhook.mjs"
+    "asaas:webhook": "node scripts/setup-asaas-webhook.mjs",
+    "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",
@@ -16,7 +17,6 @@
     "qrcode": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "xlsx": "latest",
     "zod": "latest"
   },
   "devDependencies": {
