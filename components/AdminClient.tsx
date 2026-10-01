@@ -52,7 +52,7 @@ export default function AdminClient(){
     const {error}=await sb.rpc("admin_create_campaign",{
       p_name:campaignForm.name,p_slug:campaignForm.slug.toLowerCase().replace(/[^a-z0-9-]/g,"-"),
       p_description:campaignForm.description,p_price_cents:Math.round(Number(campaignForm.price.replace(",","."))*100),
-      p_total_numbers:Number(campaignForm.total),p_pix_key:campaignForm.pix_key,p_pix_receiver:campaignForm.pix_receiver,p_ends_at:null
+      p_total_numbers:Number(campaignForm.total),p_pix_key:campaignForm.pix_key,p_pix_receiver:campaignForm.pix_receiver
     });
     if(error)setMessage("Não foi possível criar a campanha: "+error.message);
     else{setCampaignForm({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:""});setMessage("Campanha criada em rascunho.");await load();}
@@ -60,7 +60,7 @@ export default function AdminClient(){
 
   async function saveCampaign(e:FormEvent){
     e.preventDefault();setMessage("");
-    const {error}=await sb.rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver,p_ends_at:null});
+    const {error}=await sb.rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver});
     if(error)setMessage("Falha ao salvar campanha."); else{setMessage("Campanha atualizada.");await load();}
   }
 
