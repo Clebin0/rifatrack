@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       p_seller_code: parsed.data.sellerCode || null,
       p_buyer_name: parsed.data.buyerName,
       p_buyer_phone: parsed.data.buyerPhone,
+      p_buyer_email: parsed.data.buyerEmail || "",
       p_numbers: parsed.data.numbers,
     });
 
