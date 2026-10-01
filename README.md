@@ -11,16 +11,16 @@ Aplicação: https://rifatrack.vercel.app
 - Campanhas dinâmicas com páginas públicas por slug
 - Seleção de números com atualização de disponibilidade
 - Reserva transacional: dois compradores não conseguem reservar o mesmo número
-- Expiração automática de reservas em 15 minutos
+- Reserva e QR Pix com expiração em 10 minutos
 - Limite de pedidos e rate limit por fingerprint
 - Link individual por vendedor e geração de QR Code
 - Atribuição automática da origem de cada venda
 - Página pública de acompanhamento do pedido
-- Pagamento Pix com confirmação administrativa
+- Pix manual com comprovante ou Pix automático via Asaas
 - Painel autenticado com Supabase Auth
 - Gestão de campanhas, vendedores, metas e pedidos
-- Confirmação/cancelamento de pedidos
-- Dashboard de receita e desempenho
+- Confirmação automática por webhook, com idempotência por evento
+- IDs de transação, valor líquido, horário do pagamento e status do provedor
 - Exportação de pedidos em XLSX
 - Sorteio auditado entre números pagos após encerramento da campanha
 - Resultado do sorteio persistente e público
@@ -50,9 +50,14 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 RIFATRACK_INTERNAL_API_SECRET=
 NEXT_PUBLIC_APP_URL=
+PAYMENT_PROVIDER=manual
+ASAAS_ENV=sandbox
+ASAAS_API_KEY=
+ASAAS_PIX_ADDRESS_KEY=
+ASAAS_WEBHOOK_TOKEN=
 ```
 
-Nunca exponha `RIFATRACK_INTERNAL_API_SECRET` no frontend ou no repositório.
+Nunca exponha `RIFATRACK_INTERNAL_API_SECRET`, `ASAAS_API_KEY` ou `ASAAS_WEBHOOK_TOKEN` no frontend ou no repositório.
 
 ## Primeiro administrador
 
@@ -69,4 +74,20 @@ npm run dev
 
 ## Pagamentos
 
-O fluxo atual de Pix é funcional com confirmação manual pelo administrador. Conciliação automática depende da contratação/configuração de um provedor de pagamentos e das respectivas credenciais/webhooks.
+O RifaTrack possui dois modos:
+
+### Manual
+`PAYMENT_PROVIDER=manual`
+
+Usa a chave Pix cadastrada na campanha e mantém upload privado de comprovante e confirmação administrativa.
+
+### Asaas automático
+`PAYMENT_PROVIDER=asaas`
+
+Requer `ASAAS_API_KEY`, `ASAAS_PIX_ADDRESS_KEY` e `ASAAS_WEBHOOK_TOKEN`. Cada pedido cria um QR Code Pix individual de pagamento único com expiração de 600 segundos. O webhook está em:
+
+`POST /api/webhooks/asaas`
+
+O endpoint valida o header `asaas-access-token`, persiste o ID do evento antes de processá-lo e trata reenvios de forma idempotente. Eventos de recebimento vinculam o ID da cobrança, status do provedor, valor líquido, horário do pagamento e identificador da transação Pix ao pedido e confirmam os números automaticamente.
+
+Use uma conta Sandbox do Asaas para homologação e altere `ASAAS_ENV=production` somente com credenciais produtivas.
