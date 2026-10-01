@@ -234,11 +234,20 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          payment_provider: string
           payment_reference: string | null
+          pix_transaction_id: string | null
           pix_txid: string
           proof_path: string | null
           proof_status: string
           proof_uploaded_at: string | null
+          provider_event_id: string | null
+          provider_net_value_cents: number | null
+          provider_paid_at: string | null
+          provider_payment_id: string | null
+          provider_qr_id: string | null
+          provider_qr_payload: string | null
+          provider_status: string | null
           public_token: string
           seller_id: string | null
           status: string
@@ -252,11 +261,20 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          payment_provider?: string
           payment_reference?: string | null
+          pix_transaction_id?: string | null
           pix_txid: string
           proof_path?: string | null
           proof_status?: string
           proof_uploaded_at?: string | null
+          provider_event_id?: string | null
+          provider_net_value_cents?: number | null
+          provider_paid_at?: string | null
+          provider_payment_id?: string | null
+          provider_qr_id?: string | null
+          provider_qr_payload?: string | null
+          provider_status?: string | null
           public_token?: string
           seller_id?: string | null
           status?: string
@@ -270,11 +288,20 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          payment_provider?: string
           payment_reference?: string | null
+          pix_transaction_id?: string | null
           pix_txid?: string
           proof_path?: string | null
           proof_status?: string
           proof_uploaded_at?: string | null
+          provider_event_id?: string | null
+          provider_net_value_cents?: number | null
+          provider_paid_at?: string | null
+          provider_payment_id?: string | null
+          provider_qr_id?: string | null
+          provider_qr_payload?: string | null
+          provider_status?: string | null
           public_token?: string
           seller_id?: string | null
           status?: string
@@ -295,6 +322,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: number
+          payload: Json
+          processed: boolean
+          processing_note: string | null
+          provider: string
+          provider_event_id: string
+          provider_payment_id: string | null
+          provider_qr_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: never
+          payload?: Json
+          processed?: boolean
+          processing_note?: string | null
+          provider: string
+          provider_event_id: string
+          provider_payment_id?: string | null
+          provider_qr_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: never
+          payload?: Json
+          processed?: boolean
+          processing_note?: string | null
+          provider?: string
+          provider_event_id?: string
+          provider_payment_id?: string | null
+          provider_qr_id?: string | null
+        }
+        Relationships: []
       }
       raffle_numbers: {
         Row: {
@@ -429,10 +495,43 @@ export type Database = {
         }
         Returns: boolean
       }
+      attach_asaas_qr: {
+        Args: {
+          p_internal_secret: string
+          p_order_id: string
+          p_payload: string
+          p_qr_id: string
+        }
+        Returns: boolean
+      }
       can_upload_payment_proof: { Args: { p_name: string }; Returns: boolean }
+      cancel_order_internal: {
+        Args: {
+          p_internal_secret: string
+          p_order_id: string
+          p_reason?: string
+        }
+        Returns: boolean
+      }
       claim_first_admin: { Args: { p_code: string }; Returns: boolean }
       internal_secret_ok: { Args: { p_secret: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      process_asaas_event: {
+        Args: {
+          p_event_id: string
+          p_event_type: string
+          p_internal_secret: string
+          p_net_value_cents: number
+          p_paid_at: string
+          p_payload: Json
+          p_payment_id: string
+          p_payment_status: string
+          p_pix_transaction_id: string
+          p_qr_id: string
+          p_value_cents: number
+        }
+        Returns: Json
+      }
       public_active_campaigns: { Args: never; Returns: Json }
       public_campaign: {
         Args: { p_seller_code?: string; p_slug: string }
