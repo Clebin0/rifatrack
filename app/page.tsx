@@ -12,7 +12,7 @@ export default async function Home(){
   return <main className="min-h-screen bg-zinc-950">
     <header className="max-w-6xl mx-auto px-5 py-6 flex justify-between items-center">
       <div className="font-black text-xl">Rifa<span className="text-emerald-400">Track</span></div>
-      <a href="/admin" className="text-sm text-zinc-400 hover:text-white">Área administrativa</a>
+      <div className="flex gap-4 text-sm"><a href="/vendedor/login" className="text-zinc-400 hover:text-white">Vendedores</a><a href="/admin" className="text-zinc-400 hover:text-white">Administração</a></div>
     </header>
     <section className="max-w-6xl mx-auto px-5 pt-16 pb-20">
       <div className="max-w-3xl">
