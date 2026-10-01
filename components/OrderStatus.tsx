@@ -49,7 +49,7 @@ export default function OrderStatus({ token }: { token: string }) {
     finally{setLoading(false)}
   }
 
-  useEffect(()=>{load();const t=setInterval(load,15000);return()=>clearInterval(t)},[token]);
+  useEffect(()=>{load();const t=setInterval(load,5000);return()=>clearInterval(t)},[token]);
   useEffect(()=>{const t=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(t)},[]);
 
   const remaining=useMemo(()=>{
@@ -115,6 +115,9 @@ export default function OrderStatus({ token }: { token: string }) {
 
         {order.status==="pending" && <div className="mt-6 border-t border-zinc-800 pt-6">
           <div className="flex items-center justify-between gap-4"><h2 className="font-bold text-xl">Pagamento por Pix</h2><div className="font-mono text-lg font-black text-amber-300">{mm}:{ss}</div></div>
+          {remaining===0 && order.payment_provider==="asaas"
+            ? <div className="mt-4 rounded-2xl border border-amber-800 bg-amber-950/30 p-4"><p className="font-bold text-amber-300">QR Code expirado</p><p className="text-sm text-zinc-400 mt-1">Aguarde alguns instantes enquanto verificamos se houve pagamento antes do vencimento. Esta página atualiza automaticamente.</p></div>
+            : <>
           <p className="text-sm text-zinc-400 mt-2">{order.payment_provider==="asaas"?"Este QR Code é individual, expira com este pedido e a confirmação ocorre automaticamente após o Pix.":"Pague dentro do tempo acima. Depois do vencimento, os números voltam a ficar disponíveis."}</p>
 
           {order.pix_payload ? <>
@@ -134,6 +137,7 @@ export default function OrderStatus({ token }: { token: string }) {
             <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-950 border border-emerald-800 px-4 py-3 text-emerald-300"><CheckCircle2 size={18}/> Comprovante recebido · {order.proof_status==="approved"?"aprovado":order.proof_status==="rejected"?"rejeitado":"aguardando conferência"}</div>}
             {uploadMessage&&<p className="text-sm mt-3 text-zinc-300">{uploadMessage}</p>}
           </div>
+          </>}
         </div>}
 
         <button onClick={load} className="mt-6 inline-flex gap-2 items-center bg-zinc-800 hover:bg-zinc-700 rounded-xl px-4 py-2"><RefreshCw size={16}/> Atualizar status</button>
