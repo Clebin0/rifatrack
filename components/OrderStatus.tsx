@@ -27,7 +27,7 @@ export default function OrderStatus({ token }: { token: string }) {
     ? {label:"Aguardando confirmação",icon:<Clock3/>,cls:"text-amber-300 bg-amber-950 border-amber-800"}
     : {label:order.status==="expired"?"Reserva expirada":"Pedido cancelado",icon:<XCircle/>,cls:"text-rose-300 bg-rose-950 border-rose-800"};
 
-  async function copyPix(){if(!order.pix_key)return;await navigator.clipboard.writeText(order.pix_key);setCopied(true);setTimeout(()=>setCopied(false),1500)}
+  async function copyPix(){if(!order?.pix_key)return;const key=order.pix_key;await navigator.clipboard.writeText(key);setCopied(true);setTimeout(()=>setCopied(false),1500)}
 
   return <main className="min-h-screen bg-zinc-950 px-5 py-10">
     <div className="max-w-2xl mx-auto">
