@@ -11,7 +11,8 @@ const nextConfig = {
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
         { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
         { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-        { key: "Content-Security-Policy", value: "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
+        { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+        { key: "X-DNS-Prefetch-Control", value: "off" }
       ]
     }];
   }
