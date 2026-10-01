@@ -1,13 +1,13 @@
 "use client";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import { Download, LogOut, Plus, RefreshCw, Ticket, Users, WalletCards, Trophy } from "lucide-react";
+import { Download, LogOut, Plus, RefreshCw, Ticket, Users, WalletCards, Trophy, ShieldCheck } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
 type Campaign={id:string;name:string;slug:string;description:string;price_cents:number;total_numbers:number;status:"draft"|"active"|"closed";pix_key:string;pix_receiver:string;ends_at:string|null;sold_numbers:number;reserved_numbers:number;revenue_cents:number;created_at:string;draw_number:number|null;drawn_at:string|null};
 type Seller={campaign_id:string;campaign_name:string;campaign_slug:string;id:string;name:string;code:string;team:string;goal:number;active:boolean;sold_numbers:number;revenue_cents:number};
 type Order={id:string;public_token:string;buyer_name:string;buyer_phone:string;buyer_email:string;status:string;amount_cents:number;payment_reference:string;pix_txid:string;expires_at:string;created_at:string;campaign_name:string;campaign_slug:string;seller_name:string|null;proof_path:string|null;proof_status:"none"|"submitted"|"approved"|"rejected";proof_uploaded_at:string|null;payment_provider:string;provider_qr_id:string|null;provider_payment_id:string|null;provider_status:string|null;provider_paid_at:string|null;provider_net_value_cents:number|null;pix_transaction_id:string|null;numbers:number[]};
-type Dashboard={admin_email:string;summary:{campaigns:number;active_campaigns:number;paid_revenue_cents:number;pending_orders:number};campaigns:Campaign[];sellers:Seller[];orders:Order[]};
+type Dashboard={admin_email:string;summary:{campaigns:number;active_campaigns:number;paid_revenue_cents:number;pending_orders:number;payment_alerts:number};campaigns:Campaign[];sellers:Seller[];orders:Order[]};
 
 const money=(c:number)=>"R$ "+(c/100).toFixed(2).replace(".",",");
 const input="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500";
@@ -148,12 +148,13 @@ export default function AdminClient(){
       {message&&<div className="border border-zinc-700 bg-zinc-900 rounded-xl p-3 text-sm">{message}</div>}
       {paymentHealth&&<div className={"rounded-2xl border p-4 text-sm "+(paymentHealth.automatic?"border-emerald-800 bg-emerald-950/30":"border-amber-800 bg-amber-950/20")}><b>Pagamentos:</b> {paymentHealth.automatic?"Pix automático ativo":"Pix manual ativo"} · provedor {paymentHealth.provider}{paymentHealth.provider==="asaas"?" · "+paymentHealth.environment:""}{!paymentHealth.configured&&<span className="text-amber-300"> · integração incompleta</span>}</div>}
 
-      <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           ["Receita confirmada",money(data.summary.paid_revenue_cents),<WalletCards key="a"/>],
           ["Pedidos pendentes",String(data.summary.pending_orders),<Ticket key="b"/>],
           ["Campanhas ativas",String(data.summary.active_campaigns),<RefreshCw key="c"/>],
-          ["Vendedores",String(data.sellers.filter(s=>s.active).length),<Users key="d"/>]
+          ["Vendedores",String(data.sellers.filter(s=>s.active).length),<Users key="d"/>],
+          ["Alertas financeiros",String(data.summary.payment_alerts),<ShieldCheck key="e"/>]
         ].map(([label,value,icon])=><div key={String(label)} className={panel}><div className="text-zinc-500">{icon}</div><p className="text-zinc-500 text-sm mt-4">{label}</p><p className="text-3xl font-black mt-1">{value}</p></div>)}
       </section>
 
