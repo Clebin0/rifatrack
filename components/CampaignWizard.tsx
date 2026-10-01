@@ -12,7 +12,7 @@ export default function CampaignWizard(){
  const totalPotential=useMemo(()=>price*total,[price,total]);
  async function save(){
   if(!valid1)return;setSaving(true);setMessage("");
-  const {data,error}=await supabaseBrowser().rpc("admin_create_campaign",{p_name:form.name.trim(),p_slug:form.slug,p_description:form.description,p_price_cents:price,p_total_numbers:total,p_pix_key:form.pix_key,p_pix_receiver:form.pix_receiver,p_ends_at:form.ends_at?new Date(form.ends_at).toISOString():null});
+  const {data,error}=await supabaseBrowser().rpc("admin_create_campaign",{p_name:form.name.trim(),p_slug:form.slug,p_description:form.description,p_price_cents:price,p_total_numbers:total,p_pix_key:form.pix_key,p_pix_receiver:form.pix_receiver,p_ends_at:form.ends_at?new Date(form.ends_at).toISOString():undefined});
   if(error){setMessage("Não foi possível criar a campanha: "+error.message);setSaving(false);return}
   setMessage("Campanha criada em rascunho.");setTimeout(()=>{location.href="/admin"},700);
  }
