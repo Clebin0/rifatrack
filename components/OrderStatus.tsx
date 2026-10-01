@@ -72,7 +72,8 @@ export default function OrderStatus({ token }: { token: string }) {
 
   async function uploadProof(file:File){
     setUploadMessage("");
-    if(order.status!=="pending"||remaining<=0){setUploadMessage("A reserva expirou. Não envie comprovante deste pedido.");return}
+    const current=order;
+    if(!current||current.status!=="pending"||remaining<=0){setUploadMessage("A reserva expirou. Não envie comprovante deste pedido.");return}
     if(file.size>5*1024*1024){setUploadMessage("O arquivo deve ter no máximo 5 MB.");return}
     const ext=file.type==="application/pdf"?"pdf":file.type==="image/png"?"png":file.type==="image/jpeg"?(file.name.toLowerCase().endsWith(".jpeg")?"jpeg":"jpg"):"";
     if(!ext){setUploadMessage("Envie JPG, PNG ou PDF.");return}
