@@ -15,7 +15,9 @@ function cents(value:unknown){
 
 export async function POST(req:Request){
   const expected=process.env.ASAAS_WEBHOOK_TOKEN;
-  if(!expected) return NextResponse.json({error:"Webhook não configurado"},{status:503});
+  if(!expected || expected.length<32) return NextResponse.json({error:"Webhook não configurado"},{status:503});
+  const contentLength=Number(req.headers.get("content-length")||"0");
+  if(contentLength>262144) return NextResponse.json({error:"Payload muito grande"},{status:413});
 
   const received=req.headers.get("asaas-access-token")||"";
   if(!received || !safeEqual(received,expected)){
@@ -28,7 +30,8 @@ export async function POST(req:Request){
   const eventId=String(body?.id||"");
   const eventType=String(body?.event||"");
   const payment=body?.payment||{};
-  if(!eventId || !eventType){
+  const allowedEvents=new Set(["PAYMENT_RECEIVED","PAYMENT_CONFIRMED","PAYMENT_REFUNDED","PAYMENT_CHARGEBACK_REQUESTED","PAYMENT_CHARGEBACK_DISPUTE"]);
+  if(!eventId || !allowedEvents.has(eventType)){
     return NextResponse.json({error:"Evento inválido"},{status:400});
   }
 
@@ -52,7 +55,20 @@ export async function POST(req:Request){
     p_net_value_cents:cents(payment?.netValue),
     p_paid_at:paidAt,
     p_pix_transaction_id:pixTransactionId,
-    p_payload:body,
+    p_payload:{
+      id:eventId,
+      event:eventType,
+      payment:{
+        id:payment?.id||null,
+        status:payment?.status||null,
+        value:payment?.value??null,
+        netValue:payment?.netValue??null,
+        pixQrCodeId:payment?.pixQrCodeId||null,
+        billingType:payment?.billingType||null,
+        paymentDate:payment?.paymentDate||null,
+        confirmedDate:payment?.confirmedDate||null,
+      }
+    },
   });
 
   if(error){
