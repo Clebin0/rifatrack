@@ -664,6 +664,39 @@ export type Database = {
         }
         Relationships: []
       }
+      system_events: {
+        Row: {
+          category: string
+          code: string
+          created_at: string
+          id: number
+          metadata: Json
+          request_id: string | null
+          route: string | null
+          severity: string
+        }
+        Insert: {
+          category: string
+          code: string
+          created_at?: string
+          id?: never
+          metadata?: Json
+          request_id?: string | null
+          route?: string | null
+          severity: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          created_at?: string
+          id?: never
+          metadata?: Json
+          request_id?: string | null
+          route?: string | null
+          severity?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -763,6 +796,7 @@ export type Database = {
         Args: { p_active: boolean; p_email: string; p_role: string }
         Returns: boolean
       }
+      admin_system_health_dashboard: { Args: never; Returns: Json }
       admin_team_dashboard: { Args: never; Returns: Json }
       admin_update_campaign: {
         Args: {
@@ -829,6 +863,18 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_admin_aal2: { Args: never; Returns: boolean }
       is_seller: { Args: never; Returns: boolean }
+      log_system_event_internal: {
+        Args: {
+          p_category: string
+          p_code: string
+          p_internal_secret: string
+          p_metadata?: Json
+          p_request_id: string
+          p_route: string
+          p_severity: string
+        }
+        Returns: boolean
+      }
       process_asaas_event: {
         Args: {
           p_event_id: string
