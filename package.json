@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "asaas:webhook": "node scripts/setup-asaas-webhook.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "smoke": "node scripts/smoke-production.mjs"
+    "smoke": "node scripts/smoke-production.mjs",
+    "backup:verify": "node scripts/verify-backup.mjs",
+    "backup:restore": "node scripts/restore-backup.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
