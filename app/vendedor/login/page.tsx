@@ -1,6 +1,7 @@
 "use client";
 import {FormEvent,useState} from "react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
+import {postLoginMfaRedirect} from "@/lib/mfa-browser";
 import {BadgeDollarSign} from "lucide-react";
 
 export default function SellerLogin(){
@@ -16,7 +17,7 @@ export default function SellerLogin(){
     }else{
       const {data,error}=await sb.auth.signUp({email,password});
       if(error)setMessage(error.message);
-      else if(data.session)location.href="/vendedor";
+      else if(data.session)await postLoginMfaRedirect("vendedor","/vendedor");
       else setMessage("Conta criada. Confirme o e-mail e depois entre com o código fornecido pela organização.");
     }
     setLoading(false);
