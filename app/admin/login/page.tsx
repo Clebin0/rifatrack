@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
+import { postLoginMfaRedirect } from "@/lib/mfa-browser";
 import { ShieldCheck } from "lucide-react";
 
 export default function AdminLogin(){
@@ -16,11 +17,11 @@ export default function AdminLogin(){
     if(mode==="login"){
       const {error}=await sb.auth.signInWithPassword({email,password});
       if(error) setMessage("E-mail ou senha inválidos.");
-      else location.href="/admin";
+      else await postLoginMfaRedirect("admin","/admin");
     }else{
       const {data,error}=await sb.auth.signUp({email,password});
       if(error) setMessage(error.message);
-      else if(data.session) location.href="/admin";
+      else if(data.session) await postLoginMfaRedirect("admin","/admin");
       else setMessage("Conta criada. Confirme o e-mail recebido e depois entre no painel.");
     }
     setLoading(false);
