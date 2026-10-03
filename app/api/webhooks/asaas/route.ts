@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { processNotificationBatch } from "@/lib/notifications";
+import { logSystemEvent, requestId } from "@/lib/observability";
 
 function safeEqual(a:string,b:string){
   const ah=createHash("sha256").update(a).digest();
@@ -15,25 +16,29 @@ function cents(value:unknown){
 }
 
 export async function POST(req:Request){
+  const rid=requestId(req);
+  const headers={"Cache-Control":"no-store","x-request-id":rid};
   const expected=process.env.ASAAS_WEBHOOK_TOKEN;
-  if(!expected || expected.length<32) return NextResponse.json({error:"Webhook não configurado"},{status:503});
+  if(!expected || expected.length<32){await logSystemEvent({requestId:rid,severity:"critical",category:"config",code:"ASAAS_WEBHOOK_TOKEN_MISSING",route:"/api/webhooks/asaas"});return NextResponse.json({error:"Webhook não configurado"},{status:503,headers})}
   const contentLength=Number(req.headers.get("content-length")||"0");
-  if(contentLength>262144) return NextResponse.json({error:"Payload muito grande"},{status:413});
+  if(contentLength>262144){await logSystemEvent({requestId:rid,severity:"warn",category:"security",code:"WEBHOOK_PAYLOAD_TOO_LARGE",route:"/api/webhooks/asaas"});return NextResponse.json({error:"Payload muito grande"},{status:413,headers})}
 
   const received=req.headers.get("asaas-access-token")||"";
   if(!received || !safeEqual(received,expected)){
-    return NextResponse.json({error:"Não autorizado"},{status:401});
+    await logSystemEvent({requestId:rid,severity:"warn",category:"security",code:"WEBHOOK_AUTH_FAILED",route:"/api/webhooks/asaas"});
+    return NextResponse.json({error:"Não autorizado"},{status:401,headers});
   }
 
   let body:any;
-  try{body=await req.json()}catch{return NextResponse.json({error:"JSON inválido"},{status:400})}
+  try{body=await req.json()}catch{await logSystemEvent({requestId:rid,severity:"warn",category:"payments",code:"WEBHOOK_INVALID_JSON",route:"/api/webhooks/asaas"});return NextResponse.json({error:"JSON inválido"},{status:400,headers})}
 
   const eventId=String(body?.id||"");
   const eventType=String(body?.event||"");
   const payment=body?.payment||{};
   const allowedEvents=new Set(["PAYMENT_RECEIVED","PAYMENT_CONFIRMED","PAYMENT_REFUNDED","PAYMENT_CHARGEBACK_REQUESTED","PAYMENT_CHARGEBACK_DISPUTE"]);
   if(!eventId || !allowedEvents.has(eventType)){
-    return NextResponse.json({error:"Evento inválido"},{status:400});
+    await logSystemEvent({requestId:rid,severity:"warn",category:"payments",code:"WEBHOOK_EVENT_REJECTED",route:"/api/webhooks/asaas"});
+    return NextResponse.json({error:"Evento inválido"},{status:400,headers});
   }
 
   const paidAtRaw=payment?.paymentDate || payment?.confirmedDate || body?.dateCreated || null;
@@ -43,7 +48,7 @@ export async function POST(req:Request){
     payment?.pixTransaction?.id ? String(payment.pixTransaction.id) : null;
 
   const secret=process.env.RIFATRACK_INTERNAL_API_SECRET;
-  if(!secret) return NextResponse.json({error:"Serviço indisponível"},{status:503});
+  if(!secret)return NextResponse.json({error:"Serviço indisponível"},{status:503,headers});
 
   const {data,error}=await supabaseServer().rpc("process_asaas_event",{
     p_internal_secret:secret,
@@ -73,8 +78,10 @@ export async function POST(req:Request){
   });
 
   if(error){
-    return NextResponse.json({error:"Falha ao registrar evento"},{status:500});
+    await logSystemEvent({requestId:rid,severity:"error",category:"payments",code:"WEBHOOK_PROCESSING_FAILED",route:"/api/webhooks/asaas",metadata:{event_type:eventType,event_id:eventId}});
+    return NextResponse.json({error:"Falha ao registrar evento"},{status:500,headers});
   }
   try{await processNotificationBatch(8)}catch{}
-  return NextResponse.json({ok:true,result:data},{status:200});
+  await logSystemEvent({requestId:rid,severity:"info",category:"payments",code:"WEBHOOK_PROCESSED",route:"/api/webhooks/asaas",metadata:{event_type:eventType,event_id:eventId}});
+  return NextResponse.json({ok:true,result:data},{status:200,headers});
 }
