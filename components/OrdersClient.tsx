@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {ArrowLeft,ChevronLeft,ChevronRight,Download,RefreshCw} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
+import {ensureMfa} from "@/lib/mfa-browser";
 
 type Campaign={id:string;name:string;slug:string};
 type Seller={id:string;name:string};
@@ -13,7 +14,7 @@ export default function OrdersClient(){
  const sb=()=>supabaseBrowser();const [page,setPage]=useState(1);const [data,setData]=useState<PageData|null>(null);const [meta,setMeta]=useState<{campaigns:Campaign[];sellers:Seller[]}|null>(null);const [loading,setLoading]=useState(true);
  const [search,setSearch]=useState("");const [status,setStatus]=useState("");const [campaign,setCampaign]=useState("");const [seller,setSeller]=useState("");const [from,setFrom]=useState("");const [to,setTo]=useState("");
  async function load(next=page){
-  setLoading(true);const client=sb();const {data:auth}=await client.auth.getSession();if(!auth.session){location.href="/admin/login";return}
+  setLoading(true);if(!(await ensureMfa("admin","/admin/pedidos")))return;const client=sb();
   if(!meta){const {data:d}=await client.rpc("admin_dashboard");if(d){const x=d as any;setMeta({campaigns:x.campaigns,sellers:Array.from(new Map((x.sellers as any[]).map(s=>[s.id,{id:s.id,name:s.name}])).values()) as Seller[]})}}
   const {data:d,error}=await client.rpc("admin_orders_page",{p_page:next,p_page_size:25,p_search:search,p_status:status,p_campaign_id:campaign||undefined,p_seller_id:seller||undefined,p_from:from?new Date(from+"T00:00:00").toISOString():undefined,p_to:to?new Date(new Date(to+"T00:00:00").getTime()+86400000).toISOString():undefined});
   if(!error){setData(d as PageData);setPage(next)}setLoading(false);
