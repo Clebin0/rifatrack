@@ -2,11 +2,12 @@
 import {useEffect,useMemo,useState} from "react";
 import {ArrowLeft,CheckCircle2,ChevronLeft,ChevronRight,RefreshCw} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
+import {ensureMfa} from "@/lib/mfa-browser";
 const input="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500";
 export default function CampaignWizard(){
  const [step,setStep]=useState(1);const [ready,setReady]=useState(false);const [saving,setSaving]=useState(false);const [message,setMessage]=useState("");
  const [form,setForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:"",ends_at:""});
- useEffect(()=>{supabaseBrowser().auth.getSession().then(({data})=>{if(!data.session)location.href="/admin/login";else setReady(true)})},[]);
+ useEffect(()=>{(async()=>{if(await ensureMfa("admin","/admin/nova-campanha"))setReady(true)})()},[]);
  const price=Math.round(Number(form.price.replace(",","."))*100);const total=Number(form.total);
  const valid1=form.name.trim().length>=3&&/^[a-z0-9-]{2,80}$/.test(form.slug)&&price>0&&total>0&&total<=100000;
  const totalPotential=useMemo(()=>price*total,[price,total]);
