@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
+import { processNotificationBatch } from "@/lib/notifications";
 
 function safeEqual(a:string,b:string){
   const ah=createHash("sha256").update(a).digest();
@@ -74,5 +75,6 @@ export async function POST(req:Request){
   if(error){
     return NextResponse.json({error:"Falha ao registrar evento"},{status:500});
   }
+  try{await processNotificationBatch(8)}catch{}
   return NextResponse.json({ok:true,result:data},{status:200});
 }
