@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase";
 import { orderSchema } from "@/lib/validation";
 import { asaasAutomaticEnabled, createAsaasPixQr } from "@/lib/asaas";
+import { processNotificationBatch } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -60,6 +61,8 @@ export async function POST(req: Request) {
       }
     }
 
+    await supabaseServer().rpc("enqueue_order_notification_internal",{p_internal_secret:secret,p_order_id:order.id,p_event:"reserved"});
+    try{await processNotificationBatch(4)}catch{}
     return NextResponse.json({ order }, { status: 201, headers: { "Cache-Control": "no-store", "Pragma":"no-cache" } });
   } catch {
     return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
