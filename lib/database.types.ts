@@ -14,18 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
+      admin_invites: {
         Row: {
+          code_hash: string
           created_at: string
+          created_by: string
           email: string
+          expires_at: string
+          id: string
+          role: string
+          used_at: string | null
         }
         Insert: {
+          code_hash: string
           created_at?: string
+          created_by: string
           email: string
+          expires_at?: string
+          id?: string
+          role: string
+          used_at?: string | null
         }
         Update: {
+          code_hash?: string
+          created_at?: string
+          created_by?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          role?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
           created_at?: string
           email?: string
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -182,30 +224,83 @@ export type Database = {
         }
         Relationships: []
       }
+      draw_commitments: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          eligible_count: number
+          paid_list_hash: string
+          revealed_at: string | null
+          seed_commitment: string
+          seed_secret: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          eligible_count: number
+          paid_list_hash: string
+          revealed_at?: string | null
+          seed_commitment: string
+          seed_secret: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          eligible_count?: number
+          paid_list_hash?: string
+          revealed_at?: string | null
+          seed_commitment?: string
+          seed_secret?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "draw_commitments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       draws: {
         Row: {
           actor_email: string
           campaign_id: string
           drawn_at: string
+          eligible_count: number | null
           id: string
+          method: string
           number: number
           order_id: string
+          paid_list_hash: string | null
+          seed_commitment: string | null
+          seed_reveal: string | null
         }
         Insert: {
           actor_email: string
           campaign_id: string
           drawn_at?: string
+          eligible_count?: number | null
           id?: string
+          method?: string
           number: number
           order_id: string
+          paid_list_hash?: string | null
+          seed_commitment?: string | null
+          seed_reveal?: string | null
         }
         Update: {
           actor_email?: string
           campaign_id?: string
           drawn_at?: string
+          eligible_count?: number | null
           id?: string
+          method?: string
           number?: number
           order_id?: string
+          paid_list_hash?: string | null
+          seed_commitment?: string | null
+          seed_reveal?: string | null
         }
         Relationships: [
           {
@@ -217,6 +312,62 @@ export type Database = {
           },
           {
             foreignKeyName: "draws_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_outbox: {
+        Row: {
+          attempts: number
+          channel: string
+          created_at: string
+          dedupe_key: string
+          id: string
+          last_error: string | null
+          next_attempt_at: string
+          order_id: string | null
+          payload: Json
+          recipient: string
+          sent_at: string | null
+          status: string
+          template: string
+        }
+        Insert: {
+          attempts?: number
+          channel?: string
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          order_id?: string | null
+          payload?: Json
+          recipient: string
+          sent_at?: string | null
+          status?: string
+          template: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          order_id?: string | null
+          payload?: Json
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+          template?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
@@ -519,6 +670,11 @@ export type Database = {
     }
     Functions: {
       admin_audit_dashboard: { Args: never; Returns: Json }
+      admin_backup_chunk: {
+        Args: { p_entity: string; p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      admin_backup_counts: { Args: never; Returns: Json }
       admin_bulk_sellers: {
         Args: { p_campaign_id: string; p_rows: Json }
         Returns: number
@@ -561,6 +717,10 @@ export type Database = {
         }
         Returns: string
       }
+      admin_create_team_invite: {
+        Args: { p_email: string; p_role: string }
+        Returns: Json
+      }
       admin_dashboard: { Args: never; Returns: Json }
       admin_draw_campaign: { Args: { p_campaign_id: string }; Returns: Json }
       admin_duplicate_campaign: {
@@ -568,6 +728,7 @@ export type Database = {
         Returns: string
       }
       admin_financial_dashboard: { Args: never; Returns: Json }
+      admin_notification_dashboard: { Args: never; Returns: Json }
       admin_orders_page: {
         Args: {
           p_campaign_id?: string
@@ -581,6 +742,7 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_role_aal2: { Args: { p_roles: string[] }; Returns: boolean }
       admin_set_campaign_status: {
         Args: { p_id: string; p_status: string }
         Returns: boolean
@@ -597,6 +759,11 @@ export type Database = {
         Args: { p_active: boolean; p_campaign_id: string; p_seller_id: string }
         Returns: boolean
       }
+      admin_set_team_member: {
+        Args: { p_active: boolean; p_email: string; p_role: string }
+        Returns: boolean
+      }
+      admin_team_dashboard: { Args: never; Returns: Json }
       admin_update_campaign: {
         Args: {
           p_description: string
@@ -636,10 +803,31 @@ export type Database = {
         }
         Returns: boolean
       }
+      claim_admin_invite: { Args: { p_code: string }; Returns: boolean }
       claim_first_admin: { Args: { p_code: string }; Returns: boolean }
+      claim_notification_batch_internal: {
+        Args: { p_internal_secret: string; p_limit?: number }
+        Returns: Json
+      }
       claim_seller_access: { Args: { p_code: string }; Returns: boolean }
+      current_admin_role: { Args: never; Returns: string }
+      enqueue_order_notification_internal: {
+        Args: { p_event: string; p_internal_secret: string; p_order_id: string }
+        Returns: number
+      }
+      finish_notification_internal: {
+        Args: {
+          p_error?: string
+          p_id: string
+          p_internal_secret: string
+          p_ok: boolean
+        }
+        Returns: boolean
+      }
+      has_admin_role: { Args: { p_roles: string[] }; Returns: boolean }
       internal_secret_ok: { Args: { p_secret: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_admin_aal2: { Args: never; Returns: boolean }
       is_seller: { Args: never; Returns: boolean }
       process_asaas_event: {
         Args: {
@@ -663,6 +851,7 @@ export type Database = {
         Returns: Json
       }
       public_draw_result: { Args: { p_slug: string }; Returns: Json }
+      public_draw_verification: { Args: { p_slug: string }; Returns: Json }
       public_order: { Args: { p_token: string }; Returns: Json }
       register_payment_proof: {
         Args: { p_path: string; p_token: string }
