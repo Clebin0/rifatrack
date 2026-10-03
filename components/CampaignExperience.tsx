@@ -100,7 +100,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
             <h1 className="text-4xl md:text-5xl font-black mt-2">{campaign.name}</h1>
             <p className="text-zinc-400 mt-3 max-w-2xl">{campaign.description || "Escolha seus números e acompanhe a confirmação do pedido em tempo real."}</p>
             {campaign.seller_name && <div className="mt-4 flex flex-wrap gap-2 items-center"><div className="inline-flex items-center gap-2 bg-emerald-950 border border-emerald-800 rounded-full px-4 py-2 text-sm">Indicação de <strong>{campaign.seller_name}</strong> <CheckCircle2 size={15}/></div>{sellerWhatsApp&&<a target="_blank" rel="noreferrer" href={"https://wa.me/"+sellerWhatsApp} className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm"><MessageCircle size={15}/> Falar com vendedor</a>}</div>}
-            {campaign.draw_result && <div className="mt-5 rounded-2xl border border-amber-700 bg-amber-950/50 p-5"><p className="text-amber-300 text-sm font-bold uppercase tracking-wider">Resultado oficial</p><p className="text-4xl font-black mt-2">Número {String(campaign.draw_result.number).padStart(3,"0")}</p><p className="text-zinc-400 text-sm mt-1">Sorteado em {new Date(campaign.draw_result.drawn_at).toLocaleString("pt-BR")}.</p></div>}
+            {campaign.draw_result && <div className="mt-5 rounded-2xl border border-amber-700 bg-amber-950/50 p-5"><p className="text-amber-300 text-sm font-bold uppercase tracking-wider">Resultado oficial</p><p className="text-4xl font-black mt-2">Número {String(campaign.draw_result.number).padStart(3,"0")}</p><p className="text-zinc-400 text-sm mt-1">Sorteado em {new Date(campaign.draw_result.drawn_at).toLocaleString("pt-BR")}.</p><a href={"/campanha/"+campaign.slug+"/transparencia"} className="inline-block mt-3 text-sm text-amber-300 underline">Ver prova criptográfica do sorteio</a></div>}
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
@@ -127,7 +127,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
 
         <aside className="lg:sticky lg:top-24 h-fit bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
           <h2 className="text-xl font-bold">{campaign.status==="active"?"Seu pedido":"Campanha encerrada"}</h2>
-          {campaign.status==="closed" && <p className="text-zinc-400 text-sm mt-3">{campaign.draw_result?"O resultado do sorteio está publicado nesta página.":"O sorteio ainda não foi realizado pelo administrador."}</p>}
+          {campaign.status==="closed" && <><p className="text-zinc-400 text-sm mt-3">{campaign.draw_result?"O resultado do sorteio está publicado nesta página.":"O sorteio ainda não foi realizado pelo administrador."}</p><a href={"/campanha/"+campaign.slug+"/transparencia"} className="inline-block mt-3 text-sm text-emerald-400 underline">Transparência e integridade do sorteio</a></>}
           {campaign.status==="active" && <>
           <div className="mt-4 rounded-2xl bg-zinc-950 p-4 border border-zinc-800">
             <div className="flex justify-between text-sm text-zinc-400"><span>Números</span><span>{selected.length}</span></div>
