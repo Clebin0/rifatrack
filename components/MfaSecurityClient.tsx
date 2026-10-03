@@ -30,7 +30,7 @@ export default function MfaSecurityClient({area,defaultReturn}:Props){
       client.auth.mfa.getAuthenticatorAssuranceLevel(),
       client.auth.mfa.listFactors()
     ]);
-    setCurrent(aal.data.currentLevel||null);
+    setCurrent(aal.data?.currentLevel||null);
     const totp=(list.data?.totp||[]) as Factor[];
     setFactors(totp.filter(f=>f.status==="verified"));
     setLoading(false);
