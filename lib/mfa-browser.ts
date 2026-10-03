@@ -19,7 +19,7 @@ export async function ensureMfa(area:"admin"|"vendedor", returnTo:string){
 export async function postLoginMfaRedirect(area:"admin"|"vendedor", returnTo:string){
   const sb=supabaseBrowser();
   const {data}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-  if(data.currentLevel==="aal2"){
+  if(data?.currentLevel==="aal2"){
     location.href=returnTo;
     return;
   }
