@@ -3,6 +3,7 @@ import {FormEvent,useEffect,useMemo,useState} from "react";
 import QRCode from "qrcode";
 import {Copy,Download,LogOut,RefreshCw,Target,Ticket,Users,WalletCards} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
+import {ensureMfa} from "@/lib/mfa-browser";
 
 type Campaign={id:string;name:string;slug:string;status:string;price_cents:number;total_numbers:number;goal:number;active:boolean;sold_numbers:number;revenue_cents:number;created_at:string};
 type Order={id:string;public_token:string;buyer_name:string;buyer_phone:string;status:string;amount_cents:number;payment_reference:string;created_at:string;provider_paid_at:string|null;campaign_name:string;campaign_slug:string;numbers:number[]};
@@ -15,8 +16,7 @@ export default function SellerDashboard(){
   const [claim,setClaim]=useState(false);const [code,setCode]=useState("");const [message,setMessage]=useState("");const [search,setSearch]=useState("");
   async function load(){
     setLoading(true);setMessage("");
-    const {data:auth}=await sb().auth.getSession();
-    if(!auth.session){location.href="/vendedor/login";return}
+    if(!(await ensureMfa("vendedor","/vendedor"))) return;
     const {data:d,error}=await sb().rpc("seller_dashboard");
     if(error){setClaim(true);setData(null)}else{setClaim(false);setData(d as Data)}
     setLoading(false);
