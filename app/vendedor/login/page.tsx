@@ -12,7 +12,7 @@ export default function SellerLogin(){
     const sb=supabaseBrowser();
     if(mode==="login"){
       const {error}=await sb.auth.signInWithPassword({email,password});
-      if(error)setMessage("E-mail ou senha inválidos.");else location.href="/vendedor";
+      if(error)setMessage("E-mail ou senha inválidos.");else await postLoginMfaRedirect("vendedor","/vendedor");
     }else{
       const {data,error}=await sb.auth.signUp({email,password});
       if(error)setMessage(error.message);
