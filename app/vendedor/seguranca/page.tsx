@@ -1,0 +1,1 @@
+import MfaSecurityClient from "@/components/MfaSecurityClient";export default function SellerSecurityPage(){return <MfaSecurityClient area="vendedor" defaultReturn="/vendedor"/>}
