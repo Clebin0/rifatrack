@@ -5,7 +5,7 @@ import { Download, LogOut, Plus, RefreshCw, Ticket, Users, WalletCards, Trophy, 
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { ensureMfa } from "@/lib/mfa-browser";
 
-type Campaign={id:string;name:string;slug:string;description:string;price_cents:number;total_numbers:number;status:"draft"|"active"|"closed";pix_key:string;pix_receiver:string;ends_at:string|null;sold_numbers:number;reserved_numbers:number;revenue_cents:number;created_at:string;draw_number:number|null;drawn_at:string|null};
+type Campaign={id:string;name:string;slug:string;description:string;price_cents:number;total_numbers:number;status:"draft"|"active"|"closed";pix_key:string;pix_receiver:string;ends_at:string|null;deadline_reached:boolean;finalized_at:string|null;finalized_by:string|null;sold_numbers:number;reserved_numbers:number;revenue_cents:number;created_at:string;draw_number:number|null;drawn_at:string|null};
 type Seller={campaign_id:string;campaign_name:string;campaign_slug:string;id:string;name:string;code:string;team:string;whatsapp:string;goal:number;active:boolean;sold_numbers:number;revenue_cents:number};
 type Order={id:string;public_token:string;buyer_name:string;buyer_phone:string;buyer_email:string;status:string;amount_cents:number;payment_reference:string;pix_txid:string;expires_at:string;created_at:string;campaign_name:string;campaign_slug:string;seller_name:string|null;proof_path:string|null;proof_status:"none"|"submitted"|"approved"|"rejected";proof_uploaded_at:string|null;payment_provider:string;provider_qr_id:string|null;provider_payment_id:string|null;provider_status:string|null;provider_paid_at:string|null;provider_net_value_cents:number|null;pix_transaction_id:string|null;numbers:number[]};
 type AdminRole="owner"|"admin"|"financeiro"|"operador"|"auditor";
@@ -14,6 +14,12 @@ type Dashboard={admin_email:string;admin_role:AdminRole;summary:{campaigns:numbe
 const money=(c:number)=>"R$ "+(c/100).toFixed(2).replace(".",",");
 const input="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500";
 const panel="bg-zinc-900 border border-zinc-800 rounded-3xl p-5";
+const toDateTimeLocal=(value:string|null)=>{
+  if(!value)return "";
+  const d=new Date(value);
+  const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+  return local.toISOString().slice(0,16);
+};
 
 export default function AdminClient(){
   const getSb=()=>supabaseBrowser();
@@ -27,9 +33,9 @@ export default function AdminClient(){
   const [campaignFilter,setCampaignFilter]=useState("");
   const [sellerFilter,setSellerFilter]=useState("");
   const [paymentHealth,setPaymentHealth]=useState<{provider:string;environment:string;configured:boolean;automatic:boolean}|null>(null);
-  const [campaignForm,setCampaignForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:""});
+  const [campaignForm,setCampaignForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:"",ends_at:""});
   const [sellerForm,setSellerForm]=useState({campaign_id:"",name:"",code:"",team:"",whatsapp:"",goal:"30"});
-  const [edit,setEdit]=useState({id:"",name:"",description:"",price:"",pix_key:"",pix_receiver:""});
+  const [edit,setEdit]=useState({id:"",name:"",description:"",price:"",pix_key:"",pix_receiver:"",ends_at:""});
 
   async function load(){
     setLoading(true); setMessage("");
@@ -39,7 +45,7 @@ export default function AdminClient(){
     if(error){setUnauthorized(true);setData(null);}else{
       const d=dashboard as Dashboard; setData(d);setUnauthorized(false);
       if(!sellerForm.campaign_id&&d.campaigns[0]) setSellerForm(x=>({...x,campaign_id:d.campaigns[0].id}));
-      if(!edit.id&&d.campaigns[0]) setEdit({id:d.campaigns[0].id,name:d.campaigns[0].name,description:d.campaigns[0].description,price:(d.campaigns[0].price_cents/100).toFixed(2),pix_key:d.campaigns[0].pix_key,pix_receiver:d.campaigns[0].pix_receiver});
+      if(!edit.id&&d.campaigns[0]) setEdit({id:d.campaigns[0].id,name:d.campaigns[0].name,description:d.campaigns[0].description,price:(d.campaigns[0].price_cents/100).toFixed(2),pix_key:d.campaigns[0].pix_key,pix_receiver:d.campaigns[0].pix_receiver,ends_at:toDateTimeLocal(d.campaigns[0].ends_at)});
     }
     setLoading(false);
   }
@@ -60,21 +66,39 @@ export default function AdminClient(){
     const {error}=await getSb().rpc("admin_create_campaign",{
       p_name:campaignForm.name,p_slug:campaignForm.slug.toLowerCase().replace(/[^a-z0-9-]/g,"-"),
       p_description:campaignForm.description,p_price_cents:Math.round(Number(campaignForm.price.replace(",","."))*100),
-      p_total_numbers:Number(campaignForm.total),p_pix_key:campaignForm.pix_key,p_pix_receiver:campaignForm.pix_receiver
+      p_total_numbers:Number(campaignForm.total),p_pix_key:campaignForm.pix_key,p_pix_receiver:campaignForm.pix_receiver,
+      p_ends_at:campaignForm.ends_at?new Date(campaignForm.ends_at).toISOString():undefined
     });
     if(error)setMessage("Não foi possível criar a campanha: "+error.message);
-    else{setCampaignForm({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:""});setMessage("Campanha criada em rascunho.");await load();}
+    else{setCampaignForm({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:"",ends_at:""});setMessage("Campanha criada em rascunho.");await load();}
   }
 
   async function saveCampaign(e:FormEvent){
     e.preventDefault();setMessage("");
-    const {error}=await getSb().rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver});
+    const {error}=await getSb().rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver,p_ends_at:edit.ends_at?new Date(edit.ends_at).toISOString():undefined});
     if(error)setMessage("Falha ao salvar campanha."); else{setMessage("Campanha atualizada.");await load();}
   }
 
-  async function statusCampaign(id:string,status:"draft"|"active"|"closed"){
+  async function statusCampaign(id:string,status:"draft"|"active"){
     const {error}=await getSb().rpc("admin_set_campaign_status",{p_id:id,p_status:status});
-    if(error)setMessage("Falha ao alterar status."); else await load();
+    if(error){
+      const msg=error.message||"";
+      setMessage(msg.includes("deadline required")?"Defina o prazo final antes de ativar a campanha.":msg.includes("deadline reached")?"O prazo desta campanha já terminou. Ajuste a data antes de ativar.":"Falha ao alterar status.");
+    } else await load();
+  }
+
+  async function finalizeCampaign(campaign:Campaign){
+    const pending=data?.orders.filter(o=>o.campaign_slug===campaign.slug&&o.status==="pending").length||0;
+    const warning=pending>0?"\n\nExistem "+pending+" pedido(s) pendente(s). Eles precisam expirar ou ser resolvidos antes da finalização.":"";
+    if(!confirm("Finalizar a campanha \""+campaign.name+"\"?\n\nIsso encerra definitivamente novas vendas, congela os números pagos e prepara a campanha para o sorteio."+warning))return;
+    const {error}=await getSb().rpc("admin_set_campaign_status",{p_id:campaign.id,p_status:"closed"});
+    if(error){
+      const msg=error.message||"";
+      setMessage(msg.includes("pending orders exist")?"Ainda existem pedidos pendentes. Aguarde a expiração ou resolva-os antes de finalizar.":"Não foi possível finalizar a campanha: "+msg);
+    }else{
+      setMessage("Campanha finalizada. As vendas foram encerradas e a lista de números pagos foi congelada.");
+      await load();
+    }
   }
 
   async function drawCampaign(id:string,name:string){
@@ -191,7 +215,7 @@ export default function AdminClient(){
   if(unauthorized)return <main className="min-h-screen grid place-items-center p-5"><form onSubmit={claimAdmin} className={panel+" w-full max-w-md"}><h1 className="text-2xl font-black">Ativar acesso administrativo</h1><p className="text-zinc-500 text-sm mt-2">Use o código de implantação inicial ou um convite de equipe emitido pelo proprietário.</p><input value={setupCode} onChange={e=>setSetupCode(e.target.value)} placeholder="Código de implantação" className={input+" mt-5"}/><button className="w-full mt-3 p-3 rounded-xl bg-emerald-400 text-emerald-950 font-black">Ativar acesso</button>{message&&<p className="text-sm mt-3">{message}</p>}</form></main>;
   if(!data)return null;
 
-  function pickEdit(id:string){const c=data!.campaigns.find(x=>x.id===id);if(c)setEdit({id:c.id,name:c.name,description:c.description,price:(c.price_cents/100).toFixed(2),pix_key:c.pix_key,pix_receiver:c.pix_receiver});}
+  function pickEdit(id:string){const c=data!.campaigns.find(x=>x.id===id);if(c)setEdit({id:c.id,name:c.name,description:c.description,price:(c.price_cents/100).toFixed(2),pix_key:c.pix_key,pix_receiver:c.pix_receiver,ends_at:toDateTimeLocal(c.ends_at)});}
   const role=data.admin_role;
   const canCampaignWrite=role==="owner"||role==="admin";
   const canOperate=role==="owner"||role==="admin"||role==="operador";
@@ -221,12 +245,12 @@ export default function AdminClient(){
       </section>
 
       {canCampaignWrite&&<section className="grid xl:grid-cols-2 gap-5">
-        <form onSubmit={createCampaign} className={panel+" space-y-3"}><h2 className="text-xl font-black flex gap-2 items-center"><Plus size={20}/> Nova campanha</h2><div className="grid sm:grid-cols-2 gap-3"><input required placeholder="Nome" value={campaignForm.name} onChange={e=>setCampaignForm({...campaignForm,name:e.target.value})} className={input}/><input required placeholder="slug-exemplo" value={campaignForm.slug} onChange={e=>setCampaignForm({...campaignForm,slug:e.target.value})} className={input}/></div><textarea placeholder="Descrição" value={campaignForm.description} onChange={e=>setCampaignForm({...campaignForm,description:e.target.value})} className={input}/><div className="grid sm:grid-cols-2 gap-3"><input required type="number" min="0.01" step="0.01" placeholder="Preço" value={campaignForm.price} onChange={e=>setCampaignForm({...campaignForm,price:e.target.value})} className={input}/><input required type="number" min="1" max="100000" placeholder="Quantidade de números" value={campaignForm.total} onChange={e=>setCampaignForm({...campaignForm,total:e.target.value})} className={input}/></div><div className="grid sm:grid-cols-2 gap-3"><input placeholder="Chave Pix" value={campaignForm.pix_key} onChange={e=>setCampaignForm({...campaignForm,pix_key:e.target.value})} className={input}/><input placeholder="Recebedor Pix" value={campaignForm.pix_receiver} onChange={e=>setCampaignForm({...campaignForm,pix_receiver:e.target.value})} className={input}/></div><button className="bg-white text-black rounded-xl px-4 py-3 font-bold">Criar campanha</button></form>
+        <form onSubmit={createCampaign} className={panel+" space-y-3"}><h2 className="text-xl font-black flex gap-2 items-center"><Plus size={20}/> Nova campanha</h2><div className="grid sm:grid-cols-2 gap-3"><input required placeholder="Nome" value={campaignForm.name} onChange={e=>setCampaignForm({...campaignForm,name:e.target.value})} className={input}/><input required placeholder="slug-exemplo" value={campaignForm.slug} onChange={e=>setCampaignForm({...campaignForm,slug:e.target.value})} className={input}/></div><textarea placeholder="Descrição" value={campaignForm.description} onChange={e=>setCampaignForm({...campaignForm,description:e.target.value})} className={input}/><div className="grid sm:grid-cols-2 gap-3"><input required type="number" min="0.01" step="0.01" placeholder="Preço" value={campaignForm.price} onChange={e=>setCampaignForm({...campaignForm,price:e.target.value})} className={input}/><input required type="number" min="1" max="100000" placeholder="Quantidade de números" value={campaignForm.total} onChange={e=>setCampaignForm({...campaignForm,total:e.target.value})} className={input}/></div><div className="grid sm:grid-cols-2 gap-3"><input placeholder="Chave Pix" value={campaignForm.pix_key} onChange={e=>setCampaignForm({...campaignForm,pix_key:e.target.value})} className={input}/><input placeholder="Recebedor Pix" value={campaignForm.pix_receiver} onChange={e=>setCampaignForm({...campaignForm,pix_receiver:e.target.value})} className={input}/></div><label className="block"><span className="text-xs text-zinc-500">Prazo final da campanha</span><input required type="datetime-local" value={campaignForm.ends_at} onChange={e=>setCampaignForm({...campaignForm,ends_at:e.target.value})} className={input+" mt-1"}/></label><button className="bg-white text-black rounded-xl px-4 py-3 font-bold">Criar campanha</button></form>
 
-        <form onSubmit={saveCampaign} className={panel+" space-y-3"}><h2 className="text-xl font-black">Configurar campanha</h2><select value={edit.id} onChange={e=>pickEdit(e.target.value)} className={input}>{data.campaigns.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><input required value={edit.name} onChange={e=>setEdit({...edit,name:e.target.value})} className={input}/><textarea placeholder="Descrição" value={edit.description} onChange={e=>setEdit({...edit,description:e.target.value})} className={input}/><div className="grid sm:grid-cols-2 gap-3"><input required type="number" min="0.01" step="0.01" value={edit.price} onChange={e=>setEdit({...edit,price:e.target.value})} className={input}/><input placeholder="Chave Pix" value={edit.pix_key} onChange={e=>setEdit({...edit,pix_key:e.target.value})} className={input}/></div><input placeholder="Recebedor Pix" value={edit.pix_receiver} onChange={e=>setEdit({...edit,pix_receiver:e.target.value})} className={input}/><button className="bg-emerald-400 text-emerald-950 rounded-xl px-4 py-3 font-black">Salvar configurações</button></form>
+        <form onSubmit={saveCampaign} className={panel+" space-y-3"}><h2 className="text-xl font-black">Configurar campanha</h2><select value={edit.id} onChange={e=>pickEdit(e.target.value)} className={input}>{data.campaigns.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><input required value={edit.name} onChange={e=>setEdit({...edit,name:e.target.value})} className={input}/><textarea placeholder="Descrição" value={edit.description} onChange={e=>setEdit({...edit,description:e.target.value})} className={input}/><div className="grid sm:grid-cols-2 gap-3"><input required type="number" min="0.01" step="0.01" value={edit.price} onChange={e=>setEdit({...edit,price:e.target.value})} className={input}/><input placeholder="Chave Pix" value={edit.pix_key} onChange={e=>setEdit({...edit,pix_key:e.target.value})} className={input}/></div><input placeholder="Recebedor Pix" value={edit.pix_receiver} onChange={e=>setEdit({...edit,pix_receiver:e.target.value})} className={input}/><label className="block"><span className="text-xs text-zinc-500">Prazo final da campanha</span><input required type="datetime-local" value={edit.ends_at} onChange={e=>setEdit({...edit,ends_at:e.target.value})} className={input+" mt-1"}/></label><button className="bg-emerald-400 text-emerald-950 rounded-xl px-4 py-3 font-black">Salvar configurações</button></form>
       </section>}
 
-      <section className={panel}><h2 className="text-xl font-black mb-4">Campanhas</h2><div className="grid lg:grid-cols-2 gap-3">{data.campaigns.map(c=><div key={c.id} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><div className="flex justify-between gap-3"><div><h3 className="font-bold text-lg">{c.name}</h3><p className="text-xs text-zinc-500">/{c.slug} · {c.status}</p></div><strong>{money(c.revenue_cents)}</strong></div><div className="mt-4 h-2 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{width:Math.round(c.sold_numbers/c.total_numbers*100)+"%"}}/></div><p className="text-xs text-zinc-500 mt-2">{c.sold_numbers} pagos · {c.reserved_numbers} reservados · {c.total_numbers} total</p><div className="flex flex-wrap gap-2 mt-4">{canOperate&&c.status!=="active"&&<button onClick={()=>statusCampaign(c.id,"active")} className="px-3 py-2 bg-emerald-950 text-emerald-300 rounded-lg text-sm">Ativar</button>}{canOperate&&c.status==="active"&&<button onClick={()=>statusCampaign(c.id,"closed")} className="px-3 py-2 bg-rose-950 text-rose-300 rounded-lg text-sm">Encerrar</button>}{canDraw&&c.status==="closed"&&c.sold_numbers>0&&!c.draw_number&&<button onClick={()=>drawCampaign(c.id,c.name)} className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1"><Trophy size={14}/> Sortear</button>}{c.draw_number&&<span className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1"><Trophy size={14}/> Sorteado: {String(c.draw_number).padStart(3,"0")}</span>}{canCampaignWrite&&<button onClick={()=>pickEdit(c.id)} className="px-3 py-2 bg-zinc-800 rounded-lg text-sm">Editar acima</button>}{canOperate&&<button onClick={()=>duplicateCampaign(c)} className="px-3 py-2 bg-zinc-800 rounded-lg text-sm">Duplicar</button>}<a target="_blank" href={"/campanha/"+c.slug} className="px-3 py-2 bg-zinc-800 rounded-lg text-sm">Abrir página</a></div></div>)}</div></section>
+      <section className={panel}><h2 className="text-xl font-black mb-4">Campanhas</h2><div className="grid lg:grid-cols-2 gap-3">{data.campaigns.map(c=><div key={c.id} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"><div className="flex justify-between gap-3"><div><h3 className="font-bold text-lg">{c.name}</h3><p className="text-xs text-zinc-500">/{c.slug} · {c.status}</p></div><strong>{money(c.revenue_cents)}</strong></div><div className="mt-4 h-2 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{width:Math.round(c.sold_numbers/c.total_numbers*100)+"%"}}/></div><p className="text-xs text-zinc-500 mt-2">{c.sold_numbers} pagos · {c.reserved_numbers} reservados · {c.total_numbers} total</p><p className={"text-xs mt-2 "+(c.deadline_reached&&!c.finalized_at?"text-amber-300":"text-zinc-500")}>Prazo: {c.ends_at?new Date(c.ends_at).toLocaleString("pt-BR"):"não definido"}{c.finalized_at?" · finalizada em "+new Date(c.finalized_at).toLocaleString("pt-BR"):c.deadline_reached?" · prazo encerrado, aguardando finalização":""}</p><div className="flex flex-wrap gap-2 mt-4">{canOperate&&c.status!=="active"&&!c.finalized_at&&!c.deadline_reached&&<button onClick={()=>statusCampaign(c.id,"active")} className="px-3 py-2 bg-emerald-950 text-emerald-300 rounded-lg text-sm">Ativar</button>}{canOperate&&!c.finalized_at&&(c.status==="active"||c.deadline_reached)&&<button onClick={()=>finalizeCampaign(c)} className="px-3 py-2 bg-rose-950 text-rose-300 rounded-lg text-sm font-bold">Finalizar campanha</button>}{canDraw&&c.finalized_at&&c.sold_numbers>0&&!c.draw_number&&<button onClick={()=>drawCampaign(c.id,c.name)} className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1"><Trophy size={14}/> Sortear</button>}{c.draw_number&&<span className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1"><Trophy size={14}/> Sorteado: {String(c.draw_number).padStart(3,"0")}</span>}{canCampaignWrite&&!c.finalized_at&&<button onClick={()=>pickEdit(c.id)} className="px-3 py-2 bg-zinc-800 rounded-lg text-sm">Editar acima</button>}{canOperate&&<button onClick={()=>duplicateCampaign(c)} className="px-3 py-2 bg-zinc-800 rounded-lg text-sm">Duplicar</button>}<a target="_blank" href={"/campanha/"+c.slug} className="px-3 py-2 bg-zinc-800 rounded-lg text-sm">Abrir página</a></div></div>)}</div></section>
 
       {canOperate&&<section className="grid xl:grid-cols-[360px_1fr] gap-5">
         <form onSubmit={createSeller} className={panel+" h-fit space-y-3"}><h2 className="text-xl font-black">Adicionar vendedor</h2><select required value={sellerForm.campaign_id} onChange={e=>setSellerForm({...sellerForm,campaign_id:e.target.value})} className={input}>{data.campaigns.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><input required placeholder="Nome" value={sellerForm.name} onChange={e=>setSellerForm({...sellerForm,name:e.target.value})} className={input}/><input required placeholder="Código (ex: JOAO)" value={sellerForm.code} onChange={e=>setSellerForm({...sellerForm,code:e.target.value.toUpperCase()})} className={input}/><input placeholder="Equipe / grupo" value={sellerForm.team} onChange={e=>setSellerForm({...sellerForm,team:e.target.value})} className={input}/><input placeholder="WhatsApp do vendedor" value={sellerForm.whatsapp} onChange={e=>setSellerForm({...sellerForm,whatsapp:e.target.value})} className={input}/><input required type="number" min="0" placeholder="Meta de números" value={sellerForm.goal} onChange={e=>setSellerForm({...sellerForm,goal:e.target.value})} className={input}/><button className="bg-white text-black rounded-xl px-4 py-3 font-bold">Cadastrar</button><label className="block text-center cursor-pointer bg-zinc-800 rounded-xl px-4 py-3 font-bold text-sm">Importar CSV<input type="file" accept=".csv,text/csv" className="hidden" onChange={e=>{const file=e.target.files?.[0];if(file)importSellers(file);e.currentTarget.value=""}}/></label><p className="text-xs text-zinc-500">CSV: nome;codigo;equipe;whatsapp;meta</p></form>

@@ -181,6 +181,8 @@ export type Database = {
           created_at: string
           description: string
           ends_at: string | null
+          finalized_at: string | null
+          finalized_by: string | null
           id: string
           name: string
           pix_city: string
@@ -196,6 +198,8 @@ export type Database = {
           created_at?: string
           description?: string
           ends_at?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
           id?: string
           name: string
           pix_city?: string
@@ -211,6 +215,8 @@ export type Database = {
           created_at?: string
           description?: string
           ends_at?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
           id?: string
           name?: string
           pix_city?: string

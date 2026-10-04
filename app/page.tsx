@@ -1,4 +1,4 @@
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, Clock3, ShieldCheck } from "lucide-react";
 import { supabaseServer } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +31,7 @@ export default async function Home(){
             <p className="text-zinc-500 text-sm mt-2 line-clamp-2">{c.description || "Participe escolhendo seus números."}</p>
             <div className="h-2 bg-zinc-800 rounded-full mt-6 overflow-hidden"><div className="h-full bg-emerald-500" style={{width:progress+"%"}}/></div>
             <div className="flex justify-between mt-3 text-sm"><span>{c.sold_numbers}/{c.total_numbers} vendidos</span><strong>R$ {(c.price_cents/100).toFixed(2).replace(".",",")}</strong></div>
+            {c.ends_at&&<p className="mt-3 text-xs text-zinc-500 flex gap-2 items-center"><Clock3 size={14}/> Participações até {new Date(c.ends_at).toLocaleString("pt-BR")}</p>}
             <span className="inline-flex gap-2 items-center mt-5 font-bold group-hover:text-emerald-400">Participar <ArrowRight size={18}/></span>
           </a>})}</div>}
       </div>
