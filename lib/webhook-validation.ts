@@ -34,3 +34,18 @@ export function validDate(value: string | null | undefined) {
 export function cents(value: number | null | undefined) {
   return value == null ? null : Math.round(value * 100);
 }
+
+// A day-only or timezone-less value cannot prove a ten-minute payment deadline.
+// Receipt time is conservative: events delivered during the grace period go to review.
+export function paymentTimestamp(values: (string | null | undefined)[], receivedAt = new Date()) {
+  for (const value of values) {
+    if (
+      value &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
+    ) {
+      const precise = validDate(value);
+      if (precise) return precise;
+    }
+  }
+  return receivedAt.toISOString();
+}

@@ -250,7 +250,7 @@ begin
  if p_event_type='PAYMENT_RECEIVED' then
  if o.provider_status in('PAYMENT_REFUNDED','PAYMENT_CHARGEBACK_REQUESTED','PAYMENT_CHARGEBACK_DISPUTE') then note:='TERMINAL_PAYMENT_REVIEW_REQUIRED';
  elsif o.status='paid' then note:='already_paid';
- elsif o.status<>'pending' or final_at is not null or p_paid_at is null or p_paid_at>o.expires_at or now()>o.expires_at+interval '2 minutes' then
+ elsif o.status<>'pending' or final_at is not null or p_paid_at is null or p_paid_at<o.created_at or p_paid_at>o.expires_at or now()>o.expires_at+interval '2 minutes' then
  note:='PAYMENT_RECEIVED_AFTER_LOCAL_CLOSE';
  else
  expected_count:=o.amount_cents/(select price_cents from campaigns where id=cid);

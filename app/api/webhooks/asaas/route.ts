@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { after, NextResponse } from "next/server";
 import { supabaseInternal } from "@/lib/supabase";
-import { webhookSchema, validDate, cents } from "@/lib/webhook-validation";
+import { webhookSchema, validDate, paymentTimestamp, cents } from "@/lib/webhook-validation";
 import { logSystemEvent, requestId } from "@/lib/observability";
 export async function POST(req: Request) {
   const rid = requestId(req),
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401, headers });
   try {
     const raw = await req.text();
-    if (raw.length > 262144)
+    if (new TextEncoder().encode(raw).length > 262144)
       return NextResponse.json({ error: "Payload muito grande" }, { status: 413, headers });
     let json: unknown;
     try {
@@ -33,10 +33,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Evento inválido" }, { status: 400, headers });
     const body = parsed.data,
       payment = body.payment;
-    const dateRaw = payment.paymentDate || payment.confirmedDate || body.dateCreated;
-    const paidAt = validDate(dateRaw);
-    if (dateRaw && !paidAt)
+    const dates = [payment.paymentDate, payment.confirmedDate, body.dateCreated];
+    if (dates.some((value) => value && !validDate(value)))
       return NextResponse.json({ error: "Data inválida" }, { status: 400, headers });
+    const paidAt = paymentTimestamp(dates);
     const pixId =
       typeof payment.pixTransaction === "string"
         ? payment.pixTransaction
