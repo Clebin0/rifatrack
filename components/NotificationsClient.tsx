@@ -2,14 +2,14 @@
 import {useEffect,useState} from "react";
 import {ArrowLeft,Mail,RefreshCw,Send} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureMfa} from "@/lib/mfa-browser";
+import {ensureSession} from "@/lib/mfa-browser";
 
 type Item={id:string;recipient:string;template:string;status:string;attempts:number;last_error:string|null;created_at:string;sent_at:string|null;next_attempt_at:string};
 type Data={summary:{pending:number;failed:number;sent:number;processing:number};items:Item[]};
 
 export default function NotificationsClient(){
  const [data,setData]=useState<Data|null>(null);const [loading,setLoading]=useState(true);const [message,setMessage]=useState("");const [configured,setConfigured]=useState<boolean|null>(null);
- async function load(){setLoading(true);if(!(await ensureMfa("admin","/admin/notificacoes")))return;const sb=supabaseBrowser();const [{data:d,error},status]=await Promise.all([sb.rpc("admin_notification_dashboard"),fetch("/api/integrations/notifications-status",{cache:"no-store"}).then(r=>r.json()).catch(()=>null)]);if(!error)setData(d as Data);setConfigured(Boolean(status?.configured));setLoading(false)}
+ async function load(){setLoading(true);if(!(await ensureSession("admin","/admin/notificacoes"))){setLoading(false);return;}const sb=supabaseBrowser();const [{data:d,error},status]=await Promise.all([sb.rpc("admin_notification_dashboard"),fetch("/api/integrations/notifications-status",{cache:"no-store"}).then(r=>r.json()).catch(()=>null)]);if(!error)setData(d as Data);setConfigured(Boolean(status?.configured));setLoading(false)}
  useEffect(()=>{load()},[]);
  async function processQueue(){setMessage("");const sb=supabaseBrowser();const {data:s}=await sb.auth.getSession();const token=s.session?.access_token;if(!token)return;const r=await fetch("/api/admin/notifications/process",{method:"POST",headers:{Authorization:"Bearer "+token}});const body=await r.json();if(!r.ok)setMessage(body.error||"Falha ao processar.");else setMessage(`Processadas ${body.processed}; enviadas ${body.sent}; falharam ${body.failed}.`);await load()}
  if(loading)return <main className="min-h-screen grid place-items-center bg-zinc-950"><RefreshCw className="animate-spin"/></main>;

@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {ArrowLeft,RefreshCw,ShieldAlert,TriangleAlert} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureMfa} from "@/lib/mfa-browser";
+import {ensureSession} from "@/lib/mfa-browser";
 
 type Event={id:number;request_id:string|null;severity:"info"|"warn"|"error"|"critical";category:string;code:string;route:string|null;metadata:Record<string,unknown>;created_at:string};
 type Top={code:string;count_value:number;last_seen:string};
@@ -10,7 +10,7 @@ type Data={summary:{errors_24h:number;warnings_24h:number;payment_alerts_24h:num
 
 export default function ObservabilityClient(){
  const [data,setData]=useState<Data|null>(null);const [loading,setLoading]=useState(true);const [severity,setSeverity]=useState("");const [search,setSearch]=useState("");
- async function load(){setLoading(true);if(!(await ensureMfa("admin","/admin/observabilidade")))return;const {data:d}=await supabaseBrowser().rpc("admin_system_health_dashboard");setData((d as Data)||null);setLoading(false)}
+ async function load(){setLoading(true);if(!(await ensureSession("admin","/admin/observabilidade"))){setLoading(false);return;}const {data:d}=await supabaseBrowser().rpc("admin_system_health_dashboard");setData((d as Data)||null);setLoading(false)}
  useEffect(()=>{load()},[]);
  const events=useMemo(()=>data?.recent_events.filter(e=>(!severity||e.severity===severity)&&[e.code,e.category,e.route||"",e.request_id||""].join(" ").toLowerCase().includes(search.toLowerCase()))||[],[data,severity,search]);
  if(loading)return <main className="min-h-screen grid place-items-center bg-zinc-950"><RefreshCw className="animate-spin"/></main>;

@@ -2,17 +2,18 @@
 import {useEffect,useMemo,useState} from "react";
 import {ArrowLeft,CheckCircle2,ChevronLeft,ChevronRight,RefreshCw} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureMfa} from "@/lib/mfa-browser";
+import {ensureMfa,ensureSession} from "@/lib/mfa-browser";
 const input="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500";
 export default function CampaignWizard(){
  const [step,setStep]=useState(1);const [ready,setReady]=useState(false);const [saving,setSaving]=useState(false);const [message,setMessage]=useState("");
  const [form,setForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:"",ends_at:""});
- useEffect(()=>{(async()=>{if(await ensureMfa("admin","/admin/nova-campanha"))setReady(true)})()},[]);
+ useEffect(()=>{(async()=>{if(await ensureSession("admin","/admin/nova-campanha"))setReady(true)})()},[]);
  const price=Math.round(Number(form.price.replace(",","."))*100);const total=Number(form.total);
  const valid1=form.name.trim().length>=3&&/^[a-z0-9-]{2,80}$/.test(form.slug)&&price>0&&total>0&&total<=100000&&Boolean(form.ends_at)&&new Date(form.ends_at).getTime()>Date.now();
  const totalPotential=useMemo(()=>price*total,[price,total]);
  async function save(){
   if(!valid1)return;setSaving(true);setMessage("");
+  if(!(await ensureMfa("admin","/admin/nova-campanha"))){setSaving(false);return}
   const {data,error}=await supabaseBrowser().rpc("admin_create_campaign",{p_name:form.name.trim(),p_slug:form.slug,p_description:form.description,p_price_cents:price,p_total_numbers:total,p_pix_key:form.pix_key,p_pix_receiver:form.pix_receiver,p_ends_at:form.ends_at?new Date(form.ends_at).toISOString():undefined});
   if(error){setMessage("Não foi possível criar a campanha: "+error.message);setSaving(false);return}
   setMessage("Campanha criada em rascunho.");setTimeout(()=>{location.href="/admin"},700);

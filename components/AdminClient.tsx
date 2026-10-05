@@ -3,7 +3,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { Download, LogOut, Plus, RefreshCw, Ticket, Users, WalletCards, Trophy, ShieldCheck } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { ensureMfa } from "@/lib/mfa-browser";
+import { ensureMfa, ensureSession, getMfaLevel } from "@/lib/mfa-browser";
 
 type Campaign={id:string;name:string;slug:string;description:string;price_cents:number;total_numbers:number;status:"draft"|"active"|"closed";pix_key:string;pix_receiver:string;ends_at:string|null;deadline_reached:boolean;finalized_at:string|null;finalized_by:string|null;sold_numbers:number;reserved_numbers:number;revenue_cents:number;created_at:string;draw_number:number|null;drawn_at:string|null};
 type Seller={campaign_id:string;campaign_name:string;campaign_slug:string;id:string;name:string;code:string;team:string;whatsapp:string;goal:number;active:boolean;sold_numbers:number;revenue_cents:number};
@@ -33,6 +33,7 @@ export default function AdminClient(){
   const [campaignFilter,setCampaignFilter]=useState("");
   const [sellerFilter,setSellerFilter]=useState("");
   const [paymentHealth,setPaymentHealth]=useState<{provider:string;environment:string;configured:boolean;automatic:boolean}|null>(null);
+  const [mfaReady,setMfaReady]=useState(false);
   const [campaignForm,setCampaignForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:"",ends_at:""});
   const [sellerForm,setSellerForm]=useState({campaign_id:"",name:"",code:"",team:"",whatsapp:"",goal:"30"});
   const [edit,setEdit]=useState({id:"",name:"",description:"",price:"",pix_key:"",pix_receiver:"",ends_at:""});
@@ -40,7 +41,8 @@ export default function AdminClient(){
   async function load(){
     setLoading(true); setMessage("");
     fetch("/api/integrations/payment-status",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(setPaymentHealth).catch(()=>setPaymentHealth(null));
-    if(!(await ensureMfa("admin","/admin"))) return;
+    if(!(await ensureSession("admin","/admin"))){setLoading(false);return;}
+    setMfaReady((await getMfaLevel())==="aal2");
     const {data:dashboard,error}=await getSb().rpc("admin_dashboard");
     if(error){setUnauthorized(true);setData(null);}else{
       const d=dashboard as Dashboard; setData(d);setUnauthorized(false);
@@ -52,8 +54,10 @@ export default function AdminClient(){
 
   useEffect(()=>{load()},[]);
 
+  async function requireWriteMfa(){if(await ensureMfa("admin","/admin"))return true;setLoading(false);return false;}
+
   async function claimAdmin(e:FormEvent){
-    e.preventDefault();setMessage("");
+    e.preventDefault();setMessage("");if(!(await requireWriteMfa()))return;
     const first=await getSb().rpc("claim_first_admin",{p_code:setupCode});
     if(!first.error){setMessage("Administrador proprietário ativado.");await load();return}
     const invite=await getSb().rpc("claim_admin_invite",{p_code:setupCode});
@@ -62,7 +66,7 @@ export default function AdminClient(){
   }
 
   async function createCampaign(e:FormEvent){
-    e.preventDefault();setMessage("");
+    e.preventDefault();setMessage("");if(!(await requireWriteMfa()))return;
     const {error}=await getSb().rpc("admin_create_campaign",{
       p_name:campaignForm.name,p_slug:campaignForm.slug.toLowerCase().replace(/[^a-z0-9-]/g,"-"),
       p_description:campaignForm.description,p_price_cents:Math.round(Number(campaignForm.price.replace(",","."))*100),
@@ -74,12 +78,13 @@ export default function AdminClient(){
   }
 
   async function saveCampaign(e:FormEvent){
-    e.preventDefault();setMessage("");
+    e.preventDefault();setMessage("");if(!(await requireWriteMfa()))return;
     const {error}=await getSb().rpc("admin_update_campaign",{p_id:edit.id,p_name:edit.name,p_description:edit.description,p_price_cents:Math.round(Number(edit.price.replace(",","."))*100),p_pix_key:edit.pix_key,p_pix_receiver:edit.pix_receiver,p_ends_at:edit.ends_at?new Date(edit.ends_at).toISOString():undefined});
     if(error)setMessage("Falha ao salvar campanha."); else{setMessage("Campanha atualizada.");await load();}
   }
 
   async function statusCampaign(id:string,status:"draft"|"active"){
+    if(!(await requireWriteMfa()))return;
     const {error}=await getSb().rpc("admin_set_campaign_status",{p_id:id,p_status:status});
     if(error){
       const msg=error.message||"";
@@ -88,6 +93,7 @@ export default function AdminClient(){
   }
 
   async function finalizeCampaign(campaign:Campaign){
+    if(!(await requireWriteMfa()))return;
     const pending=data?.orders.filter(o=>o.campaign_slug===campaign.slug&&o.status==="pending").length||0;
     const warning=pending>0?"\n\nExistem "+pending+" pedido(s) pendente(s). Eles precisam expirar ou ser resolvidos antes da finalização.":"";
     if(!confirm("Finalizar a campanha \""+campaign.name+"\"?\n\nIsso encerra definitivamente novas vendas, congela os números pagos e prepara a campanha para o sorteio."+warning))return;
@@ -102,6 +108,7 @@ export default function AdminClient(){
   }
 
   async function drawCampaign(id:string,name:string){
+    if(!(await requireWriteMfa()))return;
     if(!confirm(`Sortear agora a campanha "${name}"? O resultado ficará registrado e não poderá ser refeito.`)) return;
     const {data:result,error}=await getSb().rpc("admin_draw_campaign",{p_campaign_id:id});
     if(error){setMessage("Não foi possível realizar o sorteio: "+error.message);return;}
@@ -111,13 +118,14 @@ export default function AdminClient(){
   }
 
   async function createSeller(e:FormEvent){
-    e.preventDefault();setMessage("");
+    e.preventDefault();setMessage("");if(!(await requireWriteMfa()))return;
     const {error}=await getSb().rpc("admin_create_seller_v2",{p_campaign_id:sellerForm.campaign_id,p_name:sellerForm.name,p_code:sellerForm.code,p_team:sellerForm.team,p_goal:Number(sellerForm.goal),p_whatsapp:sellerForm.whatsapp});
     if(error)setMessage("Não foi possível cadastrar o vendedor: "+error.message);
     else{setSellerForm(x=>({...x,name:"",code:"",team:"",whatsapp:"",goal:"30"}));setMessage("Vendedor cadastrado.");await load();}
   }
 
   async function editSeller(s:Seller){
+    if(!(await requireWriteMfa()))return;
     const name=prompt("Nome do vendedor:",s.name);if(!name)return;
     const team=prompt("Equipe / grupo:",s.team||"")??s.team;
     const whatsapp=prompt("WhatsApp:",s.whatsapp||"")??s.whatsapp;
@@ -126,6 +134,7 @@ export default function AdminClient(){
   }
 
   async function inviteSeller(s:Seller){
+    if(!(await requireWriteMfa()))return;
     const email=prompt("E-mail que o vendedor usará no portal:");
     if(!email)return;
     const {data:invite,error}=await getSb().rpc("admin_create_seller_invite",{p_seller_id:s.id,p_email:email.trim()});
@@ -137,6 +146,7 @@ export default function AdminClient(){
   }
 
   async function duplicateCampaign(campaign:Campaign){
+    if(!(await requireWriteMfa()))return;
     const name=prompt("Nome da nova campanha:",campaign.name+" - cópia");if(!name)return;
     const slug=prompt("Slug da nova campanha:",campaign.slug+"-copia");if(!slug)return;
     const clean=slug.toLowerCase().replace(/[^a-z0-9-]/g,"-");
@@ -145,6 +155,7 @@ export default function AdminClient(){
   }
 
   async function importSellers(file:File){
+    if(!(await requireWriteMfa()))return;
     const text=await file.text();
     const lines=text.replace(/^\uFEFF/,"").split(/\r?\n/).filter(Boolean);
     if(lines.length<2){setMessage("CSV sem dados.");return}
@@ -159,11 +170,13 @@ export default function AdminClient(){
   }
 
   async function toggleSeller(s:Seller){
+    if(!(await requireWriteMfa()))return;
     const {error}=await getSb().rpc("admin_set_seller_active",{p_campaign_id:s.campaign_id,p_seller_id:s.id,p_active:!s.active});
     if(error)setMessage("Falha ao alterar vendedor."); else await load();
   }
 
   async function orderStatus(id:string,status:"paid"|"cancelled"){
+    if(!(await requireWriteMfa()))return;
     if(status==="paid"&&!confirm("Confirmar recebimento do pagamento deste pedido?"))return;
     const {error}=await getSb().rpc("admin_set_order_status",{p_order_id:id,p_status:status});
     if(error)setMessage("Não foi possível alterar o pedido. A reserva pode ter expirado."); else await load();
@@ -177,6 +190,7 @@ export default function AdminClient(){
   }
 
   async function setProofStatus(o:Order,status:"approved"|"rejected"){
+    if(!(await requireWriteMfa()))return;
     const {error}=await getSb().rpc("admin_set_proof_status",{p_order_id:o.id,p_status:status});
     if(error)setMessage("Não foi possível atualizar o comprovante."); else await load();
   }
@@ -226,13 +240,14 @@ export default function AdminClient(){
   const isOwner=role==="owner";
 
   return <main className="min-h-screen bg-zinc-950">
-    <header className="border-b border-zinc-800 sticky top-0 bg-zinc-950/95 backdrop-blur z-20"><div className="max-w-7xl mx-auto px-5 py-4 flex justify-between items-center gap-3"><div><span className="font-black text-xl">Rifa<span className="text-emerald-400">Track</span></span><span className="text-zinc-600 text-sm ml-3 hidden sm:inline">{data.admin_email} · {data.admin_role}</span></div><nav className="hidden md:flex gap-2 text-sm">{canCampaignWrite&&<a href="/admin/nova-campanha" className="px-3 py-2 rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-900">Nova campanha</a>}<a href="/admin/pedidos" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Pedidos</a>{canFinanceRead&&<a href="/admin/financeiro" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Financeiro</a>}{canAudit&&<a href="/admin/auditoria" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Auditoria</a>}<a href="/admin/notificacoes" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Notificações</a>{canOperate&&<a href="/admin/qrs" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">QRs</a>}{isOwner&&<a href="/admin/equipe" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Equipe</a>}{isOwner&&<a href="/admin/backup" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Backup</a>}<a href="/admin/seguranca" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Segurança</a></nav><div className="flex gap-2"><button onClick={load} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800"><RefreshCw size={18}/></button><button onClick={logout} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800"><LogOut size={18}/></button></div></div></header>
+    <header className="border-b border-zinc-800 sticky top-0 bg-zinc-950/95 backdrop-blur z-20"><div className="max-w-7xl mx-auto px-5 py-4 flex justify-between items-center gap-3"><div><span className="font-black text-xl">Rifa<span className="text-emerald-400">Track</span></span><span className="text-zinc-600 text-sm ml-3 hidden sm:inline">{data.admin_email} · {data.admin_role}</span></div><nav className="hidden md:flex gap-2 text-sm">{canCampaignWrite&&<a href="/admin/nova-campanha" className="px-3 py-2 rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-900">Nova campanha</a>}<a href="/admin/pedidos" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Pedidos</a>{canFinanceWrite&&<a href="/admin/vendas-manuais" className="px-3 py-2 rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-900">Vendas manuais</a>}{canFinanceRead&&<a href="/admin/financeiro" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Financeiro</a>}{canAudit&&<a href="/admin/auditoria" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Auditoria</a>}<a href="/admin/notificacoes" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Notificações</a>{canOperate&&<a href="/admin/qrs" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">QRs</a>}{isOwner&&<a href="/admin/equipe" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Equipe</a>}{isOwner&&<a href="/admin/backup" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Backup</a>}<a href="/admin/seguranca" className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800">Segurança</a></nav><div className="flex gap-2"><button onClick={load} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800"><RefreshCw size={18}/></button><button onClick={logout} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800"><LogOut size={18}/></button></div></div></header>
 
     <div className="max-w-7xl mx-auto px-5 py-8 space-y-8">
       <div><p className="text-emerald-400 text-sm font-semibold">PAINEL ADMINISTRATIVO</p><h1 className="text-4xl font-black mt-1">Visão geral</h1></div>
       {message&&<div className="border border-zinc-700 bg-zinc-900 rounded-xl p-3 text-sm">{message}</div>}
       {paymentHealth&&<div className={"rounded-2xl border p-4 text-sm "+(paymentHealth.automatic?"border-emerald-800 bg-emerald-950/30":"border-amber-800 bg-amber-950/20")}><b>Pagamentos:</b> {paymentHealth.automatic?"Pix automático ativo":"Pix manual ativo"} · provedor {paymentHealth.provider}{paymentHealth.provider==="asaas"?" · "+paymentHealth.environment:""}{!paymentHealth.configured&&<span className="text-amber-300"> · integração incompleta</span>}</div>}
-      <div className="md:hidden grid grid-cols-2 gap-2">{canCampaignWrite&&<a href="/admin/nova-campanha" className="rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-900 p-3 text-sm font-bold">Nova campanha</a>}<a href="/admin/pedidos" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Pedidos</a>{canFinanceRead&&<a href="/admin/financeiro" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Financeiro</a>}{canAudit&&<a href="/admin/auditoria" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Auditoria</a>}<a href="/admin/notificacoes" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Notificações</a>{canOperate&&<a href="/admin/qrs" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">QR Codes</a>}{isOwner&&<a href="/admin/equipe" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Equipe</a>}{isOwner&&<a href="/admin/backup" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Backup</a>}<a href="/admin/seguranca" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Segurança / MFA</a></div>
+      {!mfaReady&&<div className="rounded-2xl border border-amber-800 bg-amber-950/20 p-4 text-sm text-amber-100"><b>MFA pendente.</b> O painel pode ser consultado normalmente. Para ações administrativas, <a href="/admin/seguranca?return=%2Fadmin" className="underline font-bold">configure o autenticador</a>.</div>}
+      <div className="md:hidden grid grid-cols-2 gap-2">{canCampaignWrite&&<a href="/admin/nova-campanha" className="rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-900 p-3 text-sm font-bold">Nova campanha</a>}<a href="/admin/pedidos" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Pedidos</a>{canFinanceWrite&&<a href="/admin/vendas-manuais" className="rounded-xl bg-indigo-950 text-indigo-300 border border-indigo-900 p-3 text-sm">Vendas manuais</a>}{canFinanceRead&&<a href="/admin/financeiro" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Financeiro</a>}{canAudit&&<a href="/admin/auditoria" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Auditoria</a>}<a href="/admin/notificacoes" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Notificações</a>{canOperate&&<a href="/admin/qrs" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">QR Codes</a>}{isOwner&&<a href="/admin/equipe" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Equipe</a>}{isOwner&&<a href="/admin/backup" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Backup</a>}<a href="/admin/seguranca" className="rounded-xl bg-zinc-900 border border-zinc-800 p-3 text-sm">Segurança / MFA</a></div>
 
       <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[

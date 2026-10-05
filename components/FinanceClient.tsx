@@ -2,13 +2,13 @@
 import {useEffect,useState} from "react";
 import {ArrowLeft,RefreshCw,ShieldAlert,WalletCards} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureMfa} from "@/lib/mfa-browser";
+import {ensureSession} from "@/lib/mfa-browser";
 type Row={day_value:string;gross_cents:number;net_cents:number;paid_orders:number};
 type Rank={id:string;name:string;code?:string;slug?:string;paid_orders:number;revenue_cents:number};
 type Data={summary:{gross_cents:number;net_cents:number;paid_orders:number;pending_orders:number;expired_orders:number;cancelled_orders:number;alerts:number};daily:Row[];by_seller:Rank[];by_campaign:Rank[]};
 const money=(v:number)=>"R$ "+(v/100).toFixed(2).replace(".",",");
 export default function FinanceClient(){const [data,setData]=useState<Data|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState("");
-async function load(){setLoading(true);if(!(await ensureMfa("admin","/admin/financeiro")))return;const sb=supabaseBrowser();const {data:d,error}=await sb.rpc("admin_financial_dashboard");if(error)setError("Acesso administrativo necessário.");else{setData(d as Data);setError("")}setLoading(false)}
+async function load(){setLoading(true);if(!(await ensureSession("admin","/admin/financeiro"))){setLoading(false);return;}const sb=supabaseBrowser();const {data:d,error}=await sb.rpc("admin_financial_dashboard");if(error)setError("Acesso administrativo necessário.");else{setData(d as Data);setError("")}setLoading(false)}
 useEffect(()=>{load()},[]);if(loading)return <main className="min-h-screen grid place-items-center bg-zinc-950"><RefreshCw className="animate-spin"/></main>;if(!data)return <main className="min-h-screen grid place-items-center bg-zinc-950">{error}</main>;
 const max=Math.max(1,...data.daily.map(x=>x.gross_cents));
 return <main className="min-h-screen bg-zinc-950"><div className="max-w-7xl mx-auto px-5 py-8 space-y-8"><div className="flex justify-between items-center"><div><a href="/admin" className="text-zinc-400 inline-flex gap-2 items-center text-sm"><ArrowLeft size={16}/> Painel</a><h1 className="text-4xl font-black mt-3">Financeiro</h1><p className="text-zinc-500 mt-1">Receita, conciliação e desempenho.</p></div><button onClick={load} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><RefreshCw/></button></div>

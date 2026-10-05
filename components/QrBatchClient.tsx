@@ -3,13 +3,13 @@ import {useEffect,useMemo,useState} from "react";
 import QRCode from "qrcode";
 import {ArrowLeft,Download,Printer,RefreshCw} from "lucide-react";
 import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureMfa} from "@/lib/mfa-browser";
+import {ensureSession} from "@/lib/mfa-browser";
 type Campaign={id:string;name:string;slug:string};
 type Seller={campaign_id:string;campaign_name:string;campaign_slug:string;id:string;name:string;code:string;team:string;active:boolean};
 type Card=Seller&{qr:string;url:string};
 export default function QrBatchClient(){
  const [campaigns,setCampaigns]=useState<Campaign[]>([]);const [sellers,setSellers]=useState<Seller[]>([]);const [campaign,setCampaign]=useState("");const [cards,setCards]=useState<Card[]>([]);const [loading,setLoading]=useState(true);const [generating,setGenerating]=useState(false);
- async function load(){setLoading(true);if(!(await ensureMfa("admin","/admin/qrs")))return;const sb=supabaseBrowser();const {data:d,error}=await sb.rpc("admin_dashboard");if(!error&&d){const x=d as any;setCampaigns(x.campaigns);setSellers(x.sellers);if(!campaign&&x.campaigns[0])setCampaign(x.campaigns[0].id)}setLoading(false)}
+ async function load(){setLoading(true);if(!(await ensureSession("admin","/admin/qrs"))){setLoading(false);return;}const sb=supabaseBrowser();const {data:d,error}=await sb.rpc("admin_dashboard");if(!error&&d){const x=d as any;setCampaigns(x.campaigns);setSellers(x.sellers);if(!campaign&&x.campaigns[0])setCampaign(x.campaigns[0].id)}setLoading(false)}
  useEffect(()=>{load()},[]);
  const selected=useMemo(()=>sellers.filter(s=>s.campaign_id===campaign&&s.active),[sellers,campaign]);
  async function generate(){setGenerating(true);const origin=location.origin;const result:Card[]=[];for(const s of selected){const url=origin+"/campanha/"+s.campaign_slug+"?vendedor="+encodeURIComponent(s.code);const qr=await QRCode.toDataURL(url,{width:700,margin:2,errorCorrectionLevel:"H"});result.push({...s,url,qr})}setCards(result);setGenerating(false)}

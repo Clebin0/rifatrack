@@ -391,6 +391,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          manual_note: string | null
           payment_provider: string
           payment_reference: string | null
           pix_transaction_id: string | null
@@ -406,6 +407,7 @@ export type Database = {
           provider_qr_payload: string | null
           provider_status: string | null
           public_token: string
+          sales_channel: string
           seller_id: string | null
           status: string
         }
@@ -418,6 +420,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          manual_note?: string | null
           payment_provider?: string
           payment_reference?: string | null
           pix_transaction_id?: string | null
@@ -433,6 +436,7 @@ export type Database = {
           provider_qr_payload?: string | null
           provider_status?: string | null
           public_token?: string
+          sales_channel?: string
           seller_id?: string | null
           status?: string
         }
@@ -445,6 +449,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          manual_note?: string | null
           payment_provider?: string
           payment_reference?: string | null
           pix_transaction_id?: string | null
@@ -460,6 +465,7 @@ export type Database = {
           provider_qr_payload?: string | null
           provider_status?: string | null
           public_token?: string
+          sales_channel?: string
           seller_id?: string | null
           status?: string
         }
@@ -767,6 +773,20 @@ export type Database = {
         Returns: string
       }
       admin_financial_dashboard: { Args: never; Returns: Json }
+      admin_import_paid_numbers: {
+        Args: {
+          p_buyer_email?: string
+          p_buyer_name?: string
+          p_buyer_phone?: string
+          p_campaign_id: string
+          p_note?: string
+          p_numbers?: number[]
+          p_paid_at?: string
+          p_sales_channel?: string
+          p_seller_id?: string
+        }
+        Returns: Json
+      }
       admin_notification_dashboard: { Args: never; Returns: Json }
       admin_orders_page: {
         Args: {

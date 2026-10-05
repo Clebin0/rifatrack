@@ -16,7 +16,7 @@ export default function SellerDashboard(){
   const [claim,setClaim]=useState(false);const [code,setCode]=useState("");const [message,setMessage]=useState("");const [search,setSearch]=useState("");
   async function load(){
     setLoading(true);setMessage("");
-    if(!(await ensureMfa("vendedor","/vendedor"))) return;
+    if(!(await ensureMfa("vendedor","/vendedor"))){setLoading(false);return;}
     const {data:d,error}=await sb().rpc("seller_dashboard");
     if(error){setClaim(true);setData(null)}else{setClaim(false);setData(d as Data)}
     setLoading(false);
