@@ -15,6 +15,8 @@ const entities = [
   "admin_users",
   "audit_logs",
   "payment_events",
+  "financial_cases",
+  "notification_outbox",
 ] as const;
 
 function toBase64(bytes: Uint8Array) {
@@ -91,7 +93,7 @@ export default function BackupClient() {
       counts: unknown;
       entities: Record<string, unknown[]>;
     } = {
-      schema_version: 1,
+      schema_version: 2,
       generated_at: new Date().toISOString(),
       source: "RifaTrack",
       counts,
@@ -118,6 +120,13 @@ export default function BackupClient() {
         offset += chunk.length;
         if (chunk.length < 2000) break;
       } while (offset < total);
+      if (rows.length !== total) {
+        setMessage(
+          "Os dados mudaram durante o export. Faça o backup em uma janela sem alterações e tente novamente.",
+        );
+        setBusy(false);
+        return;
+      }
       backup.entities[entity] = rows;
     }
     setProgress("Criptografando localmente...");

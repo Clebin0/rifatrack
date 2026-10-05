@@ -1,30 +1,6 @@
-import fs from "node:fs/promises";
-import crypto from "node:crypto";
+import { decryptBackup, restoreTarget } from "./backup-format.mjs";
 import { createClient } from "@supabase/supabase-js";
 
-function fromBase64(v) {
-  return Buffer.from(v, "base64");
-}
-async function decrypt(path, passphrase) {
-  const envelope = JSON.parse(await fs.readFile(path, "utf8"));
-  if (envelope.format !== "rifatrack-backup" || envelope.version !== 1)
-    throw new Error("Formato de backup inválido.");
-  const key = crypto.pbkdf2Sync(
-    Buffer.from(passphrase),
-    fromBase64(envelope.salt),
-    envelope.iterations,
-    32,
-    "sha256",
-  );
-  const payload = fromBase64(envelope.data),
-    ciphertext = payload.subarray(0, payload.length - 16),
-    tag = payload.subarray(payload.length - 16);
-  const decipher = crypto.createDecipheriv("aes-256-gcm", key, fromBase64(envelope.iv));
-  decipher.setAuthTag(tag);
-  return JSON.parse(
-    Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8"),
-  );
-}
 async function chunks(rows, size = 400) {
   const out = [];
   for (let i = 0; i < rows.length; i += size) out.push(rows.slice(i, i + size));
@@ -52,15 +28,16 @@ if (!file || !password || !url || !key)
   throw new Error(
     "Faltam arquivo, BACKUP_PASSPHRASE, RESTORE_SUPABASE_URL ou RESTORE_SUPABASE_SERVICE_ROLE_KEY.",
   );
-if (
-  process.env.PRODUCTION_SUPABASE_URL &&
-  url === process.env.PRODUCTION_SUPABASE_URL &&
-  process.env.ALLOW_PRODUCTION_RESTORE !== "YES"
-)
-  throw new Error("Restauração direta na produção bloqueada.");
+const targetUrl = restoreTarget(
+  url,
+  process.env.PRODUCTION_SUPABASE_URL,
+  process.env.ALLOW_PRODUCTION_RESTORE === "YES",
+);
 
-const backup = await decrypt(file, password);
-const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+const backup = await decryptBackup(file, password);
+const client = createClient(targetUrl, key, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
 const { count, error: countError } = await client
   .from("campaigns")
   .select("*", { count: "exact", head: true });
@@ -88,6 +65,21 @@ await write(
   client,
   "payment_events",
   (e.payment_events || []).map(({ id, ...x }) => x),
+);
+await write(client, "financial_cases", e.financial_cases || [], "id");
+// Restore the queue for audit, but never resend historical mail automatically.
+await write(
+  client,
+  "notification_outbox",
+  (e.notification_outbox || []).map((row) => ({
+    ...row,
+    status: row.status === "sent" ? "sent" : "failed",
+    attempts: 5,
+    claim_token: null,
+    lease_until: null,
+    last_error: row.status === "sent" ? row.last_error : "restore_delivery_paused",
+  })),
+  "id",
 );
 console.log(
   "Restauração de dados concluída. Recrie/revincule contas Auth, confira comprovantes do Storage e rotacione segredos antes de promover o ambiente.",

@@ -6,6 +6,24 @@ export async function securityCases(db) {
   await db.query("begin");
   try {
     for (const role of ["anon", "authenticated"]) {
+      for (const signature of [
+        "public_active_campaigns()",
+        "public_campaign(text,text)",
+        "public_order(uuid)",
+        "public_draw_result(text)",
+        "public_draw_verification(text)",
+      ]) {
+        assert.equal(
+          (
+            await q("select has_function_privilege($1,$2,'execute') allowed", [
+              role,
+              "public." + signature,
+            ])
+          ).allowed,
+          false,
+          `${role} cannot bypass the HTTP rate limit through ${signature}`,
+        );
+      }
       const denied = await q(
         `select count(*)::int n from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and (p.proname like '%_internal' or p.proname in ('reserve_raffle_numbers','attach_asaas_qr','process_asaas_event','internal_secret_ok','admin_draw_campaign')) and has_function_privilege($1,p.oid,'execute')`,
         [role],
@@ -205,6 +223,12 @@ export async function securityCases(db) {
     const proof = (await q("select public_draw_verification('sql-security-test') result")).result;
     assert.deepEqual(proof.eligible_numbers, [5, 6]);
     assert.equal(proof.number, draw.result.number);
+    const counts = (await q("select admin_backup_counts() result")).result;
+    for (const entity of ["financial_cases", "notification_outbox"]) {
+      assert.ok(counts[entity] > 0);
+      const rows = (await q("select admin_backup_chunk($1,0,2000) result", [entity])).result;
+      assert.equal(rows.length, counts[entity]);
+    }
     console.log(
       "PASS RPC permissions, exclusive reservation, PII masking, payment matching/idempotency/refund/chargeback/late payment, leases and rate limits",
     );

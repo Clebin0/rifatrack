@@ -12,9 +12,6 @@ function client(key: string | undefined) {
     },
   });
 }
-export function supabaseServer() {
-  return client(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
-}
 export function supabaseInternal() {
   return client(process.env.SUPABASE_SECRET_KEY);
 }
