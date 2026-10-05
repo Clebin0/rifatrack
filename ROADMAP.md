@@ -16,7 +16,7 @@
 
 ## Evidências locais
 
-Build, typecheck e lint passam. Vitest: 12 testes, incluindo assinatura BLS válida e falsificada. Replay das 36 migrations passa em PGlite; testes de reserva, valor/vínculo, duplicidade, atraso, reembolso, disputa, privacidade, permissões e leases passam. PostgreSQL concorrente/pgTAP devem ser confirmados pela CI; não foram executados no Docker local indisponível.
+Build, typecheck e lint passam. Vitest: 14 testes, incluindo assinatura BLS válida/falsificada e datas financeiras sem fuso. Replay das 36 migrations passa em PGlite; testes de reserva, valor/vínculo, duplicidade, atraso, reembolso, disputa, privacidade, permissões, leases e sorteio passam. PostgreSQL 17, duas conexões concorrentes e oito verificações pgTAP passaram na CI; o Docker local não estava disponível.
 
 ## Pendências externas ou de homologação
 

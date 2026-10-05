@@ -21,6 +21,7 @@ Falhas dos workflows aparecem no GitHub Actions; habilitar a notificação da co
 
 - Recebimento dentro do prazo + QR/payment id vinculado + externalReference correto + valor exato: marcar pago uma vez.
 - PAYMENT_CONFIRMED: registrar estado, aguardar PAYMENT_RECEIVED.
+- Datas do provedor sem horário ou sem fuso não provam o instante do pagamento. Nesses casos, usar o recebimento do evento como referência conservadora; uma entrega durante a tolerância pode exigir conciliação. Validar esse caso no Sandbox. Referência: [eventos de cobrança Asaas](https://docs.asaas.com/docs/webhook-para-cobrancas).
 - Tardio ou referência/valor divergente: abrir caso; preservar evento; verificar no provedor. Não reassociar números que já foram liberados ou vendidos.
 - Reembolso confirmado antes da finalização: pedido cancelado, receita líquida zero, números disponíveis. Depois de finalizada: manter a lista e resultado históricos congelados; registrar o impacto financeiro e conciliação.
 - Chargeback/disputa: abrir caso e sinalizar provedor. Não presumir que a disputa já terminou, nem eliminar números da lista congelada. Resolver conforme evidência do provedor, com MFA e nota de auditoria.

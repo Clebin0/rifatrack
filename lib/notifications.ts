@@ -89,26 +89,28 @@ export async function processNotificationBatch(limit = 10) {
   const items = (data || []) as NotificationItem[];
   let sent = 0,
     failed = 0;
-  for (const item of items) {
-    try {
-      await sendOne(item);
-      const result = await sb.rpc("finish_notification_internal", {
-        p_id: item.id,
-        p_claim_token: item.claim_token,
-        p_ok: true,
-      });
-      if (result.error || !result.data) throw result.error ?? new Error("lease_lost");
-      sent++;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "unknown";
-      await sb.rpc("finish_notification_internal", {
-        p_id: item.id,
-        p_claim_token: item.claim_token,
-        p_ok: false,
-        p_error: msg,
-      });
-      failed++;
-    }
-  }
+  await Promise.all(
+    items.map(async (item) => {
+      try {
+        await sendOne(item);
+        const result = await sb.rpc("finish_notification_internal", {
+          p_id: item.id,
+          p_claim_token: item.claim_token,
+          p_ok: true,
+        });
+        if (result.error || !result.data) throw result.error ?? new Error("lease_lost");
+        sent++;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "unknown";
+        await sb.rpc("finish_notification_internal", {
+          p_id: item.id,
+          p_claim_token: item.claim_token,
+          p_ok: false,
+          p_error: msg,
+        });
+        failed++;
+      }
+    }),
+  );
   return { configured: true, processed: items.length, sent, failed };
 }
