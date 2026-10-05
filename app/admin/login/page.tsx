@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { postLoginMfaRedirect } from "@/lib/mfa-browser";
 import { KeyRound, ShieldCheck } from "lucide-react";
@@ -10,6 +10,13 @@ export default function AdminLogin(){
   const [password,setPassword]=useState("");
   const [message,setMessage]=useState("");
   const [loading,setLoading]=useState(false);
+  const [cooldown,setCooldown]=useState(0);
+
+  useEffect(()=>{
+    if(cooldown<=0)return;
+    const timer=setInterval(()=>setCooldown(v=>Math.max(0,v-1)),1000);
+    return()=>clearInterval(timer);
+  },[cooldown]);
 
   async function submit(e:FormEvent){
     e.preventDefault();setLoading(true);setMessage("");
@@ -32,11 +39,14 @@ export default function AdminLogin(){
           const status=(error as {code?:string;status?:number}).status||0;
           const text=(error.message||"").toLowerCase();
           if(status===429||code==="over_email_send_rate_limit"||text.includes("rate limit")){
-            setMessage("Muitas solicitações foram feitas em pouco tempo. Aguarde alguns minutos antes de pedir outro link de recuperação.");
+            setMessage("O provedor de autenticação recusou um novo envio por limite de e-mails. Tente novamente quando o limite do servidor liberar.");
           }else{
-            setMessage("Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos.");
+            setMessage("Não foi possível solicitar a recuperação agora. Tente novamente.");
           }
-        }else setMessage("Se esse e-mail estiver cadastrado, enviaremos um link para redefinir a senha. Confira também spam e lixo eletrônico.");
+        }else{
+          setCooldown(5);
+          setMessage("Se esse e-mail estiver cadastrado, enviaremos um link para redefinir a senha. Você poderá solicitar outro em 5 segundos.");
+        }
       }
     }catch{setMessage("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setLoading(false)}
@@ -53,7 +63,7 @@ export default function AdminLogin(){
         <form onSubmit={submit} className="space-y-3 mt-6">
           <input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="E-mail" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
           {mode!=="forgot"&&<input type="password" required minLength={12} autoComplete={mode==="login"?"current-password":"new-password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Senha (mínimo 12 caracteres)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>}
-          <button disabled={loading} className="w-full bg-emerald-400 text-emerald-950 rounded-xl p-3 font-black disabled:opacity-50">{loading?"Aguarde...":mode==="login"?"Entrar":mode==="signup"?"Criar conta":"Enviar link de recuperação"}</button>
+          <button disabled={loading||(mode==="forgot"&&cooldown>0)} className="w-full bg-emerald-400 text-emerald-950 rounded-xl p-3 font-black disabled:opacity-50">{loading?"Aguarde...":mode==="login"?"Entrar":mode==="signup"?"Criar conta":cooldown>0?`Tentar novamente em ${cooldown}s`:"Enviar link de recuperação"}</button>
         </form>
         {message&&<p className="text-sm text-zinc-300 mt-4">{message}</p>}
         <div className="mt-5 flex flex-col gap-3">
