@@ -1,5 +1,4 @@
--- Campaign deadlines and explicit finalization
--- Applied to Supabase on 2026-10-04.
+-- Recovered verbatim from Supabase migration history; 20261004225506.
 
 alter table public.campaigns
   add column if not exists finalized_at timestamptz,
@@ -244,3 +243,5 @@ begin
     ) x),'[]'::jsonb)
   );
 end $$;
+
+

@@ -1,30 +1,335 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,ChevronLeft,ChevronRight,Download,RefreshCw} from "lucide-react";
-import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureSession} from "@/lib/mfa-browser";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, RefreshCw } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
+import { ensureSession } from "@/lib/mfa-browser";
 
-type Campaign={id:string;name:string;slug:string};
-type Seller={id:string;name:string};
-type Order={id:string;public_token:string;buyer_name:string;buyer_phone:string;buyer_email:string;status:string;amount_cents:number;payment_reference:string;created_at:string;proof_path:string|null;proof_status:string;payment_provider:string;provider_payment_id:string|null;provider_status:string|null;provider_paid_at:string|null;provider_net_value_cents:number|null;pix_transaction_id:string|null;sales_channel:string;manual_note:string|null;campaign_id:string;campaign_name:string;campaign_slug:string;seller_id:string|null;seller_name:string|null;numbers:number[]};
-type PageData={page:number;page_size:number;total:number;orders:Order[]};
-const money=(v:number)=>"R$ "+(v/100).toFixed(2).replace(".",",");
+type Campaign = { id: string; name: string; slug: string };
+type Seller = { id: string; name: string };
+type Order = {
+  id: string;
+  public_token: string;
+  buyer_name: string;
+  buyer_phone: string;
+  buyer_email: string;
+  status: string;
+  amount_cents: number;
+  payment_reference: string;
+  created_at: string;
+  proof_path: string | null;
+  proof_status: string;
+  payment_provider: string;
+  provider_payment_id: string | null;
+  provider_status: string | null;
+  provider_paid_at: string | null;
+  provider_net_value_cents: number | null;
+  pix_transaction_id: string | null;
+  sales_channel: string;
+  manual_note: string | null;
+  campaign_id: string;
+  campaign_name: string;
+  campaign_slug: string;
+  seller_id: string | null;
+  seller_name: string | null;
+  numbers: number[];
+};
+type PageData = { page: number; page_size: number; total: number; orders: Order[] };
+const money = (v: number) => "R$ " + (v / 100).toFixed(2).replace(".", ",");
 
-export default function OrdersClient(){
- const sb=()=>supabaseBrowser();const [page,setPage]=useState(1);const [data,setData]=useState<PageData|null>(null);const [meta,setMeta]=useState<{campaigns:Campaign[];sellers:Seller[]}|null>(null);const [loading,setLoading]=useState(true);
- const [search,setSearch]=useState("");const [status,setStatus]=useState("");const [campaign,setCampaign]=useState("");const [seller,setSeller]=useState("");const [from,setFrom]=useState("");const [to,setTo]=useState("");
- async function load(next=page){
-  setLoading(true);if(!(await ensureSession("admin","/admin/pedidos"))){setLoading(false);return;}const client=sb();
-  if(!meta){const {data:d}=await client.rpc("admin_dashboard");if(d){const x=d as any;setMeta({campaigns:x.campaigns,sellers:Array.from(new Map((x.sellers as any[]).map(s=>[s.id,{id:s.id,name:s.name}])).values()) as Seller[]})}}
-  const {data:d,error}=await client.rpc("admin_orders_page",{p_page:next,p_page_size:25,p_search:search,p_status:status,p_campaign_id:campaign||undefined,p_seller_id:seller||undefined,p_from:from?new Date(from+"T00:00:00").toISOString():undefined,p_to:to?new Date(new Date(to+"T00:00:00").getTime()+86400000).toISOString():undefined});
-  if(!error){setData(d as PageData);setPage(next)}setLoading(false);
- }
- useEffect(()=>{load(1)},[]);
- const pages=Math.max(1,Math.ceil((data?.total||0)/25));
- function apply(){load(1)}
- function clear(){setSearch("");setStatus("");setCampaign("");setSeller("");setFrom("");setTo("");setTimeout(()=>load(1),0)}
- function exportCsv(){if(!data)return;const head=["Pedido","Comprador","Telefone","Email","Campanha","Vendedor","Status","Valor","Números","Origem","Provedor","Observação","ID transação","Criado"];const rows=data.orders.map(o=>[o.payment_reference,o.buyer_name,o.buyer_phone,o.buyer_email,o.campaign_name,o.seller_name||"Direto",o.status,money(o.amount_cents),o.numbers.join(", "),o.sales_channel||"online",o.payment_provider,o.manual_note||"",o.provider_payment_id||"",new Date(o.created_at).toLocaleString("pt-BR")]);const esc=(x:unknown)=>'"'+String(x??"").replace(/"/g,'""')+'"';const csv="\uFEFF"+[head,...rows].map(r=>r.map(esc).join(";")).join("\r\n");const u=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=u;a.download="rifatrack-pedidos-pagina-"+page+".csv";a.click();URL.revokeObjectURL(u)}
- return <main className="min-h-screen bg-zinc-950"><div className="max-w-7xl mx-auto px-5 py-8 space-y-6"><div className="flex justify-between items-center"><div><a href="/admin" className="inline-flex items-center gap-2 text-sm text-zinc-400"><ArrowLeft size={16}/> Painel</a><h1 className="text-4xl font-black mt-3">Pedidos</h1><p className="text-zinc-500 mt-1">Consulta paginada e filtros operacionais.</p></div><button onClick={()=>load(page)} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"><RefreshCw className={loading?"animate-spin":""}/></button></div>
- <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"><div className="grid md:grid-cols-3 lg:grid-cols-6 gap-2"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Pedido, comprador, telefone..." className="lg:col-span-2 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"/><select value={status} onChange={e=>setStatus(e.target.value)} className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"><option value="">Todos status</option><option value="pending">Pendente</option><option value="paid">Pago</option><option value="expired">Expirado</option><option value="cancelled">Cancelado</option></select><select value={campaign} onChange={e=>setCampaign(e.target.value)} className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"><option value="">Todas campanhas</option>{meta?.campaigns.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><select value={seller} onChange={e=>setSeller(e.target.value)} className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"><option value="">Todos vendedores</option>{meta?.sellers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><button onClick={apply} className="bg-white text-black rounded-xl px-3 py-2 font-bold">Filtrar</button></div><div className="grid sm:grid-cols-[1fr_1fr_auto_auto] gap-2 mt-2"><input type="date" value={from} onChange={e=>setFrom(e.target.value)} className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"/><input type="date" value={to} onChange={e=>setTo(e.target.value)} className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"/><button onClick={clear} className="bg-zinc-800 rounded-xl px-3 py-2">Limpar</button><button onClick={exportCsv} className="bg-zinc-800 rounded-xl px-3 py-2 inline-flex gap-2 items-center"><Download size={16}/> CSV da página</button></div></section>
- <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"><div className="flex justify-between items-center mb-4"><p className="text-sm text-zinc-500">{data?.total||0} pedidos encontrados</p><p className="text-sm text-zinc-500">Página {page} de {pages}</p></div><div className="overflow-x-auto"><table className="w-full text-sm min-w-[1050px]"><thead className="text-zinc-500 text-left"><tr><th className="pb-3">Pedido</th><th>Comprador</th><th>Campanha</th><th>Vendedor</th><th>Números</th><th>Valor</th><th>Status</th><th>Pagamento</th><th>Data</th></tr></thead><tbody>{data?.orders.map(o=><tr key={o.id} className="border-t border-zinc-800"><td className="py-4 font-mono text-xs">{o.payment_reference}</td><td><b>{o.buyer_name}</b><div className="text-xs text-zinc-500">{o.buyer_phone}{o.buyer_email?" · "+o.buyer_email:""}</div></td><td>{o.campaign_name}</td><td>{o.seller_name||"Direto"}</td><td className="max-w-[220px]">{o.numbers.join(", ")}</td><td>{money(o.amount_cents)}</td><td><span className={"px-2 py-1 rounded-full text-xs "+(o.status==="paid"?"bg-emerald-950 text-emerald-300":o.status==="pending"?"bg-amber-950 text-amber-300":"bg-zinc-800 text-zinc-400")}>{o.status}</span></td><td><div>{o.sales_channel==="whatsapp"?"WhatsApp":o.sales_channel==="presencial"?"Presencial":o.sales_channel==="outro"?"Manual":o.payment_provider}</div><div className="text-xs text-zinc-500 max-w-[190px] truncate" title={o.manual_note||""}>{o.manual_note||o.provider_payment_id||o.provider_status||"—"}</div></td><td className="whitespace-nowrap">{new Date(o.created_at).toLocaleString("pt-BR")}</td></tr>)}</tbody></table>{!data?.orders.length&&!loading&&<p className="text-center text-zinc-500 py-10">Nenhum pedido encontrado.</p>}</div><div className="flex justify-center gap-2 mt-5"><button disabled={page<=1||loading} onClick={()=>load(page-1)} className="p-2 rounded-xl bg-zinc-800 disabled:opacity-30"><ChevronLeft/></button><button disabled={page>=pages||loading} onClick={()=>load(page+1)} className="p-2 rounded-xl bg-zinc-800 disabled:opacity-30"><ChevronRight/></button></div></section></div></main>
+export default function OrdersClient() {
+  const sb = () => supabaseBrowser();
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<PageData | null>(null);
+  const [meta, setMeta] = useState<{ campaigns: Campaign[]; sellers: Seller[] } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [campaign, setCampaign] = useState("");
+  const [seller, setSeller] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  async function load(next = page) {
+    setLoading(true);
+    if (!(await ensureSession("admin", "/admin/pedidos"))) {
+      setLoading(false);
+      return;
+    }
+    const client = sb();
+    if (!meta) {
+      const { data: d } = await client.rpc("admin_dashboard");
+      if (d) {
+        const x = d as { campaigns: Campaign[]; sellers: Seller[] };
+        setMeta({
+          campaigns: x.campaigns,
+          sellers: Array.from(
+            new Map(x.sellers.map((s) => [s.id, { id: s.id, name: s.name }])).values(),
+          ) as Seller[],
+        });
+      }
+    }
+    const { data: d, error } = await client.rpc("admin_orders_page", {
+      p_page: next,
+      p_page_size: 25,
+      p_search: search,
+      p_status: status,
+      p_campaign_id: campaign || undefined,
+      p_seller_id: seller || undefined,
+      p_from: from ? new Date(from + "T00:00:00").toISOString() : undefined,
+      p_to: to
+        ? new Date(new Date(to + "T00:00:00").getTime() + 86400000).toISOString()
+        : undefined,
+    });
+    if (!error) {
+      setData(d as PageData);
+      setPage(next);
+    }
+    setLoading(false);
+  }
+  useEffect(() => {
+    load(1);
+  }, []);
+  const pages = Math.max(1, Math.ceil((data?.total || 0) / 25));
+  function apply() {
+    load(1);
+  }
+  function clear() {
+    setSearch("");
+    setStatus("");
+    setCampaign("");
+    setSeller("");
+    setFrom("");
+    setTo("");
+    setTimeout(() => load(1), 0);
+  }
+  function exportCsv() {
+    if (!data) return;
+    const head = [
+      "Pedido",
+      "Comprador",
+      "Telefone",
+      "Email",
+      "Campanha",
+      "Vendedor",
+      "Status",
+      "Valor",
+      "Números",
+      "Origem",
+      "Provedor",
+      "Observação",
+      "ID transação",
+      "Criado",
+    ];
+    const rows = data.orders.map((o) => [
+      o.payment_reference,
+      o.buyer_name,
+      o.buyer_phone,
+      o.buyer_email,
+      o.campaign_name,
+      o.seller_name || "Direto",
+      o.status,
+      money(o.amount_cents),
+      o.numbers.join(", "),
+      o.sales_channel || "online",
+      o.payment_provider,
+      o.manual_note || "",
+      o.provider_payment_id || "",
+      new Date(o.created_at).toLocaleString("pt-BR"),
+    ]);
+    const esc = (x: unknown) => '"' + String(x ?? "").replace(/"/g, '""') + '"';
+    const csv = "\uFEFF" + [head, ...rows].map((r) => r.map(esc).join(";")).join("\r\n");
+    const u = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = u;
+    a.download = "rifatrack-pedidos-pagina-" + page + ".csv";
+    a.click();
+    URL.revokeObjectURL(u);
+  }
+  return (
+    <main className="min-h-screen bg-zinc-950">
+      <div className="max-w-7xl mx-auto px-5 py-8 space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <a href="/admin" className="inline-flex items-center gap-2 text-sm text-zinc-400">
+              <ArrowLeft size={16} /> Painel
+            </a>
+            <h1 className="text-4xl font-black mt-3">Pedidos</h1>
+            <p className="text-zinc-500 mt-1">Consulta paginada e filtros operacionais.</p>
+          </div>
+          <button
+            onClick={() => load(page)}
+            className="p-3 rounded-xl bg-zinc-900 border border-zinc-800"
+          >
+            <RefreshCw className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+        <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
+          <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Pedido, comprador, telefone..."
+              className="lg:col-span-2 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            />
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            >
+              <option value="">Todos status</option>
+              <option value="pending">Pendente</option>
+              <option value="paid">Pago</option>
+              <option value="expired">Expirado</option>
+              <option value="cancelled">Cancelado</option>
+            </select>
+            <select
+              value={campaign}
+              onChange={(e) => setCampaign(e.target.value)}
+              className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            >
+              <option value="">Todas campanhas</option>
+              {meta?.campaigns.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={seller}
+              onChange={(e) => setSeller(e.target.value)}
+              className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            >
+              <option value="">Todos vendedores</option>
+              {meta?.sellers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <button onClick={apply} className="bg-white text-black rounded-xl px-3 py-2 font-bold">
+              Filtrar
+            </button>
+          </div>
+          <div className="grid sm:grid-cols-[1fr_1fr_auto_auto] gap-2 mt-2">
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            />
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            />
+            <button onClick={clear} className="bg-zinc-800 rounded-xl px-3 py-2">
+              Limpar
+            </button>
+            <button
+              onClick={exportCsv}
+              className="bg-zinc-800 rounded-xl px-3 py-2 inline-flex gap-2 items-center"
+            >
+              <Download size={16} /> CSV da página
+            </button>
+          </div>
+        </section>
+        <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-zinc-500">{data?.total || 0} pedidos encontrados</p>
+            <p className="text-sm text-zinc-500">
+              Página {page} de {pages}
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[1050px]">
+              <thead className="text-zinc-500 text-left">
+                <tr>
+                  <th className="pb-3">Pedido</th>
+                  <th>Comprador</th>
+                  <th>Campanha</th>
+                  <th>Vendedor</th>
+                  <th>Números</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                  <th>Pagamento</th>
+                  <th>Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.orders.map((o) => (
+                  <tr key={o.id} className="border-t border-zinc-800">
+                    <td className="py-4 font-mono text-xs">{o.payment_reference}</td>
+                    <td>
+                      <b>{o.buyer_name}</b>
+                      <div className="text-xs text-zinc-500">
+                        {o.buyer_phone}
+                        {o.buyer_email ? " · " + o.buyer_email : ""}
+                      </div>
+                    </td>
+                    <td>{o.campaign_name}</td>
+                    <td>{o.seller_name || "Direto"}</td>
+                    <td className="max-w-[220px]">{o.numbers.join(", ")}</td>
+                    <td>{money(o.amount_cents)}</td>
+                    <td>
+                      <span
+                        className={
+                          "px-2 py-1 rounded-full text-xs " +
+                          (o.status === "paid"
+                            ? "bg-emerald-950 text-emerald-300"
+                            : o.status === "pending"
+                              ? "bg-amber-950 text-amber-300"
+                              : "bg-zinc-800 text-zinc-400")
+                        }
+                      >
+                        {o.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div>
+                        {o.sales_channel === "whatsapp"
+                          ? "WhatsApp"
+                          : o.sales_channel === "presencial"
+                            ? "Presencial"
+                            : o.sales_channel === "outro"
+                              ? "Manual"
+                              : o.payment_provider}
+                      </div>
+                      <div
+                        className="text-xs text-zinc-500 max-w-[190px] truncate"
+                        title={o.manual_note || ""}
+                      >
+                        {o.manual_note || o.provider_payment_id || o.provider_status || "—"}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap">
+                      {new Date(o.created_at).toLocaleString("pt-BR")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {!data?.orders.length && !loading && (
+              <p className="text-center text-zinc-500 py-10">Nenhum pedido encontrado.</p>
+            )}
+          </div>
+          <div className="flex justify-center gap-2 mt-5">
+            <button
+              disabled={page <= 1 || loading}
+              onClick={() => load(page - 1)}
+              className="p-2 rounded-xl bg-zinc-800 disabled:opacity-30"
+            >
+              <ChevronLeft />
+            </button>
+            <button
+              disabled={page >= pages || loading}
+              onClick={() => load(page + 1)}
+              className="p-2 rounded-xl bg-zinc-800 disabled:opacity-30"
+            >
+              <ChevronRight />
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
