@@ -1,6 +1,6 @@
 import { publicRateLimit } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseInternal } from "@/lib/supabase";
 import { buildPixPayload } from "@/lib/pix";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -11,7 +11,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   const { token } = await params;
   if (!UUID.test(token)) return NextResponse.json({ error: "Pedido inválido" }, { status: 400 });
   try {
-    const { data, error } = await supabaseServer().rpc("public_order", { p_token: token });
+    const { data, error } = await supabaseInternal().rpc("public_order", { p_token: token });
     if (error || !data)
       return NextResponse.json({ error: "Pedido não encontrado" }, { status: 404 });
     const order = data as unknown as {

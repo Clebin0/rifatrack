@@ -2,7 +2,7 @@
 
 ## Implementado na branch, ainda não publicado em produção
 
-- Histórico completo de 34 migrations recuperado; schema obsoleto e duplicatas removidos; duas novas migrations.
+- Histórico completo de 34 migrations recuperado; schema obsoleto e duplicatas removidos; quatro novas migrations.
 - Chave Supabase server-only e grants service_role; retirada do segredo em RPC/fingerprint.
 - Webhook com validação de data, referência e valor, idempotência, tardios, reembolso e chargeback; painel de conciliação.
 - Rate limit por IP e GETs, códigos HTTP, telefone normalizado, PII pública mascarada.
@@ -16,7 +16,7 @@
 
 ## Evidências locais
 
-Build, typecheck e lint passam. Vitest: 14 testes, incluindo assinatura BLS válida/falsificada e datas financeiras sem fuso. Replay das 36 migrations passa em PGlite; testes de reserva, valor/vínculo, duplicidade, atraso, reembolso, disputa, privacidade, permissões, leases e sorteio passam. PostgreSQL 17, duas conexões concorrentes e oito verificações pgTAP passaram na CI; o Docker local não estava disponível.
+Build, typecheck e lint passam. Vitest: 17 testes, incluindo assinatura BLS válida/falsificada e datas financeiras sem fuso. Replay das 38 migrations passa em PGlite; testes de reserva, valor/vínculo, duplicidade, atraso, reembolso, disputa, privacidade, permissões, leases e sorteio passam. PostgreSQL 17, duas conexões concorrentes e oito verificações pgTAP passaram na CI; o Docker local não estava disponível.
 
 ## Pendências externas ou de homologação
 
@@ -30,3 +30,5 @@ Build, typecheck e lint passam. Vitest: 14 testes, incluindo assinatura BLS vál
 - Teste visual e de hidratação CSP em ambiente servido e fluxo completo de pagamento.
 
 Não marcar esta lista toda como concluída nem liberar produção financeira apenas com os testes locais.
+
+Revisão adicional: RPCs de leitura acessíveis diretamente pelo navegador foram restringidos ao servidor, evitando desvio do limitador das APIs. O backup inclui conciliação/fila e rejeita inconsistências ou destinos de produção com variações de URL. Proteção da main: o GitHub respondeu 403 e exige GitHub Pro para repositório privado.

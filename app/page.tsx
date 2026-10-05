@@ -1,5 +1,5 @@
 import { ArrowRight, Clock3, ShieldCheck } from "lucide-react";
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseInternal } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ type Campaign = {
 export default async function Home() {
   let campaigns: Campaign[] = [];
   try {
-    const { data } = await supabaseServer().rpc("public_active_campaigns");
+    const { data } = await supabaseInternal().rpc("public_active_campaigns");
     campaigns = (data || []) as Campaign[];
   } catch {}
 

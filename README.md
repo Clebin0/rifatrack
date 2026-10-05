@@ -14,7 +14,7 @@ NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY são públicas. 
 
 ## Banco reproduzível
 
-supabase/migrations é a única fonte de schema. As primeiras 34 migrations foram recuperadas do histórico registrado no Supabase, com versões e SQL originais. Duas migrations novas implementam segurança financeira e drand. O antigo schema.sql e os dois arquivos de histórico duplicado foram removidos. O replay completo é testado em PGlite e PostgreSQL 17. Não execute todas as migrations novamente na produção: ela já possui as primeiras 34.
+supabase/migrations é a única fonte de schema. As primeiras 34 migrations foram recuperadas do histórico registrado no Supabase, com versões e SQL originais. Quatro migrations novas implementam segurança financeira e drand. O antigo schema.sql e os dois arquivos de histórico duplicado foram removidos. O replay completo é testado em PGlite e PostgreSQL 17. Não execute todas as migrations novamente na produção: ela já possui as primeiras 34.
 
 ## Qualidade
 
@@ -42,4 +42,4 @@ Scripts usam CSP com nonce por resposta e strict-dynamic; script-src não tem un
 
 O limite por IP usa contador atômico no banco, separado da transação da reserva. Na Vercel o IP deve vir do cabeçalho sobrescrito pela plataforma; outro proxy precisa sobrescrever x-real-ip. GETs públicos têm limite compartilhado. Falha do limitador bloqueia a requisição.
 
-Consulte SECURITY.md para os controles e OPERATIONS.md para implantação, rotação, pagamentos, alertas e restauração. O deploy deve ser coordenado com as duas novas migrations e a chave do servidor. Nunca misture credenciais do banco de produção com previews de testes mutáveis.
+Consulte SECURITY.md para os controles e OPERATIONS.md para implantação, rotação, pagamentos, alertas e restauração. O deploy deve ser coordenado com as quatro novas migrations e a chave do servidor. Nunca misture credenciais do banco de produção com previews de testes mutáveis.

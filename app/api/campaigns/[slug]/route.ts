@@ -1,6 +1,6 @@
 import { publicRateLimit } from "@/lib/rate-limit";
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseInternal } from "@/lib/supabase";
 
 export async function GET(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const limited = await publicRateLimit(req, "public-read", 180, 60);
@@ -10,7 +10,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     return NextResponse.json({ error: "Campanha inválida" }, { status: 400 });
   const seller = new URL(req.url).searchParams.get("vendedor") || "";
   try {
-    const { data, error } = await supabaseServer().rpc("public_campaign", {
+    const { data, error } = await supabaseInternal().rpc("public_campaign", {
       p_slug: slug,
       p_seller_code: seller,
     });
