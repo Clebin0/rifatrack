@@ -34,6 +34,7 @@ export default function AdminClient(){
   const [sellerFilter,setSellerFilter]=useState("");
   const [paymentHealth,setPaymentHealth]=useState<{provider:string;environment:string;configured:boolean;automatic:boolean}|null>(null);
   const [mfaReady,setMfaReady]=useState(false);
+  const [sessionEmail,setSessionEmail]=useState("");
   const [campaignForm,setCampaignForm]=useState({name:"",slug:"",description:"",price:"5.00",total:"400",pix_key:"",pix_receiver:"",ends_at:""});
   const [sellerForm,setSellerForm]=useState({campaign_id:"",name:"",code:"",team:"",whatsapp:"",goal:"30"});
   const [edit,setEdit]=useState({id:"",name:"",description:"",price:"",pix_key:"",pix_receiver:"",ends_at:""});
@@ -43,6 +44,8 @@ export default function AdminClient(){
     fetch("/api/integrations/payment-status",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(setPaymentHealth).catch(()=>setPaymentHealth(null));
     if(!(await ensureSession("admin","/admin"))){setLoading(false);return;}
     setMfaReady((await getMfaLevel())==="aal2");
+    const {data:userData}=await getSb().auth.getUser();
+    setSessionEmail(userData.user?.email||"");
     const {data:dashboard,error}=await getSb().rpc("admin_dashboard");
     if(error){setUnauthorized(true);setData(null);}else{
       const d=dashboard as Dashboard; setData(d);setUnauthorized(false);
@@ -226,7 +229,7 @@ export default function AdminClient(){
   })||[],[data,search,statusFilter,campaignFilter,sellerFilter]);
 
   if(loading)return <main className="min-h-screen grid place-items-center"><RefreshCw className="animate-spin"/></main>;
-  if(unauthorized)return <main className="min-h-screen grid place-items-center p-5"><form onSubmit={claimAdmin} className={panel+" w-full max-w-md"}><h1 className="text-2xl font-black">Ativar acesso administrativo</h1><p className="text-zinc-500 text-sm mt-2">Use o código de implantação inicial ou um convite de equipe emitido pelo proprietário.</p><input value={setupCode} onChange={e=>setSetupCode(e.target.value)} placeholder="Código de implantação" className={input+" mt-5"}/><button className="w-full mt-3 p-3 rounded-xl bg-emerald-400 text-emerald-950 font-black">Ativar acesso</button>{message&&<p className="text-sm mt-3">{message}</p>}</form></main>;
+  if(unauthorized)return <main className="min-h-screen grid place-items-center p-5"><form onSubmit={claimAdmin} className={panel+" w-full max-w-md"}><h1 className="text-2xl font-black">Conta sem acesso administrativo</h1><p className="text-zinc-500 text-sm mt-2">Você está autenticado como <b className="text-zinc-200">{sessionEmail||"outra conta"}</b>, mas esse e-mail não possui perfil administrativo ativo.</p><div className="mt-4 rounded-xl border border-amber-800 bg-amber-950/20 p-3 text-sm text-amber-200">O código de implantação inicial já foi utilizado. Use este campo apenas se você recebeu um convite administrativo válido do proprietário.</div><input value={setupCode} onChange={e=>setSetupCode(e.target.value)} placeholder="Código de convite administrativo" className={input+" mt-5"}/><button className="w-full mt-3 p-3 rounded-xl bg-emerald-400 text-emerald-950 font-black">Ativar com convite</button><button type="button" onClick={logout} className="w-full mt-2 p-3 rounded-xl bg-zinc-800 text-zinc-200 font-bold">Sair e entrar com outro e-mail</button>{message&&<p className="text-sm mt-3">{message}</p>}</form></main>;
   if(!data)return null;
 
   function pickEdit(id:string){const c=data!.campaigns.find(x=>x.id===id);if(c)setEdit({id:c.id,name:c.name,description:c.description,price:(c.price_cents/100).toFixed(2),pix_key:c.pix_key,pix_receiver:c.pix_receiver,ends_at:toDateTimeLocal(c.ends_at)});}
