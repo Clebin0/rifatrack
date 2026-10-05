@@ -27,8 +27,16 @@ export default function AdminLogin(){
       }else{
         const redirectTo=location.origin+"/admin/redefinir-senha";
         const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo});
-        if(error)setMessage("Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos.");
-        else setMessage("Se esse e-mail estiver cadastrado, enviaremos um link para redefinir a senha. Confira também spam e lixo eletrônico.");
+        if(error){
+          const code=(error as {code?:string;status?:number}).code||"";
+          const status=(error as {code?:string;status?:number}).status||0;
+          const text=(error.message||"").toLowerCase();
+          if(status===429||code==="over_email_send_rate_limit"||text.includes("rate limit")){
+            setMessage("Muitas solicitações foram feitas em pouco tempo. Aguarde alguns minutos antes de pedir outro link de recuperação.");
+          }else{
+            setMessage("Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos.");
+          }
+        }else setMessage("Se esse e-mail estiver cadastrado, enviaremos um link para redefinir a senha. Confira também spam e lixo eletrônico.");
       }
     }catch{setMessage("Não foi possível concluir a solicitação. Verifique sua conexão e tente novamente.");}
     finally{setLoading(false)}
