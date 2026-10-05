@@ -1,2 +1,62 @@
-export const metadata={title:"Termos | RifaTrack"};
-export default function Terms(){return <main className="min-h-screen bg-zinc-950"><div className="max-w-3xl mx-auto px-5 py-12"><a href="/" className="font-black text-xl">Rifa<span className="text-emerald-400">Track</span></a><article className="mt-8 space-y-5 text-zinc-300 leading-7 [&_h1]:text-4xl [&_h1]:font-black [&_h1]:text-white [&_h1]:mb-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:pt-4 [&_p]:text-zinc-400"><h1>Termos de Uso</h1><p>O RifaTrack é uma ferramenta de gestão de campanhas. A organização responsável pela campanha define regras, finalidade, preço, período, sorteio e responsabilidade sobre o prêmio ou ação promovida.</p><h2>Reservas e pagamentos</h2><p>Números ficam reservados pelo prazo exibido no pedido. Se o pagamento não for confirmado dentro do fluxo válido, a reserva pode expirar e os números retornar à disponibilidade.</p><h2>Identificação do vendedor</h2><p>Quando aplicável, cada pedido é associado ao vendedor pelo link individual ou pela seleção feita pelo comprador. Essa informação é usada para metas, atribuição e relatórios.</p><h2>Sorteio</h2><p>Quando o módulo de sorteio for utilizado, somente números marcados como pagos participam. O resultado fica registrado e auditável no sistema.</p><h2>Uso adequado</h2><p>É proibido tentar interferir em reservas, autenticação, pagamentos, webhooks, dados de terceiros ou qualquer mecanismo de segurança.</p><h2>Disponibilidade</h2><p>Serviços externos de hospedagem, autenticação e pagamentos podem sofrer indisponibilidades. A organização deve manter procedimentos de contingência e reconciliação.</p></article><p className="text-xs text-zinc-600 mt-10">Versão: 01/10/2026</p></div></main>}
+import CampaignNotice from "@/components/CampaignNotice";
+export const metadata = { title: "Termos de uso | RifaTrack" };
+export default function Terms() {
+  return (
+    <main className="max-w-3xl mx-auto px-5 py-10">
+      <a href="/" className="text-emerald-300">
+        RifaTrack
+      </a>
+      <h1 className="text-4xl font-bold mt-6">Termos de uso</h1>
+      <CampaignNotice />
+      <article className="mt-6 space-y-5 text-zinc-300 leading-7">
+        <h2 className="text-xl font-bold text-white">Campanha de Dia das Crianças</h2>
+        <p>
+          A finalidade informada é uma ação social das atléticas. O Instagram @impostoresuc é um
+          contato temporário. A identidade do organizador responsável, a descrição e entrega do
+          prêmio, as regras finais, a data do sorteio e a autorização aplicável ainda não foram
+          confirmadas. Este texto não declara que a campanha está autorizada. A operação financeira
+          permanece bloqueada até a conclusão dessas pendências e dos testes operacionais.
+        </p>
+        <h2 className="text-xl font-bold text-white">Reservas e pagamento</h2>
+        <p>
+          O valor e os números escolhidos aparecem antes da reserva. O pedido vence em 10 minutos.
+          No Pix automático, os números ficam bloqueados por mais 2 minutos para receber a
+          confirmação de pagamentos feitos dentro do prazo. Essa tolerância não permite pagar depois
+          do vencimento. Somente a confirmação de recebimento válida marca o pedido como pago.
+        </p>
+        <h2 className="text-xl font-bold text-white">Pagamento fora do prazo e reembolso</h2>
+        <p>
+          Um pagamento tardio ou divergente é encaminhado para conciliação e não garante números.
+          Procure o contato da organização com a referência do pedido e o comprovante. O responsável
+          financeiro verifica a transação e realiza o estorno no provedor quando aplicável. O
+          registro de conciliação no RifaTrack não executa uma transferência de dinheiro.
+        </p>
+        <h2 className="text-xl font-bold text-white">Encerramento e sorteio</h2>
+        <p>
+          O encerramento bloqueia novas vendas e congela a lista elegível. Os novos sorteios usam
+          uma rodada futura da rede drand quicknet, fixada no encerramento, com assinatura
+          verificável. A lista, o compromisso e o resultado ficam disponíveis na página de
+          transparência. Pendências financeiras precisam ser resolvidas antes do sorteio. Reembolsos
+          posteriores não alteram retroativamente o registro do sorteio.
+        </p>
+        <h2 className="text-xl font-bold text-white">Dados e suporte</h2>
+        <p>
+          Os dados são utilizados para identificação, gestão de pedidos, prevenção de duplicidades e
+          conciliação, conforme a{" "}
+          <a className="underline text-emerald-300" href="/privacidade">
+            Política de Privacidade
+          </a>
+          . Não tente interferir em autenticação, reservas ou pagamentos. O canal temporário para
+          dúvidas é{" "}
+          <a className="underline text-emerald-300" href="https://www.instagram.com/impostoresuc/">
+            @impostoresuc
+          </a>
+          .
+        </p>
+      </article>
+      <p className="text-sm text-zinc-400 mt-8">
+        Versão de preparação: 05/10/2026. Regras finais e responsável pendentes.
+      </p>
+    </main>
+  );
+}

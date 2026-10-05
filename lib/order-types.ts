@@ -1,0 +1,24 @@
+export type Order = {
+  status: "pending" | "paid" | "cancelled" | "expired";
+  amount_cents: number;
+  expires_at: string;
+  payment_reference: string;
+  pix_txid: string;
+  campaign_name: string;
+  campaign_slug: string;
+  buyer_name: string;
+  seller_name: string | null;
+  seller_whatsapp: string | null;
+  pix_key: string;
+  pix_receiver: string;
+  pix_payload: string;
+  proof_status: "none" | "submitted" | "approved" | "rejected";
+  proof_uploaded_at: string | null;
+  payment_provider: "manual" | "asaas" | string;
+  provider_payment_id: string | null;
+  provider_status: string | null;
+  provider_paid_at: string | null;
+  provider_net_value_cents: number | null;
+  pix_transaction_id: string | null;
+  numbers: number[];
+};

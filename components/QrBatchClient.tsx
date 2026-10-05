@@ -1,23 +1,157 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import {ArrowLeft,Download,Printer,RefreshCw} from "lucide-react";
-import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureSession} from "@/lib/mfa-browser";
-type Campaign={id:string;name:string;slug:string};
-type Seller={campaign_id:string;campaign_name:string;campaign_slug:string;id:string;name:string;code:string;team:string;active:boolean};
-type Card=Seller&{qr:string;url:string};
-export default function QrBatchClient(){
- const [campaigns,setCampaigns]=useState<Campaign[]>([]);const [sellers,setSellers]=useState<Seller[]>([]);const [campaign,setCampaign]=useState("");const [cards,setCards]=useState<Card[]>([]);const [loading,setLoading]=useState(true);const [generating,setGenerating]=useState(false);
- async function load(){setLoading(true);if(!(await ensureSession("admin","/admin/qrs"))){setLoading(false);return;}const sb=supabaseBrowser();const {data:d,error}=await sb.rpc("admin_dashboard");if(!error&&d){const x=d as any;setCampaigns(x.campaigns);setSellers(x.sellers);if(!campaign&&x.campaigns[0])setCampaign(x.campaigns[0].id)}setLoading(false)}
- useEffect(()=>{load()},[]);
- const selected=useMemo(()=>sellers.filter(s=>s.campaign_id===campaign&&s.active),[sellers,campaign]);
- async function generate(){setGenerating(true);const origin=location.origin;const result:Card[]=[];for(const s of selected){const url=origin+"/campanha/"+s.campaign_slug+"?vendedor="+encodeURIComponent(s.code);const qr=await QRCode.toDataURL(url,{width:700,margin:2,errorCorrectionLevel:"H"});result.push({...s,url,qr})}setCards(result);setGenerating(false)}
- async function downloadAll(){for(const c of cards){const a=document.createElement("a");a.href=c.qr;a.download=("qrcode-"+c.code+".png").toLowerCase();a.click();await new Promise(r=>setTimeout(r,120))}}
- if(loading)return <main className="min-h-screen grid place-items-center bg-zinc-950"><RefreshCw className="animate-spin"/></main>;
- return <main className="min-h-screen bg-zinc-950"><div className="max-w-7xl mx-auto px-5 py-8 space-y-6"><div className="no-print flex flex-col sm:flex-row justify-between gap-4"><div><a href="/admin" className="inline-flex gap-2 items-center text-zinc-400 text-sm"><ArrowLeft size={16}/> Painel</a><h1 className="text-4xl font-black mt-3">QR Codes dos vendedores</h1><p className="text-zinc-500 mt-1">Gere cartões individuais para impressão ou divulgação.</p></div><div className="flex items-start gap-2"><button disabled={!cards.length} onClick={downloadAll} className="inline-flex gap-2 items-center rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-3 disabled:opacity-30"><Download size={17}/> Baixar PNGs</button><button disabled={!cards.length} onClick={()=>window.print()} className="inline-flex gap-2 items-center rounded-xl bg-white text-black px-4 py-3 disabled:opacity-30"><Printer size={17}/> Imprimir</button></div></div>
- <section className="no-print rounded-3xl border border-zinc-800 bg-zinc-900 p-5"><div className="flex flex-col sm:flex-row gap-3"><select value={campaign} onChange={e=>{setCampaign(e.target.value);setCards([])}} className="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2">{campaigns.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><button disabled={!selected.length||generating} onClick={generate} className="rounded-xl bg-emerald-400 text-emerald-950 px-5 py-2 font-black disabled:opacity-40">{generating?"Gerando...":"Gerar "+selected.length+" QR Codes"}</button></div></section>
- <section className="qr-print-grid grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{cards.map(c=><article key={c.id} className="qr-card rounded-3xl border border-zinc-800 bg-white text-black p-6 text-center break-inside-avoid"><div className="text-xl font-black">RifaTrack</div><p className="text-sm text-zinc-600 mt-1">{c.campaign_name}</p><img src={c.qr} alt={"QR Code de "+c.name} className="w-56 h-56 mx-auto mt-4"/><h2 className="text-2xl font-black mt-3">{c.name}</h2><p className="text-sm text-zinc-600">{c.team||"Vendedor"} · código {c.code}</p><p className="text-xs text-zinc-500 mt-3 break-all">{c.url}</p></article>)}</section>
- {!cards.length&&<div className="no-print rounded-3xl border border-dashed border-zinc-800 p-12 text-center text-zinc-500">Escolha uma campanha e gere os cartões.</div>}
- </div></main>
+import { ArrowLeft, Download, Printer, RefreshCw } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
+import { ensureSession } from "@/lib/mfa-browser";
+type Campaign = { id: string; name: string; slug: string };
+type Seller = {
+  campaign_id: string;
+  campaign_name: string;
+  campaign_slug: string;
+  id: string;
+  name: string;
+  code: string;
+  team: string;
+  active: boolean;
+};
+type Card = Seller & { qr: string; url: string };
+export default function QrBatchClient() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [campaign, setCampaign] = useState("");
+  const [cards, setCards] = useState<Card[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  async function load() {
+    setLoading(true);
+    if (!(await ensureSession("admin", "/admin/qrs"))) {
+      setLoading(false);
+      return;
+    }
+    const sb = supabaseBrowser();
+    const { data: d, error } = await sb.rpc("admin_dashboard");
+    if (!error && d) {
+      const x = d as { campaigns: Campaign[]; sellers: Seller[] };
+      setCampaigns(x.campaigns);
+      setSellers(x.sellers);
+      if (!campaign && x.campaigns[0]) setCampaign(x.campaigns[0].id);
+    }
+    setLoading(false);
+  }
+  useEffect(() => {
+    load();
+  }, []);
+  const selected = useMemo(
+    () => sellers.filter((s) => s.campaign_id === campaign && s.active),
+    [sellers, campaign],
+  );
+  async function generate() {
+    setGenerating(true);
+    const origin = location.origin;
+    const result: Card[] = [];
+    for (const s of selected) {
+      const url =
+        origin + "/campanha/" + s.campaign_slug + "?vendedor=" + encodeURIComponent(s.code);
+      const qr = await QRCode.toDataURL(url, { width: 700, margin: 2, errorCorrectionLevel: "H" });
+      result.push({ ...s, url, qr });
+    }
+    setCards(result);
+    setGenerating(false);
+  }
+  async function downloadAll() {
+    for (const c of cards) {
+      const a = document.createElement("a");
+      a.href = c.qr;
+      a.download = ("qrcode-" + c.code + ".png").toLowerCase();
+      a.click();
+      await new Promise((r) => setTimeout(r, 120));
+    }
+  }
+  if (loading)
+    return (
+      <main className="min-h-screen grid place-items-center bg-zinc-950">
+        <RefreshCw className="animate-spin" />
+      </main>
+    );
+  return (
+    <main className="min-h-screen bg-zinc-950">
+      <div className="max-w-7xl mx-auto px-5 py-8 space-y-6">
+        <div className="no-print flex flex-col sm:flex-row justify-between gap-4">
+          <div>
+            <a href="/admin" className="inline-flex gap-2 items-center text-zinc-400 text-sm">
+              <ArrowLeft size={16} /> Painel
+            </a>
+            <h1 className="text-4xl font-black mt-3">QR Codes dos vendedores</h1>
+            <p className="text-zinc-500 mt-1">
+              Gere cartões individuais para impressão ou divulgação.
+            </p>
+          </div>
+          <div className="flex items-start gap-2">
+            <button
+              disabled={!cards.length}
+              onClick={downloadAll}
+              className="inline-flex gap-2 items-center rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-3 disabled:opacity-30"
+            >
+              <Download size={17} /> Baixar PNGs
+            </button>
+            <button
+              disabled={!cards.length}
+              onClick={() => window.print()}
+              className="inline-flex gap-2 items-center rounded-xl bg-white text-black px-4 py-3 disabled:opacity-30"
+            >
+              <Printer size={17} /> Imprimir
+            </button>
+          </div>
+        </div>
+        <section className="no-print rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              value={campaign}
+              onChange={(e) => {
+                setCampaign(e.target.value);
+                setCards([]);
+              }}
+              className="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+            >
+              {campaigns.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <button
+              disabled={!selected.length || generating}
+              onClick={generate}
+              className="rounded-xl bg-emerald-400 text-emerald-950 px-5 py-2 font-black disabled:opacity-40"
+            >
+              {generating ? "Gerando..." : "Gerar " + selected.length + " QR Codes"}
+            </button>
+          </div>
+        </section>
+        <section className="qr-print-grid grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {cards.map((c) => (
+            <article
+              key={c.id}
+              className="qr-card rounded-3xl border border-zinc-800 bg-white text-black p-6 text-center break-inside-avoid"
+            >
+              <div className="text-xl font-black">RifaTrack</div>
+              <p className="text-sm text-zinc-600 mt-1">{c.campaign_name}</p>
+              <img src={c.qr} alt={"QR Code de " + c.name} className="w-56 h-56 mx-auto mt-4" />
+              <h2 className="text-2xl font-black mt-3">{c.name}</h2>
+              <p className="text-sm text-zinc-600">
+                {c.team || "Vendedor"} · código {c.code}
+              </p>
+              <p className="text-xs text-zinc-500 mt-3 break-all">{c.url}</p>
+            </article>
+          ))}
+        </section>
+        {!cards.length && (
+          <div className="no-print rounded-3xl border border-dashed border-zinc-800 p-12 text-center text-zinc-500">
+            Escolha uma campanha e gere os cartões.
+          </div>
+        )}
+      </div>
+    </main>
+  );
 }

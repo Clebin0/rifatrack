@@ -1,56 +1,24 @@
-# Política de Segurança
+# Segurança
 
-## Escopo
+## Controles implementados nesta alteração
 
-O RifaTrack processa dados de compradores, atribuição de vendedores, reservas de números, comprovantes e eventos de pagamento. Falhas em autenticação, autorização, integridade de pedidos, exposição de dados pessoais, manipulação de webhooks ou vazamento de segredos são tratadas como vulnerabilidades de segurança.
+- RPCs financeiros/internos exclusivamente service_role; chave Supabase server-only, sem segredo em parâmetros.
+- Revogação dos RPCs antigos e exclusão do hash do segredo interno no cutover.
+- Permissões administrativas e MFA para alterações críticas; sorteio via API autenticada com verificação de MFA.
+- Reserva transacional com locks; apenas um pedido recebe cada número.
+- Webhook autenticado, valor exato, referência e provedor vinculados ao pedido, eventos idempotentes.
+- Pagamentos atrasados/divergentes e disputas geram conciliação; nada os transforma automaticamente em números pagos.
+- Lista congelada e rodada drand futura; verificação BLS contra chave pública fixa no servidor e navegador.
+- Nonce CSP por requisição, sem unsafe-inline para scripts de produção. Estilos inline ainda permitidos.
+- Limite por IP em transação independente; 429 para limite, 409 para conflito, 500 para erro interno.
+- Links aleatórios de pedido; nome mascarado e ausência de telefone/e-mail na resposta pública.
+- Fila durável com lease, claim_token, tentativas limitadas e envio idempotente.
+- Timeouts em Asaas, Supabase, Resend e drand; health consulta o banco.
 
-## Controles aplicados
+## Controles externos ainda dependentes de configuração/evidência
 
-- Row Level Security no PostgreSQL
-- tabelas sensíveis sem leitura/escrita pública direta
-- funções administrativas com verificação explícita de administrador
-- segredo interno entre API e RPCs sensíveis
-- tokens públicos aleatórios para consulta de pedidos
-- reservas transacionais para impedir venda duplicada
-- rate limit e limites por comprador
-- webhook Asaas autenticado e idempotente
-- validação do valor recebido antes de confirmar números
-- bucket privado para comprovantes, com limite de tamanho e MIME types
-- URLs temporárias para acesso administrativo a comprovantes
-- CSP, HSTS, anti-clickjacking, nosniff e Permissions Policy
-- Dependabot, auditoria de dependências e CI com build/typecheck
-- CODEOWNERS para caminhos sensíveis
-- arquivos de ambiente e segredos excluídos do Git
+Não considerar concluídos apenas porque o código passou: proteção da main, Leaked Password Protection, chave server-only na Vercel, staging separado, Sandbox Asaas, credenciais reais, cron/alertas configurados e exercício de restauração. A situação de cada item está no ROADMAP.
 
-## Dependências
+Nunca armazene chaves em commits, logs, payloads do navegador ou comentários de PR. Reporte incidentes privadamente ao proprietário do repositório. Revogue credenciais comprometidas, preserve os registros de auditoria, interrompa compras e execute a reconciliação antes de reabrir.
 
-A pipeline executa `npm audit --omit=dev --audit-level=high`. Dependências com vulnerabilidades altas ou críticas bloqueiam a validação até serem removidas ou corrigidas.
-
-## Segredos
-
-Nunca coloque em Issues, commits, logs ou screenshots:
-
-- `ASAAS_API_KEY`
-- `ASAAS_WEBHOOK_TOKEN`
-- `RIFATRACK_INTERNAL_API_SECRET`
-- credenciais do Supabase
-- chaves privadas ou tokens de sessão
-
-Se um segredo for exposto, considere-o comprometido e rotacione-o imediatamente.
-
-## Divulgação responsável
-
-Não publique detalhes exploráveis em uma Issue pública. Use um canal privado do responsável pelo repositório ou um Security Advisory privado do GitHub quando disponível. Inclua impacto, passos mínimos para reprodução e a versão/commit afetado.
-
-## Resposta a incidente
-
-Em caso de suspeita de comprometimento:
-
-1. desabilitar temporariamente o provedor automático de pagamentos;
-2. rotacionar os segredos afetados;
-3. revisar `payment_events`, `audit_logs` e logs da Vercel/Supabase;
-4. bloquear a origem abusiva quando aplicável;
-5. reconciliar pagamentos e pedidos manualmente antes de reativar automações;
-6. corrigir a causa raiz e executar novamente os testes de segurança.
-
-Nenhum sistema exposto à internet pode ser declarado invulnerável. Segurança aqui significa reduzir superfície de ataque, aplicar privilégio mínimo, detectar falhas cedo e manter capacidade de resposta e rotação.
+O modelo de confiança inclui a chave administrativa do servidor: quem controla o servidor ou o banco pode alterar os registros. Drand elimina a semente escolhida pelo operador; não promete tornar um administrador do banco incapaz de adulterar o sistema. Publicar e preservar a lista/rodada antes da emissão do beacon permite auditoria externa.
