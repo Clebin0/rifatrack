@@ -15,13 +15,22 @@ export default function ResetPasswordPage() {
     const sb = supabaseBrowser();
     let mounted = true;
     async function check() {
+      const recoveryCode = new URLSearchParams(window.location.search).get("code");
+      if (recoveryCode) {
+        await sb.auth.exchangeCodeForSession(recoveryCode);
+      }
       const { data } = await sb.auth.getSession();
       if (mounted) {
         setValid(Boolean(data.session));
         setReady(true);
       }
     }
-    check();
+    check().catch(() => {
+      if (mounted) {
+        setValid(false);
+        setReady(true);
+      }
+    });
     const { data: listener } = sb.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       if (event === "PASSWORD_RECOVERY" || session) {
@@ -49,9 +58,17 @@ export default function ResetPasswordPage() {
     setLoading(true);
     const { error } = await supabaseBrowser().auth.updateUser({ password });
     if (error) {
-      setMessage(
-        "O link pode ter expirado ou a senha não pôde ser alterada. Solicite um novo link.",
-      );
+      const code = (error as { code?: string }).code || "";
+      const text = (error.message || "").toLowerCase();
+      if (code === "otp_expired" || text.includes("expired") || text.includes("invalid token")) {
+        setMessage("Este link expirou ou já foi usado. Solicite um novo link e abra-o uma única vez.");
+      } else if (code === "same_password") {
+        setMessage("A nova senha precisa ser diferente da senha atual.");
+      } else if (code === "weak_password" || text.includes("weak password")) {
+        setMessage("Escolha uma senha mais forte com pelo menos 12 caracteres.");
+      } else {
+        setMessage("Não foi possível alterar a senha agora. Solicite um novo link e tente novamente.");
+      }
       setLoading(false);
       return;
     }
