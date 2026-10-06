@@ -1,0 +1,20 @@
+export const CHILDRENS_CAMPAIGN = {
+  organizer: "Bianca Oliveira da Silva",
+  initiative: "Atléticas em Ação",
+  beneficiary: "ONG Minha Vida Mudou",
+  drawDate: "12/10/2026 às 18h",
+  drawAt: "2026-10-12T18:00:00-03:00",
+  method: "Loteria Federal",
+  contact: "https://www.instagram.com/impostoresuc/",
+  prizes: [
+    "Caneca com tirante + um ano de curso gratuito na Wizard",
+    "Voucher de R$ 200 d’O Boticário",
+    "Cesta de chocolates",
+    "Garrafa de Jack Daniel’s",
+    "Cesta de chocolates Cacau Show",
+    "Plano mensal na History Barbearia",
+    "Voucher de R$ 100 para consumo no Skinão Bar",
+    "R$ 100 via Pix",
+    "Um Campari",
+  ],
+};
