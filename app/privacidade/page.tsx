@@ -11,10 +11,10 @@ export default function Privacy() {
         <p>
           A responsável informada pela campanha de Dia das Crianças é Bianca Oliveira da Silva, na
           iniciativa Atléticas em Ação. A política final ainda precisa confirmar o controlador e as
-          bases de tratamento. O contato temporário para dúvidas e pedidos de acesso, correção ou
+          bases de tratamento. O contato da organização para dúvidas e pedidos de acesso, correção ou
           exclusão é{" "}
-          <a href="https://www.instagram.com/impostoresuc/" className="underline text-emerald-300">
-            @impostoresuc
+          <a href="https://www.instagram.com/atleticasemacao/" className="underline text-emerald-300">
+            @atleticasemacao
           </a>
           . Não envie documentos ou comprovantes publicamente nos comentários. A política final
           precisa ser aprovada pelo responsável antes da operação financeira.
@@ -48,7 +48,7 @@ export default function Privacy() {
         <h2 className="text-xl font-bold text-white">Direitos</h2>
         <p>
           É possível solicitar acesso, correção, informação sobre compartilhamento e exclusão pelo
-          canal temporário. O responsável deve verificar a titularidade sem expor os dados e avaliar
+          canal da organização. O responsável deve verificar a titularidade sem expor os dados e avaliar
           os registros que precisem ser mantidos por obrigação aplicável ou disputa. Nenhum dado é
           utilizado para publicidade neste fluxo.
         </p>

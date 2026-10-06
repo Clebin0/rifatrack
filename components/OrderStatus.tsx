@@ -249,11 +249,11 @@ export default function OrderStatus({ token }: { token: string }) {
               temporário:{" "}
               <a
                 className="underline"
-                href="https://www.instagram.com/impostoresuc/"
+                href="https://www.instagram.com/atleticasemacao/"
                 target="_blank"
                 rel="noreferrer"
               >
-                @impostoresuc
+                @atleticasemacao
               </a>
               .
             </p>

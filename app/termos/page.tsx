@@ -16,7 +16,7 @@ export default function Terms() {
           sob responsabilidade de {content.organizer}. Todo o valor arrecadado será destinado à ação
           social de Dia das Crianças na {content.beneficiary}. Cada número custa R$ 5,00. Sorteio
           informado: {content.drawDate}, pela {content.method}. Participação somente para maiores de
-          18 anos. O Instagram @impostoresuc permanece o contato temporário. A autorização aplicável
+          18 anos. O Instagram @atleticasemacao permanece o contato da organização. A autorização aplicável
           e o regulamento final ainda não foram confirmados. A operação financeira neste site
           permanece bloqueada enquanto essas pendências e a homologação não forem concluídas.
         </p>
@@ -56,10 +56,10 @@ export default function Terms() {
           <a className="underline text-emerald-300" href="/privacidade">
             Política de Privacidade
           </a>
-          . Não tente interferir em autenticação, reservas ou pagamentos. O canal temporário para
+          . Não tente interferir em autenticação, reservas ou pagamentos. O canal da organização para
           dúvidas é{" "}
-          <a className="underline text-emerald-300" href="https://www.instagram.com/impostoresuc/">
-            @impostoresuc
+          <a className="underline text-emerald-300" href="https://www.instagram.com/atleticasemacao/">
+            @atleticasemacao
           </a>
           .
         </p>
