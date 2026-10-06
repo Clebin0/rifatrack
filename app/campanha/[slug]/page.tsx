@@ -10,8 +10,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
       <CampaignExperience
         slug={slug}
         salesApproved={
-          process.env.VERCEL_ENV !== "production" ||
-          process.env.FINANCIAL_PRODUCTION_APPROVED === "true"
+          !process.env.VERCEL_ENV || process.env.FINANCIAL_PRODUCTION_APPROVED === "true"
         }
       />
     </Suspense>

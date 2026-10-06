@@ -7,7 +7,7 @@
 3. Reproduzir as migrations em staging. Configurar SUPABASE_SECRET_KEY na Vercel somente no servidor. Não copiar a chave para o chat ou frontend.
 4. Homologar reservas concorrentes, MFA, comprovantes privados, webhook de Sandbox, datas inválidas, duplicidade, valor divergente, pagamento atrasado, reembolso, disputa, leases e sorteio com rodada futura.
 5. Gerar e verificar backup da produção. Testar restauração em destino isolado. As primeiras 34 migrations já existem na produção; aplicar somente as versões novas.
-6. Em janela sem checkout ativo, aplicar financial_security_hardening e external_draw_and_server_boundary e publicar o app novo imediatamente. A segunda migration revoga o protocolo antigo: não a aplicar e deixar o app antigo servindo compras. Confirmar health, smoke, CSP/hidratação e leitura administrativa antes de reabrir.
+6. Em janela sem checkout ativo, aplicar as quatro novas migrations na ordem dos arquivos: financial_security_hardening, external_draw_and_server_boundary, public_reads_through_server e backup_recovery_completeness; publicar o app novo imediatamente. A segunda migration revoga o protocolo antigo e a terceira restringe leituras ao servidor. Confirmar health, smoke, CSP/hidratação e leitura administrativa antes de reabrir.
 7. Em caso de falha, manter checkout fechado, corrigir a versão nova e repetir os testes. Um rollback de app sozinho não restaura o antigo protocolo de RPC. Não remover dados financeiros nem alterar migrations já aplicadas.
 8. Só habilitar true após responsável/regras/regularização, credenciais e controles externos aprovados e registrados.
 
