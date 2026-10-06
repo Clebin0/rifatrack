@@ -215,11 +215,8 @@ export default function AdminClient() {
       await load();
       return;
     }
-    const invite = await getSb().rpc("claim_admin_invite", {
-      p_code: setupCode,
-    });
-    if (invite.error)
-      setMessage("Código inválido, expirado ou vinculado a outro e-mail.");
+    const invite = await getSb().rpc("claim_admin_invite", { p_code: setupCode });
+    if (invite.error) setMessage("Código inválido, expirado ou vinculado a outro e-mail.");
     else {
       setMessage("Acesso administrativo ativado.");
       await load();
@@ -234,18 +231,13 @@ export default function AdminClient() {
       p_name: campaignForm.name,
       p_slug: campaignForm.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
       p_description: campaignForm.description,
-      p_price_cents: Math.round(
-        Number(campaignForm.price.replace(",", ".")) * 100,
-      ),
+      p_price_cents: Math.round(Number(campaignForm.price.replace(",", ".")) * 100),
       p_total_numbers: Number(campaignForm.total),
       p_pix_key: campaignForm.pix_key,
       p_pix_receiver: campaignForm.pix_receiver,
-      p_ends_at: campaignForm.ends_at
-        ? new Date(campaignForm.ends_at).toISOString()
-        : undefined,
+      p_ends_at: campaignForm.ends_at ? new Date(campaignForm.ends_at).toISOString() : undefined,
     });
-    if (error)
-      setMessage("Não foi possível criar a campanha: " + error.message);
+    if (error) setMessage("Não foi possível criar a campanha: " + error.message);
     else {
       setCampaignForm({
         name: "",
@@ -273,9 +265,7 @@ export default function AdminClient() {
       p_price_cents: Math.round(Number(edit.price.replace(",", ".")) * 100),
       p_pix_key: edit.pix_key,
       p_pix_receiver: edit.pix_receiver,
-      p_ends_at: edit.ends_at
-        ? new Date(edit.ends_at).toISOString()
-        : undefined,
+      p_ends_at: edit.ends_at ? new Date(edit.ends_at).toISOString() : undefined,
     });
     if (error) setMessage("Falha ao salvar campanha.");
     else {
@@ -305,9 +295,8 @@ export default function AdminClient() {
   async function finalizeCampaign(campaign: Campaign) {
     if (!(await requireWriteMfa())) return;
     const pending =
-      data?.orders.filter(
-        (o) => o.campaign_slug === campaign.slug && o.status === "pending",
-      ).length || 0;
+      data?.orders.filter((o) => o.campaign_slug === campaign.slug && o.status === "pending")
+        .length || 0;
     const warning =
       pending > 0
         ? "\n\nExistem " +
@@ -350,24 +339,28 @@ export default function AdminClient() {
       ))
     )
       return;
-    if (data?.campaigns.find((c) => c.id === id)?.slug === "dia-das-criancas") {
-      setMessage(
-        "Esta campanha informa sorteio pela Loteria Federal. Confirme a extração e as regras de correspondência antes de registrar o resultado.",
-      );
+    const { data: session } = await getSb().auth.getSession();
+    const response = await fetch("/api/admin/draw", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + (session.session?.access_token || ""),
+      },
+      body: JSON.stringify({ campaignId: id }),
+    }).catch(() => null);
+    if (!response) {
+      setMessage("Não foi possível conectar ao serviço do sorteio. Tente novamente.");
       return;
     }
-    const { data: result, error } = await getSb().rpc("admin_draw_campaign", {
-      p_campaign_id: id,
-    });
+    const result = await response.json();
+    const error = response.ok ? null : { message: result.error || "Sorteio indisponível" };
     if (error) {
       setMessage("Não foi possível realizar o sorteio: " + error.message);
       return;
     }
     const number = (result as { number?: number } | null)?.number;
     setMessage(
-      number
-        ? "Número sorteado: " + String(number).padStart(3, "0")
-        : "Sorteio concluído.",
+      number ? "Número sorteado: " + String(number).padStart(3, "0") : "Sorteio concluído.",
     );
     await load();
   }
@@ -384,17 +377,9 @@ export default function AdminClient() {
       p_goal: Number(sellerForm.goal),
       p_whatsapp: sellerForm.whatsapp,
     });
-    if (error)
-      setMessage("Não foi possível cadastrar o vendedor: " + error.message);
+    if (error) setMessage("Não foi possível cadastrar o vendedor: " + error.message);
     else {
-      setSellerForm((x) => ({
-        ...x,
-        name: "",
-        code: "",
-        team: "",
-        whatsapp: "",
-        goal: "30",
-      }));
+      setSellerForm((x) => ({ ...x, name: "", code: "", team: "", whatsapp: "", goal: "30" }));
       setMessage("Vendedor cadastrado.");
       await load();
     }
@@ -405,12 +390,7 @@ export default function AdminClient() {
     const fields = await form("Editar vendedor", [
       { key: "name", label: "Nome do vendedor", value: s.name, required: true },
       { key: "team", label: "Equipe / grupo", value: s.team || "" },
-      {
-        key: "whatsapp",
-        label: "WhatsApp",
-        type: "tel",
-        value: s.whatsapp || "",
-      },
+      { key: "whatsapp", label: "WhatsApp", type: "tel", value: s.whatsapp || "" },
     ]);
     if (!fields) return;
     const { name, team, whatsapp } = fields;
@@ -430,22 +410,14 @@ export default function AdminClient() {
   async function inviteSeller(s: Seller) {
     if (!(await requireWriteMfa())) return;
     const fields = await form("Convidar vendedor", [
-      {
-        key: "email",
-        label: "E-mail de acesso ao portal",
-        type: "email",
-        required: true,
-      },
+      { key: "email", label: "E-mail de acesso ao portal", type: "email", required: true },
     ]);
     if (!fields) return;
     const email = fields.email;
-    const { data: invite, error } = await getSb().rpc(
-      "admin_create_seller_invite",
-      {
-        p_seller_id: s.id,
-        p_email: email.trim(),
-      },
-    );
+    const { data: invite, error } = await getSb().rpc("admin_create_seller_invite", {
+      p_seller_id: s.id,
+      p_email: email.trim(),
+    });
     if (error) {
       setMessage("Não foi possível gerar o acesso: " + error.message);
       return;
@@ -499,9 +471,7 @@ export default function AdminClient() {
       return;
     }
     const sep = lines[0].includes(";") ? ";" : ",";
-    const headers = lines[0]
-      .split(sep)
-      .map((x) => x.trim().toLowerCase().replace(/"/g, ""));
+    const headers = lines[0].split(sep).map((x) => x.trim().toLowerCase().replace(/"/g, ""));
     const value = (parts: string[], name: string) => {
       const i = headers.indexOf(name);
       return i >= 0 ? (parts[i] || "").replace(/^"|"$/g, "").trim() : "";
@@ -549,19 +519,13 @@ export default function AdminClient() {
 
   async function orderStatus(id: string, status: "paid" | "cancelled") {
     if (!(await requireWriteMfa())) return;
-    if (
-      status === "paid" &&
-      !(await confirm("Confirmar recebimento do pagamento deste pedido?"))
-    )
+    if (status === "paid" && !(await confirm("Confirmar recebimento do pagamento deste pedido?")))
       return;
     const { error } = await getSb().rpc("admin_set_order_status", {
       p_order_id: id,
       p_status: status,
     });
-    if (error)
-      setMessage(
-        "Não foi possível alterar o pedido. A reserva pode ter expirado.",
-      );
+    if (error) setMessage("Não foi possível alterar o pedido. A reserva pode ter expirado.");
     else await load();
   }
 
@@ -589,11 +553,7 @@ export default function AdminClient() {
 
   function sellerLink(s: Seller) {
     return (
-      location.origin +
-      "/campanha/" +
-      s.campaign_slug +
-      "?vendedor=" +
-      encodeURIComponent(s.code)
+      location.origin + "/campanha/" + s.campaign_slug + "?vendedor=" + encodeURIComponent(s.code)
     );
   }
   async function copyLink(s: Seller) {
@@ -633,8 +593,7 @@ export default function AdminClient() {
       "PagoEm",
       "Criado",
     ];
-    const escapeCsv = (value: unknown) =>
-      '"' + String(value ?? "").replace(/"/g, '""') + '"';
+    const escapeCsv = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
     const rows = filtered.map((o) => [
       o.payment_reference,
       o.campaign_name,
@@ -649,20 +608,13 @@ export default function AdminClient() {
       o.provider_status || "",
       o.proof_status,
       money(o.amount_cents),
-      o.provider_net_value_cents == null
-        ? ""
-        : money(o.provider_net_value_cents),
+      o.provider_net_value_cents == null ? "" : money(o.provider_net_value_cents),
       o.numbers.join(", "),
-      o.provider_paid_at
-        ? new Date(o.provider_paid_at).toLocaleString("pt-BR")
-        : "",
+      o.provider_paid_at ? new Date(o.provider_paid_at).toLocaleString("pt-BR") : "",
       new Date(o.created_at).toLocaleString("pt-BR"),
     ]);
     const csv =
-      "\uFEFF" +
-      [columns, ...rows]
-        .map((row) => row.map(escapeCsv).join(";"))
-        .join("\r\n");
+      "\uFEFF" + [columns, ...rows].map((row) => row.map(escapeCsv).join(";")).join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -709,18 +661,15 @@ export default function AdminClient() {
     return (
       <main className="min-h-screen grid place-items-center p-5">
         <form onSubmit={claimAdmin} className={panel + " w-full max-w-md"}>
-          <h1 className="text-2xl font-black">
-            Conta sem acesso administrativo
-          </h1>
+          <h1 className="text-2xl font-black">Conta sem acesso administrativo</h1>
           <p className="text-zinc-500 text-sm mt-2">
             Você está autenticado como{" "}
-            <b className="text-zinc-200">{sessionEmail || "outra conta"}</b>,
-            mas esse e-mail não possui perfil administrativo ativo.
+            <b className="text-zinc-200">{sessionEmail || "outra conta"}</b>, mas esse e-mail não
+            possui perfil administrativo ativo.
           </p>
           <div className="mt-4 rounded-xl border border-amber-800 bg-amber-950/20 p-3 text-sm text-amber-200">
-            O código de implantação inicial já foi utilizado. Use este campo
-            apenas se você recebeu um convite administrativo válido do
-            proprietário.
+            O código de implantação inicial já foi utilizado. Use este campo apenas se você recebeu
+            um convite administrativo válido do proprietário.
           </div>
           <input
             value={setupCode}
@@ -759,17 +708,13 @@ export default function AdminClient() {
   }
   const role = data.admin_role;
   const canCampaignWrite = role === "owner" || role === "admin";
-  const canOperate =
-    role === "owner" || role === "admin" || role === "operador";
+  const canOperate = role === "owner" || role === "admin" || role === "operador";
   const canDraw = role === "owner" || role === "admin";
   const canFinanceWrite = ["owner", "admin", "financeiro"].includes(role);
   const canAudit = ["owner", "admin", "auditor"].includes(role);
   const isOwner = role === "owner";
   const canFinanceRead =
-    role === "owner" ||
-    role === "admin" ||
-    role === "financeiro" ||
-    role === "auditor";
+    role === "owner" || role === "admin" || role === "financeiro" || role === "auditor";
 
   return (
     <main className="min-h-screen bg-zinc-950">
@@ -785,16 +730,10 @@ export default function AdminClient() {
           </div>
 
           <div className="flex gap-2">
-            <button
-              onClick={load}
-              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800"
-            >
+            <button onClick={load} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
               <RefreshCw size={18} />
             </button>
-            <button
-              onClick={logout}
-              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800"
-            >
+            <button onClick={logout} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
               <LogOut size={18} />
             </button>
           </div>
@@ -803,15 +742,11 @@ export default function AdminClient() {
 
       <div className="max-w-7xl mx-auto px-5 py-8 space-y-8">
         <div>
-          <p className="text-emerald-400 text-sm font-semibold">
-            PAINEL ADMINISTRATIVO
-          </p>
+          <p className="text-emerald-400 text-sm font-semibold">PAINEL ADMINISTRATIVO</p>
           <h1 className="text-4xl font-black mt-1">Visão geral</h1>
         </div>
         {message && (
-          <div className="border border-zinc-700 bg-zinc-900 rounded-xl p-3 text-sm">
-            {message}
-          </div>
+          <div className="border border-zinc-700 bg-zinc-900 rounded-xl p-3 text-sm">{message}</div>
         )}
         {paymentHealth && (
           <div
@@ -823,13 +758,9 @@ export default function AdminClient() {
             }
           >
             <b>Pagamentos:</b>{" "}
-            {paymentHealth.automatic
-              ? "Pix automático ativo"
-              : "Pix manual ativo"}{" "}
-            · provedor {paymentHealth.provider}
-            {paymentHealth.provider === "asaas"
-              ? " · " + paymentHealth.environment
-              : ""}
+            {paymentHealth.automatic ? "Pix automático ativo" : "Pix manual ativo"} · provedor{" "}
+            {paymentHealth.provider}
+            {paymentHealth.provider === "asaas" ? " · " + paymentHealth.environment : ""}
             {!paymentHealth.configured && (
               <span className="text-amber-300"> · integração incompleta</span>
             )}
@@ -837,12 +768,9 @@ export default function AdminClient() {
         )}
         {!mfaReady && (
           <div className="rounded-2xl border border-amber-800 bg-amber-950/20 p-4 text-sm text-amber-100">
-            <b>MFA pendente.</b> O painel pode ser consultado normalmente. Para
-            ações administrativas,{" "}
-            <a
-              href="/admin/seguranca?return=%2Fadmin"
-              className="underline font-bold"
-            >
+            <b>MFA pendente.</b> O painel pode ser consultado normalmente. Para ações
+            administrativas,{" "}
+            <a href="/admin/seguranca?return=%2Fadmin" className="underline font-bold">
               configure o autenticador
             </a>
             .
@@ -927,31 +855,11 @@ export default function AdminClient() {
 
         <section className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            [
-              "Receita confirmada",
-              money(data.summary.paid_revenue_cents),
-              <WalletCards key="a" />,
-            ],
-            [
-              "Pedidos pendentes",
-              String(data.summary.pending_orders),
-              <Ticket key="b" />,
-            ],
-            [
-              "Campanhas ativas",
-              String(data.summary.active_campaigns),
-              <RefreshCw key="c" />,
-            ],
-            [
-              "Vendedores",
-              String(data.sellers.filter((s) => s.active).length),
-              <Users key="d" />,
-            ],
-            [
-              "Alertas financeiros",
-              String(data.summary.payment_alerts),
-              <ShieldCheck key="e" />,
-            ],
+            ["Receita confirmada", money(data.summary.paid_revenue_cents), <WalletCards key="a" />],
+            ["Pedidos pendentes", String(data.summary.pending_orders), <Ticket key="b" />],
+            ["Campanhas ativas", String(data.summary.active_campaigns), <RefreshCw key="c" />],
+            ["Vendedores", String(data.sellers.filter((s) => s.active).length), <Users key="d" />],
+            ["Alertas financeiros", String(data.summary.payment_alerts), <ShieldCheck key="e" />],
           ].map(([label, value, icon]) => (
             <div key={String(label)} className={panel}>
               <div className="text-zinc-500">{icon}</div>
@@ -972,30 +880,21 @@ export default function AdminClient() {
                   required
                   placeholder="Nome"
                   value={campaignForm.name}
-                  onChange={(e) =>
-                    setCampaignForm({ ...campaignForm, name: e.target.value })
-                  }
+                  onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })}
                   className={input}
                 />
                 <input
                   required
                   placeholder="slug-exemplo"
                   value={campaignForm.slug}
-                  onChange={(e) =>
-                    setCampaignForm({ ...campaignForm, slug: e.target.value })
-                  }
+                  onChange={(e) => setCampaignForm({ ...campaignForm, slug: e.target.value })}
                   className={input}
                 />
               </div>
               <textarea
                 placeholder="Descrição"
                 value={campaignForm.description}
-                onChange={(e) =>
-                  setCampaignForm({
-                    ...campaignForm,
-                    description: e.target.value,
-                  })
-                }
+                onChange={(e) => setCampaignForm({ ...campaignForm, description: e.target.value })}
                 className={input}
               />
               <div className="grid sm:grid-cols-2 gap-3">
@@ -1006,9 +905,7 @@ export default function AdminClient() {
                   step="0.01"
                   placeholder="Preço"
                   value={campaignForm.price}
-                  onChange={(e) =>
-                    setCampaignForm({ ...campaignForm, price: e.target.value })
-                  }
+                  onChange={(e) => setCampaignForm({ ...campaignForm, price: e.target.value })}
                   className={input}
                 />
                 <input
@@ -1018,9 +915,7 @@ export default function AdminClient() {
                   max="100000"
                   placeholder="Quantidade de números"
                   value={campaignForm.total}
-                  onChange={(e) =>
-                    setCampaignForm({ ...campaignForm, total: e.target.value })
-                  }
+                  onChange={(e) => setCampaignForm({ ...campaignForm, total: e.target.value })}
                   className={input}
                 />
               </div>
@@ -1028,40 +923,25 @@ export default function AdminClient() {
                 <input
                   placeholder="Chave Pix"
                   value={campaignForm.pix_key}
-                  onChange={(e) =>
-                    setCampaignForm({
-                      ...campaignForm,
-                      pix_key: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setCampaignForm({ ...campaignForm, pix_key: e.target.value })}
                   className={input}
                 />
                 <input
                   placeholder="Recebedor Pix"
                   value={campaignForm.pix_receiver}
                   onChange={(e) =>
-                    setCampaignForm({
-                      ...campaignForm,
-                      pix_receiver: e.target.value,
-                    })
+                    setCampaignForm({ ...campaignForm, pix_receiver: e.target.value })
                   }
                   className={input}
                 />
               </div>
               <label className="block">
-                <span className="text-xs text-zinc-500">
-                  Prazo final da campanha
-                </span>
+                <span className="text-xs text-zinc-500">Prazo final da campanha</span>
                 <input
                   required
                   type="datetime-local"
                   value={campaignForm.ends_at}
-                  onChange={(e) =>
-                    setCampaignForm({
-                      ...campaignForm,
-                      ends_at: e.target.value,
-                    })
-                  }
+                  onChange={(e) => setCampaignForm({ ...campaignForm, ends_at: e.target.value })}
                   className={input + " mt-1"}
                 />
               </label>
@@ -1072,11 +952,7 @@ export default function AdminClient() {
 
             <form onSubmit={saveCampaign} className={panel + " space-y-3"}>
               <h2 className="text-xl font-black">Configurar campanha</h2>
-              <select
-                value={edit.id}
-                onChange={(e) => pickEdit(e.target.value)}
-                className={input}
-              >
+              <select value={edit.id} onChange={(e) => pickEdit(e.target.value)} className={input}>
                 {data.campaigns.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -1092,9 +968,7 @@ export default function AdminClient() {
               <textarea
                 placeholder="Descrição"
                 value={edit.description}
-                onChange={(e) =>
-                  setEdit({ ...edit, description: e.target.value })
-                }
+                onChange={(e) => setEdit({ ...edit, description: e.target.value })}
                 className={input}
               />
               <div className="grid sm:grid-cols-2 gap-3">
@@ -1110,31 +984,23 @@ export default function AdminClient() {
                 <input
                   placeholder="Chave Pix"
                   value={edit.pix_key}
-                  onChange={(e) =>
-                    setEdit({ ...edit, pix_key: e.target.value })
-                  }
+                  onChange={(e) => setEdit({ ...edit, pix_key: e.target.value })}
                   className={input}
                 />
               </div>
               <input
                 placeholder="Recebedor Pix"
                 value={edit.pix_receiver}
-                onChange={(e) =>
-                  setEdit({ ...edit, pix_receiver: e.target.value })
-                }
+                onChange={(e) => setEdit({ ...edit, pix_receiver: e.target.value })}
                 className={input}
               />
               <label className="block">
-                <span className="text-xs text-zinc-500">
-                  Prazo final da campanha
-                </span>
+                <span className="text-xs text-zinc-500">Prazo final da campanha</span>
                 <input
                   required
                   type="datetime-local"
                   value={edit.ends_at}
-                  onChange={(e) =>
-                    setEdit({ ...edit, ends_at: e.target.value })
-                  }
+                  onChange={(e) => setEdit({ ...edit, ends_at: e.target.value })}
                   className={input + " mt-1"}
                 />
               </label>
@@ -1149,10 +1015,7 @@ export default function AdminClient() {
           <h2 className="text-xl font-black mb-4">Campanhas</h2>
           <div className="grid lg:grid-cols-2 gap-3">
             {data.campaigns.map((c) => (
-              <div
-                key={c.id}
-                className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4"
-              >
+              <div key={c.id} className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4">
                 <div className="flex justify-between gap-3">
                   <div>
                     <h3 className="font-bold text-lg">{c.name}</h3>
@@ -1165,32 +1028,21 @@ export default function AdminClient() {
                 <div className="mt-4 h-2 bg-zinc-800 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-emerald-500"
-                    style={{
-                      width:
-                        Math.round((c.sold_numbers / c.total_numbers) * 100) +
-                        "%",
-                    }}
+                    style={{ width: Math.round((c.sold_numbers / c.total_numbers) * 100) + "%" }}
                   />
                 </div>
                 <p className="text-xs text-zinc-500 mt-2">
-                  {c.sold_numbers} pagos · {c.reserved_numbers} reservados ·{" "}
-                  {c.total_numbers} total
+                  {c.sold_numbers} pagos · {c.reserved_numbers} reservados · {c.total_numbers} total
                 </p>
                 <p
                   className={
                     "text-xs mt-2 " +
-                    (c.deadline_reached && !c.finalized_at
-                      ? "text-amber-300"
-                      : "text-zinc-500")
+                    (c.deadline_reached && !c.finalized_at ? "text-amber-300" : "text-zinc-500")
                   }
                 >
-                  Prazo:{" "}
-                  {c.ends_at
-                    ? new Date(c.ends_at).toLocaleString("pt-BR")
-                    : "não definido"}
+                  Prazo: {c.ends_at ? new Date(c.ends_at).toLocaleString("pt-BR") : "não definido"}
                   {c.finalized_at
-                    ? " · finalizada em " +
-                      new Date(c.finalized_at).toLocaleString("pt-BR")
+                    ? " · finalizada em " + new Date(c.finalized_at).toLocaleString("pt-BR")
                     : c.deadline_reached
                       ? " · prazo encerrado, aguardando finalização"
                       : ""}
@@ -1217,21 +1069,17 @@ export default function AdminClient() {
                         Finalizar campanha
                       </button>
                     )}
-                  {canDraw &&
-                    c.finalized_at &&
-                    c.sold_numbers > 0 &&
-                    !c.draw_number && (
-                      <button
-                        onClick={() => drawCampaign(c.id, c.name)}
-                        className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1"
-                      >
-                        <Trophy size={14} /> Sortear
-                      </button>
-                    )}
+                  {canDraw && c.finalized_at && c.sold_numbers > 0 && !c.draw_number && (
+                    <button
+                      onClick={() => drawCampaign(c.id, c.name)}
+                      className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1"
+                    >
+                      <Trophy size={14} /> Sortear
+                    </button>
+                  )}
                   {c.draw_number && (
                     <span className="px-3 py-2 bg-amber-950 text-amber-300 rounded-lg text-sm inline-flex items-center gap-1">
-                      <Trophy size={14} /> Sorteado:{" "}
-                      {String(c.draw_number).padStart(3, "0")}
+                      <Trophy size={14} /> Sorteado: {String(c.draw_number).padStart(3, "0")}
                     </span>
                   )}
                   {canCampaignWrite && !c.finalized_at && (
@@ -1265,17 +1113,12 @@ export default function AdminClient() {
 
         {canOperate && (
           <section className="grid xl:grid-cols-[360px_1fr] gap-5">
-            <form
-              onSubmit={createSeller}
-              className={panel + " h-fit space-y-3"}
-            >
+            <form onSubmit={createSeller} className={panel + " h-fit space-y-3"}>
               <h2 className="text-xl font-black">Adicionar vendedor</h2>
               <select
                 required
                 value={sellerForm.campaign_id}
-                onChange={(e) =>
-                  setSellerForm({ ...sellerForm, campaign_id: e.target.value })
-                }
+                onChange={(e) => setSellerForm({ ...sellerForm, campaign_id: e.target.value })}
                 className={input}
               >
                 {data.campaigns.map((c) => (
@@ -1288,9 +1131,7 @@ export default function AdminClient() {
                 required
                 placeholder="Nome"
                 value={sellerForm.name}
-                onChange={(e) =>
-                  setSellerForm({ ...sellerForm, name: e.target.value })
-                }
+                onChange={(e) => setSellerForm({ ...sellerForm, name: e.target.value })}
                 className={input}
               />
               <input
@@ -1298,27 +1139,20 @@ export default function AdminClient() {
                 placeholder="Código (ex: JOAO)"
                 value={sellerForm.code}
                 onChange={(e) =>
-                  setSellerForm({
-                    ...sellerForm,
-                    code: e.target.value.toUpperCase(),
-                  })
+                  setSellerForm({ ...sellerForm, code: e.target.value.toUpperCase() })
                 }
                 className={input}
               />
               <input
                 placeholder="Equipe / grupo"
                 value={sellerForm.team}
-                onChange={(e) =>
-                  setSellerForm({ ...sellerForm, team: e.target.value })
-                }
+                onChange={(e) => setSellerForm({ ...sellerForm, team: e.target.value })}
                 className={input}
               />
               <input
                 placeholder="WhatsApp do vendedor"
                 value={sellerForm.whatsapp}
-                onChange={(e) =>
-                  setSellerForm({ ...sellerForm, whatsapp: e.target.value })
-                }
+                onChange={(e) => setSellerForm({ ...sellerForm, whatsapp: e.target.value })}
                 className={input}
               />
               <input
@@ -1327,9 +1161,7 @@ export default function AdminClient() {
                 min="0"
                 placeholder="Meta de números"
                 value={sellerForm.goal}
-                onChange={(e) =>
-                  setSellerForm({ ...sellerForm, goal: e.target.value })
-                }
+                onChange={(e) => setSellerForm({ ...sellerForm, goal: e.target.value })}
                 className={input}
               />
               <button className="bg-white text-black rounded-xl px-4 py-3 font-bold">
@@ -1348,9 +1180,7 @@ export default function AdminClient() {
                   }}
                 />
               </label>
-              <p className="text-xs text-zinc-500">
-                CSV: nome;codigo;equipe;whatsapp;meta
-              </p>
+              <p className="text-xs text-zinc-500">CSV: nome;codigo;equipe;whatsapp;meta</p>
             </form>
 
             <div className={panel}>
@@ -1368,10 +1198,7 @@ export default function AdminClient() {
                   </thead>
                   <tbody>
                     {data.sellers.map((s) => (
-                      <tr
-                        key={s.campaign_id + s.id}
-                        className="border-t border-zinc-800"
-                      >
+                      <tr key={s.campaign_id + s.id} className="border-t border-zinc-800">
                         <td className="py-4">
                           <b>{s.name}</b>
                           <div className="text-xs text-zinc-500">
@@ -1390,10 +1217,7 @@ export default function AdminClient() {
                             >
                               Link
                             </button>
-                            <button
-                              onClick={() => qr(s)}
-                              className="px-2 py-1 bg-zinc-800 rounded"
-                            >
+                            <button onClick={() => qr(s)} className="px-2 py-1 bg-zinc-800 rounded">
                               QR
                             </button>
                             <button
@@ -1485,13 +1309,11 @@ export default function AdminClient() {
               >
                 <option value="">Todos os vendedores</option>
                 <option value="Direto">Direto</option>
-                {Array.from(new Set(data.sellers.map((s) => s.name))).map(
-                  (n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ),
-                )}
+                {Array.from(new Set(data.sellers.map((s) => s.name))).map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -1526,9 +1348,7 @@ export default function AdminClient() {
                     <td>
                       <b>{o.seller_name || "Direto"}</b>
                     </td>
-                    <td className="max-w-[180px] truncate">
-                      {o.numbers.join(", ")}
-                    </td>
+                    <td className="max-w-[180px] truncate">{o.numbers.join(", ")}</td>
                     <td>{money(o.amount_cents)}</td>
                     <td>
                       <span
@@ -1556,9 +1376,7 @@ export default function AdminClient() {
                           </div>
                         )}
                         {o.provider_status && (
-                          <div className="text-zinc-500">
-                            {o.provider_status}
-                          </div>
+                          <div className="text-zinc-500">{o.provider_status}</div>
                         )}
                       </div>
                     </td>

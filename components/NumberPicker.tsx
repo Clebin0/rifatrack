@@ -28,8 +28,7 @@ export default function NumberPicker({
   const chosen = new Set(selected);
   const searchNumber = Number(search);
   const invalid =
-    Boolean(search) &&
-    (!/^\d+$/.test(search) || searchNumber < 1 || searchNumber > total);
+    Boolean(search) && (!/^\d+$/.test(search) || searchNumber < 1 || searchNumber > total);
   function go(next: number) {
     setFound(null);
     setPage(numberPage(total, next).page);
@@ -110,16 +109,15 @@ export default function NumberPicker({
           >
             {Array.from({ length: window.pages }, (_, i) => (
               <option key={i} value={i}>
-                {i * NUMBER_PAGE_SIZE + 1}–
-                {Math.min(total, (i + 1) * NUMBER_PAGE_SIZE)}
+                {i * NUMBER_PAGE_SIZE + 1}–{Math.min(total, (i + 1) * NUMBER_PAGE_SIZE)}
               </option>
             ))}
           </select>
         </div>
       </details>
       <p role="status" className="text-sm ui-muted">
-        Mostrando {window.start}–{window.end} de {total.toLocaleString("pt-BR")}{" "}
-        números. {selected.length} selecionados.
+        Mostrando {window.start}–{window.end} de {total.toLocaleString("pt-BR")} números.{" "}
+        {selected.length} selecionados.
       </p>
       <div
         className="grid grid-cols-5 sm:grid-cols-10 gap-2"
@@ -166,10 +164,7 @@ export default function NumberPicker({
           );
         })}
       </div>
-      <nav
-        aria-label="Páginas dos números"
-        className="flex items-center justify-between gap-3"
-      >
+      <nav aria-label="Páginas dos números" className="flex items-center justify-between gap-3">
         <Button
           variant="secondary"
           disabled={window.page === 0}
@@ -189,8 +184,7 @@ export default function NumberPicker({
         </Button>
       </nav>
       <p className="text-xs ui-muted">
-        A seleção só é garantida após a reserva. A disponibilidade é atualizada
-        a cada 20 segundos.
+        A seleção só é garantida após a reserva. A disponibilidade é atualizada a cada 20 segundos.
       </p>
     </div>
   );

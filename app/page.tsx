@@ -1,5 +1,5 @@
 import { ArrowRight, Gift, HeartHandshake } from "lucide-react";
-import { supabaseServer } from "@/lib/supabase";
+import { supabaseInternal } from "@/lib/supabase";
 import PublicHeader from "@/components/PublicHeader";
 import Card from "@/components/ui/Card";
 import { moneyBRL } from "@/lib/buyer";
@@ -18,15 +18,13 @@ export default async function Home() {
   let campaigns: Campaign[] = [];
   let failed = false;
   try {
-    const result = await supabaseServer().rpc("public_active_campaigns");
+    const result = await supabaseInternal().rpc("public_active_campaigns");
     if (result.error) failed = true;
     else campaigns = (result.data || []) as Campaign[];
   } catch {
     failed = true;
   }
-  const approved =
-    !process.env.VERCEL_ENV ||
-    process.env.FINANCIAL_PRODUCTION_APPROVED === "true";
+  const approved = !process.env.VERCEL_ENV || process.env.FINANCIAL_PRODUCTION_APPROVED === "true";
   return (
     <>
       <PublicHeader />
@@ -42,13 +40,10 @@ export default async function Home() {
               <span className="text-emerald-400">Concorra a prêmios.</span>
             </h1>
             <p className="text-lg ui-muted mt-6 max-w-lg">
-              A ação beneficia crianças atendidas pela ONG Minha Vida Mudou.
-              Cada número custa R$ 5. Confira os prêmios e escolha seus números.
+              A ação beneficia crianças atendidas pela ONG Minha Vida Mudou. Cada número custa R$ 5.
+              Confira os prêmios e escolha seus números.
             </p>
-            <a
-              className="ui-button ui-button-primary mt-7"
-              href="/campanha/dia-das-criancas"
-            >
+            <a className="ui-button ui-button-primary mt-7" href="/campanha/dia-das-criancas">
               Ver campanha e números <ArrowRight size={18} />
             </a>
           </div>
@@ -57,9 +52,7 @@ export default async function Home() {
             <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
               Dia das Crianças · ação social
             </p>
-            <h2 className="text-2xl font-bold mt-3">
-              Curso Wizard, vouchers, chocolates e mais
-            </h2>
+            <h2 className="text-2xl font-bold mt-3">Curso Wizard, vouchers, chocolates e mais</h2>
             <p className="ui-muted mt-4">
               Responsável pela campanha: {CHILDRENS_CAMPAIGN.organizer}.
             </p>
@@ -99,10 +92,7 @@ export default async function Home() {
           ) : !campaigns.length ? (
             <Card>
               <p>Nenhuma campanha aberta para novas participações.</p>
-              <a
-                className="underline inline-block mt-3"
-                href="/campanha/dia-das-criancas"
-              >
+              <a className="underline inline-block mt-3" href="/campanha/dia-das-criancas">
                 Consultar a campanha de Dia das Crianças
               </a>
             </Card>
@@ -115,8 +105,7 @@ export default async function Home() {
                   </p>
                   <h3 className="text-2xl font-bold mt-2">{c.name}</h3>
                   <p className="ui-muted text-sm mt-3 line-clamp-3">
-                    {c.description ||
-                      "Confira os prêmios e as informações da campanha."}
+                    {c.description || "Confira os prêmios e as informações da campanha."}
                   </p>
                   <div className="flex justify-between mt-6 text-sm">
                     <span className="ui-muted">Por número</span>
@@ -141,26 +130,11 @@ export default async function Home() {
             </div>
           )}
         </section>
-        <section
-          aria-label="Como funciona"
-          className="grid sm:grid-cols-3 gap-5 mt-14"
-        >
+        <section aria-label="Como funciona" className="grid sm:grid-cols-3 gap-5 mt-14">
           {[
-            [
-              "1",
-              "Confira a campanha",
-              "Leia os prêmios, o organizador e as regras.",
-            ],
-            [
-              "2",
-              "Escolha e reserve",
-              "Selecione os números e confira seus dados.",
-            ],
-            [
-              "3",
-              "Acompanhe seu pedido",
-              "Guarde o link. Consulte pagamento e resultado.",
-            ],
+            ["1", "Confira a campanha", "Leia os prêmios, o organizador e as regras."],
+            ["2", "Escolha e reserve", "Selecione os números e confira seus dados."],
+            ["3", "Acompanhe seu pedido", "Guarde o link. Consulte pagamento e resultado."],
           ].map(([n, title, description]) => (
             <div key={n}>
               <p className="text-emerald-400 font-bold">{n.padStart(2, "0")}</p>

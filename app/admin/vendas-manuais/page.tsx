@@ -1,1 +1,4 @@
-import ManualSalesClient from "@/components/ManualSalesClient";export default function ManualSalesPage(){return <ManualSalesClient/>}
+import ManualSalesClient from "@/components/ManualSalesClient";
+export default function ManualSalesPage() {
+  return <ManualSalesClient />;
+}

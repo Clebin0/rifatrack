@@ -12,17 +12,44 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test-only
+          POSTGRES_DB: rifatrack_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
-      - run: npm ci --ignore-scripts
+      - run: npm ci
       - run: npm run audit:prod
+      - run: npm run lint
+      - run: npm run format:check
       - run: npm run typecheck
       - run: node --test scripts/test-auth-recovery.mjs
+      - run: npm test
+      - run: npm run test:sql
+      - run: node scripts/test-postgres.mjs
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:test-only@localhost:5432/rifatrack_test
+      - run: npm run test:concurrency
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:test-only@localhost:5432/rifatrack_test
+      - name: Install pgTAP in disposable PostgreSQL service
+        run: docker exec --user root ${{ job.services.postgres.id }} sh -c 'apt-get update -qq && apt-get install -y -qq postgresql-17-pgtap'
+      - run: node scripts/test-pgtap.mjs
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:test-only@localhost:5432/rifatrack_test
       - run: npm run build

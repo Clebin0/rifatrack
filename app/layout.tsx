@@ -1,22 +1,15 @@
 import "./globals.css";
 import { Geist } from "next/font/google";
 import UIProvider from "@/components/ui/UIProvider";
-const geist = Geist({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-geist",
-});
+const geist = Geist({ subsets: ["latin"], display: "swap", variable: "--font-geist" });
 import { connection } from "next/server";
 export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: { default: "RifaTrack", template: "%s | RifaTrack" },
-  description:
-    "Conheça campanhas e prêmios, escolha seus números e acompanhe seu pedido.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://rifatrack.vercel.app",
-  ),
+  description: "Conheça campanhas e prêmios, escolha seus números e acompanhe seu pedido.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://rifatrack.vercel.app"),
   openGraph: {
     title: "RifaTrack",
     description: "Prêmios, regras e acompanhamento do seu pedido.",
@@ -27,11 +20,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   await connection();
   return (
     <html lang="pt-BR" className={geist.variable}>

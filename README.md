@@ -1,116 +1,45 @@
 # RifaTrack
 
-Sistema de gestão de campanhas com rastreamento automático por vendedor, reservas transacionais e painel administrativo.
+Gestão de campanhas, vendedores, reservas, Pix, conciliação e sorteios verificáveis. Next.js App Router, Supabase/Postgres, Vercel, Asaas e Resend opcional.
 
-## Produção
+## Estado financeiro
 
-Aplicação: https://rifatrack.vercel.app
-
-## Funcionalidades
-
-- Campanhas dinâmicas com páginas públicas por slug
-- Seleção de números com atualização de disponibilidade
-- Reserva transacional: dois compradores não conseguem reservar o mesmo número
-- Reserva e QR Pix com expiração em 10 minutos
-- Limite de pedidos e rate limit por fingerprint
-- Link individual por vendedor e geração de QR Code
-- Atribuição automática da origem de cada venda
-- Página pública de acompanhamento do pedido
-- Pix manual com comprovante ou Pix automático via Asaas
-- Painel administrativo autenticado com Supabase Auth
-- Portal separado para vendedores, com acesso somente às próprias vendas
-- Convites de vendedor de uso único vinculados ao e-mail
-- Área financeira com receita bruta/líquida, rankings e alertas
-- Área de auditoria para ações administrativas e eventos de pagamento
-- Gestão de campanhas, vendedores, metas e pedidos
-- Confirmação automática por webhook, com idempotência por evento
-- IDs de transação, valor líquido, horário do pagamento e status do provedor
-- Exportação de pedidos em CSV compatível com Excel
-- Sorteio auditado entre números pagos após encerramento da campanha
-- Resultado do sorteio persistente e público
-- Log de ações administrativas
-- CI com auditoria de dependências, typecheck e build
-- Dependências fixadas e atualizações via Dependabot
-- CSP por requisição com nonce, HSTS e headers de segurança
-- Política de Privacidade e Termos de Uso
-- Recibo digital imprimível/compartilhável
-
-## Segurança
-
-O sistema usa RLS no PostgreSQL, tabelas sem acesso direto para usuários públicos, funções RPC com validação de privilégios, segredo interno para criação de reservas, validação server-side, honeypot, limites de requisição, tokens públicos aleatórios para pedidos e cabeçalhos HTTP de segurança.
-
-Nenhum sistema exposto à internet pode ser considerado invulnerável. Dependências, credenciais e regras de acesso devem ser revisadas e atualizadas continuamente.
-
-## Stack
-
-- Next.js 16
-- React
-- TypeScript
-- Tailwind CSS
-- Supabase / PostgreSQL
-- Supabase Auth
-- Vercel
-
-## Variáveis de ambiente
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-RIFATRACK_INTERNAL_API_SECRET=
-NEXT_PUBLIC_APP_URL=
-PAYMENT_PROVIDER=manual
-ASAAS_ENV=sandbox
-ASAAS_API_KEY=
-ASAAS_PIX_ADDRESS_KEY=
-ASAAS_WEBHOOK_TOKEN=
-```
-
-Nunca exponha `RIFATRACK_INTERNAL_API_SECRET`, `ASAAS_API_KEY` ou `ASAAS_WEBHOOK_TOKEN` no frontend ou no repositório.
-
-## Primeiro administrador
-
-A primeira conta é criada em `/admin/login`. Depois da autenticação, o sistema pede um código de implantação de uso único. Ao ser utilizado corretamente, o código é invalidado no banco e aquela conta passa a ser administradora.
+Pré-produção financeira. A campanha de Dia das Crianças é uma ação social; o contato da organização é https://www.instagram.com/atleticasemacao/. A ação social está divulgada para 17/10/2026; o sorteio foi informado para 12/10/2026 às 18h. Extração, responsável legal, regras finais e autorização aplicável ainda precisam ser definidos. Não habilitar dinheiro real enquanto as pendências do ROADMAP e de OPERATIONS não forem encerradas.
 
 ## Desenvolvimento
 
-```bash
-npm install
-npm run typecheck
-npm run build
-npm run dev
-```
+Use Node 24 (também fixado na Vercel por engines). Execute npm ci, copie .env.example para .env.local e preencha apenas as credenciais do ambiente de desenvolvimento. Execute npm run dev.
 
-## Pagamentos
+NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY são públicas. SUPABASE_SECRET_KEY é a secret API key do Supabase, exclusivamente no servidor, sem prefixo NEXT_PUBLIC_. Ela permite que os RPCs internos sejam executados com service_role; nunca deve chegar ao navegador. RIFATRACK_INTERNAL_API_SECRET foi aposentada.
 
-O RifaTrack possui dois modos:
+## Banco reproduzível
 
-### Manual
-`PAYMENT_PROVIDER=manual`
+supabase/migrations é a única fonte de schema. As primeiras 34 migrations foram recuperadas do histórico registrado no Supabase, com versões e SQL originais. Quatro migrations implementam segurança financeira e drand; ainda aguardam cutover. A migration aditiva 20261006003716_buyer_number_states já foi aplicada para a nova interface, preservando grants. O histórico completo tem 39 arquivos. Não reaplique migrations existentes na produção. O antigo schema.sql e os dois arquivos duplicados foram removidos.
 
-Usa a chave Pix cadastrada na campanha e mantém upload privado de comprovante e confirmação administrativa.
+## Qualidade
 
-### Asaas automático
-`PAYMENT_PROVIDER=asaas`
+- npm run lint e npm run format:check
+- npm run typecheck e npm test
+- npm run test:sql: replay do banco, permissões, pagamento, privacidade e leases
+- TEST_DATABASE_URL apontando para PostgreSQL local rifatrack_test: node scripts/test-postgres.mjs (banco vazio), npm run test:concurrency e node scripts/test-pgtap.mjs (extensão pgTAP instalada)
+- npm run build e npm run audit:prod
 
-Requer `ASAAS_API_KEY`, `ASAAS_PIX_ADDRESS_KEY` e `ASAAS_WEBHOOK_TOKEN`. Cada pedido cria um QR Code Pix individual de pagamento único com expiração de 600 segundos. O webhook está em:
+A CI executa os mesmos testes, inclusive duas conexões PostgreSQL concorrentes e pgTAP. Os testes de infraestrutura imitam auth/storage do Supabase; não substituem a homologação de Auth, Storage, Asaas e Vercel em staging.
 
-`POST /api/webhooks/asaas`
+## Integrações
 
-O endpoint valida o header `asaas-access-token`, persiste o ID do evento antes de processá-lo e trata reenvios de forma idempotente. Eventos de recebimento vinculam o ID da cobrança, status do provedor, valor líquido, horário do pagamento e identificador da transação Pix ao pedido e confirmam os números automaticamente.
+PAYMENT_PROVIDER=manual ou asaas. ASAAS_ENV=sandbox ou production. Asaas requer ASAAS_API_KEY, ASAAS_PIX_ADDRESS_KEY e ASAAS_WEBHOOK_TOKEN. O script npm run asaas:webhook registra a URL do webhook. Só PAYMENT_RECEIVED válido confirma recebimento. O endpoint autentica, valida datas, valor e externalReference e grava eventos idempotentes.
 
-Use uma conta Sandbox do Asaas para homologação e altere `ASAAS_ENV=production` somente com credenciais produtivas.
+Resend requer RESEND_API_KEY e NOTIFICATION_FROM_EMAIL com remetente autorizado. O e-mail do comprador permanece opcional; pedidos sem e-mail não recebem notificações por e-mail. O checkout apenas grava a fila. O worker envia até cinco itens por execução, com timeout, chave de idempotência e lease recuperável.
 
+CRON_SECRET protege GET /api/internal/maintenance. Use um valor aleatório com no mínimo 32 caracteres. A rota limpa reservas vencidas e processa a fila. O endpoint POST /api/internal/notifications/process continua disponível para integrações existentes, protegido por NOTIFICATION_CRON_SECRET; não confunda as duas variáveis.
 
-## Portais
+FINANCIAL_PRODUCTION_APPROVED=false mantém o checkout de produção bloqueado. Mudar para true exige os testes, credenciais e definições da organização documentados em OPERATIONS. Não use a flag como substituta da regularização.
 
-- Administração: `/admin`
-- Financeiro: `/admin/financeiro`
-- Auditoria: `/admin/auditoria`
-- Vendedor: `/vendedor/login`
+## Segurança e publicação
 
-## Documentação
+Scripts usam CSP com nonce por resposta e strict-dynamic; script-src não tem unsafe-inline em produção. O layout é dinâmico para evitar nonce reaproveitado em HTML estático. style-src ainda permite estilos inline usados nos componentes.
 
-- `docs/ARCHITECTURE.md`
-- `docs/OPERATIONS.md`
-- `docs/SECURITY-CHECKLIST.md`
-- `SECURITY.md`
+O limite por IP usa contador atômico no banco, separado da transação da reserva. Na Vercel o IP deve vir do cabeçalho sobrescrito pela plataforma; outro proxy precisa sobrescrever x-real-ip. GETs públicos têm limite compartilhado. Falha do limitador bloqueia a requisição.
+
+Consulte SECURITY.md para os controles e OPERATIONS.md para implantação, rotação, pagamentos, alertas e restauração. O deploy deve ser coordenado com as quatro novas migrations e a chave do servidor. Nunca misture credenciais do banco de produção com previews de testes mutáveis.

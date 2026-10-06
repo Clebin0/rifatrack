@@ -1,7 +1,4 @@
 import type { HTMLAttributes } from "react";
-export default function Card({
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
+export default function Card({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={`ui-card ${className}`} {...props} />;
 }

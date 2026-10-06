@@ -39,9 +39,7 @@ export default function OrderReceipt({
         {order.provider_payment_id && (
           <div className="flex justify-between gap-4">
             <span className="text-zinc-500">Transação</span>
-            <b className="font-mono text-xs break-all text-right">
-              {order.provider_payment_id}
-            </b>
+            <b className="font-mono text-xs break-all text-right">{order.provider_payment_id}</b>
           </div>
         )}
         {order.provider_paid_at && (

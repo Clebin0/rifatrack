@@ -11,12 +11,7 @@ export type BuyerCampaign = {
   finalized_at: string | null;
   seller_name: string | null;
   seller_whatsapp: string | null;
-  sellers: {
-    name: string;
-    code: string;
-    team: string | null;
-    whatsapp: string;
-  }[];
+  sellers: { name: string; code: string; team: string | null; whatsapp: string }[];
   unavailable: number[];
   sold?: number[];
   reserved?: number[];

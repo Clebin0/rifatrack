@@ -14,10 +14,7 @@ export function numberPage(total: number, page: number) {
     ),
   };
 }
-export function reconcileSelection(
-  selected: number[],
-  unavailable: Set<number>,
-) {
+export function reconcileSelection(selected: number[], unavailable: Set<number>) {
   return {
     kept: selected.filter((n) => !unavailable.has(n)),
     removed: selected.filter((n) => unavailable.has(n)),
@@ -31,6 +28,4 @@ export function formatPhone(value: string) {
   return `(${digits.slice(0, 2)}) ${local.length > 4 ? local.slice(0, local.length > 8 ? 5 : 4) + "-" + local.slice(local.length > 8 ? 5 : 4) : local}`;
 }
 export const moneyBRL = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
-    cents / 100,
-  );
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
