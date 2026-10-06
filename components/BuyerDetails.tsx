@@ -77,6 +77,7 @@ export default function BuyerDetails({
         </h2>
         <p className="text-sm ui-muted mt-2">
           Só precisamos do seu nome e telefone. Confira a seleção abaixo.
+          Use os dados de quem ficará com os números, mesmo se outra pessoa fizer o Pix.
         </p>
       </div>
       <div className="rounded-xl border border-zinc-700 p-4">

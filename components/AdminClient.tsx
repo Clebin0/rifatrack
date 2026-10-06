@@ -1,4 +1,5 @@
 "use client";
+import AdminPayerDetails from "./AdminPayerDetails";
 import { useUI } from "@/components/ui/UIProvider";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
@@ -1514,7 +1515,7 @@ export default function AdminClient() {
               <tbody>
                 {filtered.map((o) => (
                   <tr key={o.id} className="border-t border-zinc-800">
-                    <td className="py-4 font-mono">{o.payment_reference}</td>
+                    <td className="py-4 font-mono">{o.payment_reference}<AdminPayerDetails orderId={o.id} /></td>
                     <td>
                       <b>{o.buyer_name}</b>
                       <div className="text-xs text-zinc-500">

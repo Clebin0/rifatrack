@@ -714,6 +714,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      report_order_payer: { Args: { p_token: string; p_name: string; p_reference?: string }; Returns: undefined }
+      order_payer_declaration: { Args: { p_token: string }; Returns: Json }
+      admin_order_payer_declaration: { Args: { p_order_id: string }; Returns: Json }
       admin_audit_dashboard: { Args: never; Returns: Json }
       admin_backup_chunk: {
         Args: { p_entity: string; p_limit?: number; p_offset?: number }
