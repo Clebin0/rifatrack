@@ -37,7 +37,7 @@ Exportar backup criptografado no painel do proprietário. Verificar com npm run 
 
 ## Privacidade e lançamento
 
-Contato temporário: @impostoresuc. Responsável informada: Bianca Oliveira da Silva, iniciativa Atléticas em Ação, para a ONG Minha Vida Mudou. Confirmar o controlador, base legal por finalidade e retenção aprovada. Preparar canal privado de atendimento, verificação de titularidade e anonimização quando cabível. Não anunciar exclusão automática enquanto não implementada e validada.
+Contato da organização: @atleticasemacao. Responsável informada: Bianca Oliveira da Silva, iniciativa Atléticas em Ação, para a ONG Minha Vida Mudou. A ação social está divulgada para 17/10/2026; o sorteio foi informado para 12/10/2026 às 18h e ainda precisa de extração, autorização e regulamento confirmados. Confirmar o controlador, base legal por finalidade e retenção aprovada. Preparar canal privado de atendimento, verificação de titularidade e anonimização quando cabível. Não anunciar exclusão automática enquanto não implementada e validada.
 
 ## Regulamento da campanha de Dia das Crianças
 
