@@ -60,18 +60,32 @@ export default function ResetPasswordPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabaseBrowser().auth.updateUser({ password });
+    const sb = supabaseBrowser();
+    const { data: sessionData } = await sb.auth.getSession();
+    if (!sessionData.session) {
+      setMessage("A sessão de recuperação não está mais ativa. Solicite um novo link e abra-o uma única vez.");
+      setLoading(false);
+      return;
+    }
+    const { error } = await sb.auth.updateUser({ password });
     if (error) {
       const code = (error as { code?: string }).code || "";
       const text = (error.message || "").toLowerCase();
-      if (code === "otp_expired" || text.includes("expired") || text.includes("invalid token")) {
+      if (
+        code === "otp_expired" ||
+        text.includes("expired") ||
+        text.includes("invalid token") ||
+        text.includes("session missing")
+      ) {
         setMessage("Este link expirou ou já foi usado. Solicite um novo link e abra-o uma única vez.");
-      } else if (code === "same_password") {
+      } else if (code === "same_password" || text.includes("different from the old password")) {
         setMessage("A nova senha precisa ser diferente da senha atual.");
       } else if (code === "weak_password" || text.includes("weak password")) {
         setMessage("Escolha uma senha mais forte com pelo menos 12 caracteres.");
       } else {
-        setMessage("Não foi possível alterar a senha agora. Solicite um novo link e tente novamente.");
+        setMessage(
+          `Não foi possível alterar a senha agora. ${code ? `Código: ${code}. ` : ""}Solicite um novo link e tente novamente.`,
+        );
       }
       setLoading(false);
       return;
