@@ -1,4 +1,12 @@
 export const NUMBER_PAGE_SIZE = 50;
+export function availableNumbers(total: number, blocked: Set<number>) {
+  return Array.from({ length: Math.max(0, total) }, (_, i) => i + 1).filter(n => !blocked.has(n));
+}
+export function availableNumberPage(numbers: number[], page: number) {
+  const pages = Math.max(1, Math.ceil(numbers.length / NUMBER_PAGE_SIZE));
+  const safePage = Math.max(0, Math.min(pages - 1, Math.floor(page)));
+  return { page: safePage, pages, numbers: numbers.slice(safePage * NUMBER_PAGE_SIZE, (safePage + 1) * NUMBER_PAGE_SIZE) };
+}
 export function numberPage(total: number, page: number) {
   const pages = Math.max(1, Math.ceil(total / NUMBER_PAGE_SIZE));
   const safePage = Math.max(0, Math.min(pages - 1, Math.floor(page)));

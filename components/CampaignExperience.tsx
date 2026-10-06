@@ -349,7 +349,7 @@ export default function CampaignExperience({
                 <p className="text-sm ui-muted mt-2">
                   {salesOpen
                     ? "Toque em um número livre para escolher. Toque de novo para remover."
-                    : "Consulte os números livres e os que já foram comprados."}
+                    : "Consulte os números disponíveis. As reservas ainda estão fechadas."}
                 </p>
                 <p className="text-sm ui-muted mt-2">
                   {Math.max(0, campaign.total_numbers - unavailable.size)}{" "}
