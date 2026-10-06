@@ -5,7 +5,11 @@ import { CHILDRENS_CAMPAIGN } from "@/lib/campaign-content";
 export default function CampaignFacts({ campaign }: { campaign: BuyerCampaign }) {
   const content = campaign.slug === "dia-das-criancas" ? CHILDRENS_CAMPAIGN : null;
   return (
-    <section aria-label="Informações da campanha" className="grid sm:grid-cols-2 gap-3 my-6">
+    <section
+      id="campaign-information"
+      aria-label="Informações da campanha"
+      className="grid sm:grid-cols-2 gap-3 my-6"
+    >
       <Card className="sm:col-span-2">
         <div className="flex items-center gap-3">
           <Gift className="text-emerald-400" aria-hidden="true" />
