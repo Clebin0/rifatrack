@@ -1,4 +1,5 @@
 import CampaignNotice from "@/components/CampaignNotice";
+import { CHILDRENS_CAMPAIGN as content } from "@/lib/campaign-content";
 export const metadata = { title: "Termos de uso | RifaTrack" };
 export default function Terms() {
   return (
@@ -11,12 +12,20 @@ export default function Terms() {
       <article className="mt-6 space-y-5 text-zinc-300 leading-7">
         <h2 className="text-xl font-bold text-white">Campanha de Dia das Crianças</h2>
         <p>
-          A finalidade informada é uma ação social das atléticas. O Instagram @impostoresuc é um
-          contato temporário. A identidade do organizador responsável, a descrição e entrega do
-          prêmio, as regras finais, a data do sorteio e a autorização aplicável ainda não foram
-          confirmadas. Este texto não declara que a campanha está autorizada. A operação financeira
-          permanece bloqueada até a conclusão dessas pendências e dos testes operacionais.
+          Segundo as informações fornecidas, a campanha é uma iniciativa de {content.initiative},
+          sob responsabilidade de {content.organizer}. Todo o valor arrecadado será destinado à ação
+          social de Dia das Crianças na {content.beneficiary}. Cada número custa R$ 5,00. Sorteio
+          informado: {content.drawDate}, pela {content.method}. Participação somente para maiores de
+          18 anos. O Instagram @impostoresuc permanece o contato temporário. A autorização aplicável
+          e o regulamento final ainda não foram confirmados. A operação financeira neste site
+          permanece bloqueada enquanto essas pendências e a homologação não forem concluídas.
         </p>
+        <h2 className="text-xl font-bold">Prêmios informados</h2>
+        <ul className="list-disc pl-5 space-y-2">
+          {content.prizes.map((prize) => (
+            <li key={prize}>{prize}</li>
+          ))}
+        </ul>
         <h2 className="text-xl font-bold text-white">Reservas e pagamento</h2>
         <p>
           O valor e os números escolhidos aparecem antes da reserva. O pedido vence em 10 minutos.
@@ -33,11 +42,12 @@ export default function Terms() {
         </p>
         <h2 className="text-xl font-bold text-white">Encerramento e sorteio</h2>
         <p>
-          O encerramento bloqueia novas vendas e congela a lista elegível. Os novos sorteios usam
-          uma rodada futura da rede drand quicknet, fixada no encerramento, com assinatura
-          verificável. A lista, o compromisso e o resultado ficam disponíveis na página de
-          transparência. Pendências financeiras precisam ser resolvidas antes do sorteio. Reembolsos
-          posteriores não alteram retroativamente o registro do sorteio.
+          Para esta campanha, o método informado é a Loteria Federal. A organização precisa
+          identificar a extração utilizada, a correspondência entre o resultado e os números, a
+          ordem de distribuição dos prêmios e o procedimento de entrega. A data informada para a
+          campanha não é uma confirmação de extração oficial da Caixa. O RifaTrack não substituirá
+          esse regulamento por um sorteio drand. Os dados e o resultado devem ser registrados com
+          evidências antes de anunciar vencedores.
         </p>
         <h2 className="text-xl font-bold text-white">Dados e suporte</h2>
         <p>
@@ -55,7 +65,7 @@ export default function Terms() {
         </p>
       </article>
       <p className="text-sm text-zinc-400 mt-8">
-        Versão de preparação: 05/10/2026. Regras finais e responsável pendentes.
+        Versão de preparação: 05/10/2026. Regulamento final e regularização pendentes.
       </p>
     </main>
   );

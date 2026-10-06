@@ -2,7 +2,7 @@
 
 ## Implementado na branch, ainda não publicado em produção
 
-- Histórico completo de 34 migrations recuperado; schema obsoleto e duplicatas removidos; quatro novas migrations.
+- Histórico completo de 34 migrations recuperado; quatro migrations de hardening pendentes e uma aditiva de estados da grade já aplicada (39 no total).
 - Chave Supabase server-only e grants service_role; retirada do segredo em RPC/fingerprint.
 - Webhook com validação de data, referência e valor, idempotência, tardios, reembolso e chargeback; painel de conciliação.
 - Rate limit por IP e GETs, códigos HTTP, telefone normalizado, PII pública mascarada.
@@ -16,7 +16,7 @@
 
 ## Evidências locais
 
-Build, typecheck e lint passam. Vitest: 17 testes, incluindo assinatura BLS válida/falsificada e datas financeiras sem fuso. Replay das 38 migrations passa em PGlite; testes de reserva, valor/vínculo, duplicidade, atraso, reembolso, disputa, privacidade, permissões, leases e sorteio passam. PostgreSQL 17, duas conexões concorrentes e oito verificações pgTAP passaram na CI; o Docker local não estava disponível.
+Build, typecheck e lint passam. Vitest: 22 testes, incluindo 100.000 números com 50 controles renderizados, estados acessíveis, colisões de seleção, confirmação de maioridade, BLS e datas financeiras. Replay das 39 migrations passa em PGlite, com estados vendido/reservado verificados e grants restritos preservados. PostgreSQL 17, duas conexões concorrentes e oito verificações pgTAP passaram na CI anterior; o Docker local não estava disponível.
 
 ## Pendências externas ou de homologação
 
@@ -25,10 +25,14 @@ Build, typecheck e lint passam. Vitest: 17 testes, incluindo assinatura BLS vál
 - Staging Supabase separado e homologação Asaas Sandbox; credenciais reais somente depois.
 - Configuração e confirmação do scheduler, monitor externo e notificações de falha.
 - Primeiro exercício de restauração completo (incluindo Auth/Storage), depois mensal.
-- Responsável pela campanha, prêmio/regras/datas e regularização aplicável.
+- Responsável, prêmios e data informados; faltam fotos, extração/correspondência Federal, distribuição/entrega e regularização aplicável.
 - Controlador LGPD, base legal e retenção final; rotina de exclusão/anonimização.
 - Teste visual e de hidratação CSP em ambiente servido e fluxo completo de pagamento.
 
 Não marcar esta lista toda como concluída nem liberar produção financeira apenas com os testes locais.
+
+## Experiência do comprador
+
+Home pública, prêmios/destino social/organizador/data, grade paginada de 50 números com busca/faixas/legenda, avisos de seleção tomada, formulário em duas etapas com rótulos e telefone, barra mobile fixa e pedido com erro de atualização sem perder o último estado. Geist, tema claro/escuro, componentes base, modais/toasts e telas de loading/erro/404. Admin com navegação lateral e ações sem prompt/confirm nativos; portal do vendedor com QR/link/meta. A separação completa das tabelas e formulários do AdminClient e a homologação visual dos fluxos autenticados ainda precisam continuar.
 
 Revisão adicional: RPCs de leitura acessíveis diretamente pelo navegador foram restringidos ao servidor, evitando desvio do limitador das APIs. O backup inclui conciliação/fila e rejeita inconsistências ou destinos de produção com variações de URL. Proteção da main: o GitHub respondeu 403 e exige GitHub Pro para repositório privado.

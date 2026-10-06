@@ -1,6 +1,9 @@
 "use client";
+import Loading from "@/app/loading";
 import { useEffect, useMemo, useState } from "react";
+import { useUI } from "./ui/UIProvider";
 import QRCode from "qrcode";
+import Image from "next/image";
 import { CheckCircle2, Clock3, Copy, RefreshCw, Upload, XCircle } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 
@@ -8,9 +11,11 @@ import type { Order } from "@/lib/order-types";
 import OrderReceipt from "@/components/OrderReceipt";
 
 export default function OrderStatus({ token }: { token: string }) {
+  const { toast } = useUI();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [refreshError, setRefreshError] = useState("");
   const [qr, setQr] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -19,9 +24,15 @@ export default function OrderStatus({ token }: { token: string }) {
   async function load() {
     try {
       const r = await fetch("/api/orders/" + token, { cache: "no-store" });
-      if (!r.ok) throw new Error();
+      if (!r.ok)
+        throw new Error(
+          r.status === 404
+            ? "Pedido não encontrado. Confira o link."
+            : "Não conseguimos atualizar o pedido. Tente novamente antes de pagar.",
+        );
       const data = await r.json();
       setOrder(data);
+      setRefreshError("");
       if (data.pix_payload)
         setQr(
           await QRCode.toDataURL(data.pix_payload, {
@@ -31,8 +42,10 @@ export default function OrderStatus({ token }: { token: string }) {
           }),
         );
       else setQr("");
-    } catch {
-      setOrder(null);
+    } catch (error) {
+      setRefreshError(
+        error instanceof Error ? error.message : "Falha de conexão. Tente novamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -55,17 +68,18 @@ export default function OrderStatus({ token }: { token: string }) {
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
 
-  if (loading)
-    return (
-      <main className="min-h-screen grid place-items-center">
-        <RefreshCw className="animate-spin" />
-      </main>
-    );
+  if (loading) return <Loading />;
   if (!order)
     return (
       <main className="min-h-screen grid place-items-center p-6 text-center">
         <div>
-          <h1 className="text-3xl font-bold">Pedido não encontrado</h1>
+          <h1 className="text-3xl font-bold">Não conseguimos consultar o pedido</h1>
+          <p role="alert" className="ui-muted mt-4">
+            {refreshError}
+          </p>
+          <button className="ui-button ui-button-secondary mt-4" onClick={load}>
+            Tentar novamente
+          </button>
           <a href="/" className="text-emerald-400 inline-block mt-3">
             Voltar ao início
           </a>
@@ -100,14 +114,24 @@ export default function OrderStatus({ token }: { token: string }) {
         return;
       } catch {}
     }
-    await navigator.clipboard.writeText(text + "\n" + location.href);
+    try {
+      await navigator.clipboard.writeText(text + "\n" + location.href);
+    } catch {
+      toast("Não foi possível copiar. Guarde o endereço desta página para acompanhar o pedido.");
+      return;
+    }
     setUploadMessage("Resumo do pedido copiado.");
   }
 
   async function copyPix() {
     const value = order?.pix_payload || order?.pix_key;
     if (!value) return;
-    await navigator.clipboard.writeText(value);
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      toast("Não foi possível copiar o Pix. Tente pelo navegador ou use o QR Code.");
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
@@ -167,6 +191,15 @@ export default function OrderStatus({ token }: { token: string }) {
           Rifa<span className="text-emerald-400">Track</span>
         </a>
         <section className="mt-8 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8">
+          {refreshError && (
+            <p
+              role="alert"
+              className="border border-amber-700 bg-amber-950 text-amber-200 rounded-xl p-4 mb-5"
+            >
+              {refreshError} O status exibido é da última atualização.
+            </p>
+          )}
+          <p className="text-sm ui-muted mb-5">1. Reserva criada · 2. Pagamento · 3. Confirmação</p>
           <div
             className={
               "inline-flex items-center gap-2 border rounded-full px-3 py-2 text-sm " +
@@ -248,12 +281,12 @@ export default function OrderStatus({ token }: { token: string }) {
                   {mm}:{ss}
                 </div>
               </div>
-              {remaining === 0 && order.payment_provider === "asaas" ? (
+              {remaining === 0 ? (
                 <div className="mt-4 rounded-2xl border border-amber-800 bg-amber-950/30 p-4">
-                  <p className="font-bold text-amber-300">QR Code expirado</p>
+                  <p className="font-bold text-amber-300">Prazo de pagamento encerrado</p>
                   <p className="text-sm text-zinc-400 mt-1">
-                    Aguarde alguns instantes enquanto verificamos se houve pagamento antes do
-                    vencimento. Esta página atualiza automaticamente.
+                    Não pague este pedido. Se você pagou dentro do prazo, aguarde a confirmação.
+                    Esta página atualiza automaticamente.
                   </p>
                 </div>
               ) : (
@@ -268,7 +301,7 @@ export default function OrderStatus({ token }: { token: string }) {
                     <>
                       {qr && (
                         <div className="mt-5 bg-white rounded-2xl p-4 w-fit mx-auto">
-                          <img src={qr} alt="QR Code Pix" className="w-56 h-56" />
+                          <Image src={qr} alt="QR Code Pix" width={224} height={224} unoptimized />
                         </div>
                       )}
                       <button
@@ -278,7 +311,9 @@ export default function OrderStatus({ token }: { token: string }) {
                         <Copy size={18} /> Copiar Pix Copia e Cola
                       </button>
                       {copied && (
-                        <p className="text-emerald-400 text-sm mt-2">Código Pix copiado.</p>
+                        <p role="status" className="text-emerald-400 text-sm mt-2">
+                          Código Pix copiado.
+                        </p>
                       )}
                       <div className="mt-4 text-xs text-zinc-500 space-y-1">
                         <p>Recebedor: {order.pix_receiver || "—"}</p>
@@ -325,7 +360,7 @@ export default function OrderStatus({ token }: { token: string }) {
                           disabled={uploading}
                           type="file"
                           accept="image/jpeg,image/png,application/pdf"
-                          className="hidden"
+                          className="block w-full mt-3 text-sm"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) uploadProof(file);

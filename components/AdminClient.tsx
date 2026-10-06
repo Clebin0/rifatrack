@@ -1,4 +1,5 @@
 "use client";
+import { useUI } from "@/components/ui/UIProvider";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import {
@@ -12,7 +13,7 @@ import {
   Trophy,
   ShieldCheck,
 } from "lucide-react";
-import AdminNavigation from "@/components/AdminNavigation";
+
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { ensureMfa, ensureSession, getMfaLevel } from "@/lib/mfa-browser";
 
@@ -106,12 +107,16 @@ const toDateTimeLocal = (value: string | null) => {
 };
 
 export default function AdminClient() {
+  const { confirm, form, toast } = useUI();
   const getSb = () => supabaseBrowser();
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   const [setupCode, setSetupCode] = useState("");
   const [message, setMessage] = useState("");
+  useEffect(() => {
+    if (message) toast(message);
+  }, [message, toast]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [campaignFilter, setCampaignFilter] = useState("");
@@ -299,12 +304,12 @@ export default function AdminClient() {
           " pedido(s) pendente(s). Eles precisam expirar ou ser resolvidos antes da finalização."
         : "";
     if (
-      !confirm(
+      !(await confirm(
         'Finalizar a campanha "' +
           campaign.name +
           '"?\n\nIsso encerra definitivamente novas vendas, congela os números pagos e prepara a campanha para o sorteio.' +
           warning,
-      )
+      ))
     )
       return;
     const { error } = await getSb().rpc("admin_set_campaign_status", {
@@ -329,12 +334,26 @@ export default function AdminClient() {
   async function drawCampaign(id: string, name: string) {
     if (!(await requireWriteMfa())) return;
     if (
-      !confirm(
+      !(await confirm(
         `Sortear agora a campanha "${name}"? O resultado ficará registrado e não poderá ser refeito.`,
-      )
+      ))
     )
       return;
-    const { data: result, error } = await getSb().rpc("admin_draw_campaign", { p_campaign_id: id });
+    const { data: session } = await getSb().auth.getSession();
+    const response = await fetch("/api/admin/draw", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + (session.session?.access_token || ""),
+      },
+      body: JSON.stringify({ campaignId: id }),
+    }).catch(() => null);
+    if (!response) {
+      setMessage("Não foi possível conectar ao serviço do sorteio. Tente novamente.");
+      return;
+    }
+    const result = await response.json();
+    const error = response.ok ? null : { message: result.error || "Sorteio indisponível" };
     if (error) {
       setMessage("Não foi possível realizar o sorteio: " + error.message);
       return;
@@ -368,10 +387,13 @@ export default function AdminClient() {
 
   async function editSeller(s: Seller) {
     if (!(await requireWriteMfa())) return;
-    const name = prompt("Nome do vendedor:", s.name);
-    if (!name) return;
-    const team = prompt("Equipe / grupo:", s.team || "") ?? s.team;
-    const whatsapp = prompt("WhatsApp:", s.whatsapp || "") ?? s.whatsapp;
+    const fields = await form("Editar vendedor", [
+      { key: "name", label: "Nome do vendedor", value: s.name, required: true },
+      { key: "team", label: "Equipe / grupo", value: s.team || "" },
+      { key: "whatsapp", label: "WhatsApp", type: "tel", value: s.whatsapp || "" },
+    ]);
+    if (!fields) return;
+    const { name, team, whatsapp } = fields;
     const { error } = await getSb().rpc("admin_update_seller", {
       p_seller_id: s.id,
       p_name: name,
@@ -387,8 +409,11 @@ export default function AdminClient() {
 
   async function inviteSeller(s: Seller) {
     if (!(await requireWriteMfa())) return;
-    const email = prompt("E-mail que o vendedor usará no portal:");
-    if (!email) return;
+    const fields = await form("Convidar vendedor", [
+      { key: "email", label: "E-mail de acesso ao portal", type: "email", required: true },
+    ]);
+    if (!fields) return;
+    const email = fields.email;
     const { data: invite, error } = await getSb().rpc("admin_create_seller_invite", {
       p_seller_id: s.id,
       p_email: email.trim(),
@@ -405,10 +430,22 @@ export default function AdminClient() {
 
   async function duplicateCampaign(campaign: Campaign) {
     if (!(await requireWriteMfa())) return;
-    const name = prompt("Nome da nova campanha:", campaign.name + " - cópia");
-    if (!name) return;
-    const slug = prompt("Slug da nova campanha:", campaign.slug + "-copia");
-    if (!slug) return;
+    const fields = await form("Duplicar campanha", [
+      {
+        key: "name",
+        label: "Nome da nova campanha",
+        value: campaign.name + " - cópia",
+        required: true,
+      },
+      {
+        key: "slug",
+        label: "Endereço da nova campanha",
+        value: campaign.slug + "-copia",
+        required: true,
+      },
+    ]);
+    if (!fields) return;
+    const { name, slug } = fields;
     const clean = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-");
     const { error } = await getSb().rpc("admin_duplicate_campaign", {
       p_id: campaign.id,
@@ -482,7 +519,8 @@ export default function AdminClient() {
 
   async function orderStatus(id: string, status: "paid" | "cancelled") {
     if (!(await requireWriteMfa())) return;
-    if (status === "paid" && !confirm("Confirmar recebimento do pagamento deste pedido?")) return;
+    if (status === "paid" && !(await confirm("Confirmar recebimento do pagamento deste pedido?")))
+      return;
     const { error } = await getSb().rpc("admin_set_order_status", {
       p_order_id: id,
       p_status: status,
@@ -690,7 +728,7 @@ export default function AdminClient() {
               {data.admin_email} · {data.admin_role}
             </span>
           </div>
-          <AdminNavigation role={role} />
+
           <div className="flex gap-2">
             <button onClick={load} className="p-2 rounded-xl bg-zinc-900 border border-zinc-800">
               <RefreshCw size={18} />

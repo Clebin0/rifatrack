@@ -16,6 +16,20 @@ export async function POST(req: Request) {
   if (!body.success) return NextResponse.json({ error: "Campanha inválida." }, { status: 400 });
   try {
     const sb = supabaseInternal();
+    const campaign = await sb
+      .from("campaigns")
+      .select("slug")
+      .eq("id", body.data.campaignId)
+      .single();
+    if (campaign.error) throw new Error("campaign_unavailable");
+    if (campaign.data.slug === "dia-das-criancas")
+      return NextResponse.json(
+        {
+          error:
+            "Esta campanha informa sorteio pela Loteria Federal. O sorteio drand não se aplica. Confirme e registre a extração e a regra de correspondência do regulamento.",
+        },
+        { status: 409 },
+      );
     const { data, error } = await sb.rpc("draw_state_internal", {
       p_campaign_id: body.data.campaignId,
     });
