@@ -212,10 +212,3 @@ button:disabled {
 .theme-light .number-sold-label {
   color: #3730a3;
 }
-
-.ui-notice { background: #24170b; color: #fde68a; border-color: #92400e; }
-.number-reserved-label { color: #fcd34d; }
-.number-sold-label { color: #a5b4fc; }
-.theme-light .ui-notice { background: #fff7ed; color: #78350f; border-color: #b45309; }
-.theme-light .number-reserved-label { color: #92400e; }
-.theme-light .number-sold-label { color: #3730a3; }
