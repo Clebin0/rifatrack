@@ -247,7 +247,7 @@ export default function CampaignExperience({
           </h1>
           <p className="ui-muted mt-4 max-w-2xl text-lg">
             {campaign.description ||
-              "Conheça a campanha, confira as informações e acompanhe seu pedido."}
+              "Escolha os números. Preencha seus dados. Acompanhe o pagamento."}
           </p>
         </div>
         {slug === "dia-das-criancas" && (
@@ -258,12 +258,12 @@ export default function CampaignExperience({
           </p>
         )}
         <a href="#number-picker" className="ui-button ui-button-primary mt-5">
-          {salesOpen ? "Escolher meus números" : "Ver números da campanha"}
+          {salesOpen ? "Escolher meus números" : "Ver números"}
         </a>
-        <CampaignFacts campaign={campaign} />
-        <div className="flex flex-wrap gap-3 text-sm mb-8">
+
+        <div className="flex flex-wrap gap-3 text-sm mt-5 mb-5">
           <span className="ui-card !py-3">
-            Por número: <strong>{moneyBRL(campaign.price_cents)}</strong>
+            Cada número: <strong>{moneyBRL(campaign.price_cents)}</strong>
           </span>
           {campaign.ends_at && (
             <span className="ui-card !py-3">
@@ -276,6 +276,23 @@ export default function CampaignExperience({
             </span>
           )}
         </div>
+        {slug === "dia-das-criancas" && (
+          <div className="mb-6 text-sm space-y-2">
+            <p>
+              <strong>Sorteio informado:</strong> {CHILDRENS_CAMPAIGN.drawDate}
+            </p>
+            <p className="ui-muted">
+              Ação em apoio à {CHILDRENS_CAMPAIGN.beneficiary}. Organização:{" "}
+              {CHILDRENS_CAMPAIGN.organizer}.
+            </p>
+            <p className="ui-muted">
+              Prêmios: curso Wizard, vouchers, chocolates e mais.{" "}
+              <a className="underline" href="#campaign-information">
+                Ver todos os prêmios e regras
+              </a>
+            </p>
+          </div>
+        )}
         {campaign.draw_result && (
           <Card className="mb-6">
             <p className="ui-muted">Resultado publicado</p>
@@ -329,9 +346,14 @@ export default function CampaignExperience({
                   Escolha seus números
                 </h2>
                 <p className="text-sm ui-muted mt-2">
-                  {Math.max(0, campaign.total_numbers - unavailable.size)} disponíveis ·{" "}
-                  {campaign.sold_numbers} vendidos · {campaign.reserved_numbers}{" "}
-                  reservados
+                  {salesOpen
+                    ? "Toque em um número livre para escolher. Toque de novo para remover."
+                    : "Consulte os números livres e os que já foram comprados."}
+                </p>
+                <p className="text-sm ui-muted mt-2">
+                  {Math.max(0, campaign.total_numbers - unavailable.size)}{" "}
+                  disponíveis · {campaign.sold_numbers} vendidos ·{" "}
+                  {campaign.reserved_numbers} reservados
                 </p>
               </div>
               <Button
@@ -347,12 +369,12 @@ export default function CampaignExperience({
               </Button>
             </div>
             {salesOpen && (
-              <div className="flex gap-2 mb-5">
+              <div className="flex flex-wrap gap-2 mb-5">
                 <Button variant="secondary" onClick={() => randomPick(5)}>
-                  Escolher 5
+                  Escolher 5 aleatórios
                 </Button>
                 <Button variant="secondary" onClick={() => randomPick(10)}>
-                  Escolher 10
+                  Escolher 10 aleatórios
                 </Button>
               </div>
             )}
@@ -385,6 +407,16 @@ export default function CampaignExperience({
                 >
                   Consultar as regras
                 </a>
+                {slug === "dia-das-criancas" && (
+                  <a
+                    href={CHILDRENS_CAMPAIGN.contact}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ui-button ui-button-secondary w-full mt-4"
+                  >
+                    Falar com a organização
+                  </a>
+                )}
               </>
             ) : (
               <>
@@ -394,14 +426,47 @@ export default function CampaignExperience({
                     <span>{selected.length} número(s)</span>
                     <strong>{moneyBRL(amount)}</strong>
                   </div>
-                  <p className="text-sm ui-muted break-words mb-5">
-                    {selected.length
-                      ? [...selected]
+                  {selected.length ? (
+                    <div className="mb-5">
+                      <p className="text-sm ui-muted mb-2">
+                        Toque no × para remover um número.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {[...selected]
                           .sort((a, b) => a - b)
-                          .map((n) => String(n).padStart(3, "0"))
-                          .join(", ")
-                      : "Escolha um número na grade para começar."}
-                  </p>
+                          .map((n) => (
+                            <Button
+                              key={n}
+                              variant="secondary"
+                              disabled={busy}
+                              aria-label={`Remover número ${n} da seleção`}
+                              onClick={() =>
+                                select(
+                                  selectedRef.current.filter(
+                                    (value) => value !== n,
+                                  ),
+                                )
+                              }
+                            >
+                              {String(n).padStart(3, "0")}{" "}
+                              <span aria-hidden="true">×</span>
+                            </Button>
+                          ))}
+                      </div>
+                      <Button
+                        className="mt-3"
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => select([])}
+                      >
+                        Limpar seleção
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm ui-muted mb-5">
+                      Toque em um número livre para começar.
+                    </p>
+                  )}
                   <Button
                     className="w-full"
                     disabled={!selected.length || Boolean(networkError)}
@@ -429,6 +494,7 @@ export default function CampaignExperience({
             )}
           </Card>
         </section>
+        <CampaignFacts campaign={campaign} />
         <footer className="ui-muted text-sm pt-10 flex flex-wrap gap-5">
           <a href="/termos">Termos e regras</a>
           <a href="/privacidade">Privacidade</a>
@@ -437,32 +503,47 @@ export default function CampaignExperience({
       </main>
       <div className="lg:hidden fixed bottom-0 inset-x-0 ui-header !border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center gap-4 z-30">
         <div className="flex-1">
-          <p className="text-xs ui-muted">{selected.length} número(s)</p>
-          <strong>{moneyBRL(amount)}</strong>
+          <p className="text-xs ui-muted">
+            {salesOpen
+              ? `${selected.length} número(s)`
+              : "Novas compras bloqueadas"}
+          </p>
+          <strong>{salesOpen ? moneyBRL(amount) : "Em preparação"}</strong>
         </div>
-        <Button
-          disabled={
-            !salesOpen || !selected.length || Boolean(networkError) || busy
-          }
-          onClick={
-            step === 1
-              ? continueToDetails
-              : () =>
-                  (
-                    document.getElementById(
-                      "buyer-details",
-                    ) as HTMLFormElement | null
-                  )?.requestSubmit()
-          }
-        >
-          {!salesOpen
-            ? "Reservas fechadas"
-            : step === 1
-              ? "Continuar"
-              : busy
-                ? "Reservando…"
-                : "Reservar"}
-        </Button>
+        {!salesOpen && slug === "dia-das-criancas" ? (
+          <a
+            className="ui-button ui-button-secondary"
+            href={CHILDRENS_CAMPAIGN.contact}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Preciso de ajuda
+          </a>
+        ) : (
+          <Button
+            disabled={
+              !salesOpen || !selected.length || Boolean(networkError) || busy
+            }
+            onClick={
+              step === 1
+                ? continueToDetails
+                : () =>
+                    (
+                      document.getElementById(
+                        "buyer-details",
+                      ) as HTMLFormElement | null
+                    )?.requestSubmit()
+            }
+          >
+            {!salesOpen
+              ? "Reservas fechadas"
+              : step === 1
+                ? "Preencher meus dados"
+                : busy
+                  ? "Reservando…"
+                  : "Reservar e ver o Pix"}
+          </Button>
+        )}
       </div>
     </>
   );
