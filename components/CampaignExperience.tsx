@@ -301,7 +301,9 @@ export default function CampaignExperience({
                 <h2 className="text-2xl font-bold mt-2">Escolha seus números</h2>
                 <p className="text-sm ui-muted mt-2">
                   {Math.max(0, campaign.total_numbers - unavailable.size)} disponíveis ·{" "}
-                  {campaign.reserved_numbers} reservados · {campaign.sold_numbers} vendidos
+                  {campaign.reserved_numbers} reservados ·{" "}
+                  {Math.max(0, campaign.total_numbers - unavailable.size)} disponíveis ·{" "}
+                  {campaign.sold_numbers} vendidos
                 </p>
               </div>
               <Button

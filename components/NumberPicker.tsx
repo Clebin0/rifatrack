@@ -39,8 +39,8 @@ export default function NumberPicker({
       >
         <li>○ Disponível</li>
         <li className="text-emerald-400">✓ Selecionado</li>
-        <li className="text-amber-300">◷ Reservado</li>
-        <li className="text-indigo-300">● Vendido</li>
+        <li className="number-reserved-label">◷ Reservado</li>
+        <li className="number-sold-label">● Vendido</li>
         <li>× Indisponível</li>
       </ul>
       <form
