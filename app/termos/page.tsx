@@ -22,7 +22,8 @@ export default function Terms() {
           A organização responsável é a iniciativa <strong>{content.initiative}</strong>, informada como conduzida por
           <strong> {content.organizer}</strong>, com valores destinados à ação na <strong>{content.beneficiary}</strong>.
           A organização, e não a RifaTrack, responde pela autorização, divulgação, arrecadação, sorteio, prêmios e entrega.
-          A identidade jurídica, documento, endereço e canal formal ainda precisam ser publicados antes da abertura.
+          O atendimento é feito por <a className="underline text-emerald-300" href="mailto:rifatrack@gmail.com">rifatrack@gmail.com</a>.
+          A identidade jurídica, documento e endereço ainda precisam ser confirmados antes da abertura.
         </p></section>
         <section><h2 className="text-xl font-bold text-white">2. Situação desta campanha</h2><p>
           Foram informados preço de R$ 5,00 por número, sorteio em {content.drawDate} e uso da {content.method}.
@@ -64,7 +65,8 @@ export default function Terms() {
         </p></section>
         <section><h2 className="text-xl font-bold text-white">7. Dados, segurança e suporte</h2><p>
           O uso de dados está explicado na <a className="underline text-emerald-300" href="/privacidade">Política de Privacidade</a>.
-          Não tente interferir em autenticação, reservas, pagamentos ou resultados. O contato provisório é
+          Não tente interferir em autenticação, reservas, pagamentos ou resultados. Para atendimento, use
+          <a className="underline text-emerald-300" href="mailto:rifatrack@gmail.com"> rifatrack@gmail.com</a>. A organização também está em
           <a className="underline text-emerald-300" href={content.contact}> @atleticasemacao</a>. Não envie documentos ou comprovantes em comentários públicos.
         </p></section>
         <section><h2 className="text-xl font-bold text-white">8. Aceite e alterações</h2><p>
