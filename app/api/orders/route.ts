@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       p_numbers: parsed.data.numbers,
     });
 
-    if (error){await logSystemEvent({requestId:rid,severity:"warn",category:"checkout",code:"RESERVATION_REJECTED",route:"/api/orders",metadata:{campaign:parsed.data.campaignSlug}});return NextResponse.json({ error: "Não foi possível reservar. Atualize a página e tente novamente." }, { status: 409,headers })}
+    if (error){await logSystemEvent({requestId:rid,severity:"warn",category:"checkout",code:"RESERVATION_REJECTED",route:"/api/orders",metadata:{campaign:parsed.data.campaignSlug}});return NextResponse.json({ error: "Não foi possível reservar. Confira a disponibilidade dos números e tente novamente." }, { status: 409,headers })}
 
     const order = data as {id:string;public_token:string;amount_cents:number;payment_reference:string};
     if (asaasAutomaticEnabled()) {

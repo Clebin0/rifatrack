@@ -1,174 +1,468 @@
 "use client";
-import CampaignNotice from "@/components/CampaignNotice";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, Clock3, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
-
-type SellerRef={name:string;code:string;team:string|null;whatsapp:string};
-type Campaign = {
-  id: string; name: string; slug: string; description: string; price_cents: number;
-  total_numbers: number; pix_key: string; pix_receiver: string; ends_at: string | null; status:"active"|"closed"; stored_status:"active"|"closed";
-  deadline_reached:boolean; finalized_at:string|null; finalized_by:string|null;
-  seller_name: string | null; seller_whatsapp:string|null; sellers: SellerRef[]; unavailable: number[]; sold_numbers: number; reserved_numbers: number;
-  draw_result:{number:number;drawn_at:string}|null;
-};
-
-export default function CampaignExperience({ slug, salesApproved = true }: { slug: string; salesApproved?: boolean }) {
-  const query = useSearchParams();
+import { RefreshCw } from "lucide-react";
+import type { BuyerCampaign } from "@/lib/campaign-types";
+import { moneyBRL, reconcileSelection } from "@/lib/buyer";
+import PublicHeader from "./PublicHeader";
+import CampaignNotice from "./CampaignNotice";
+import CampaignFacts from "./CampaignFacts";
+import NumberPicker from "./NumberPicker";
+import BuyerDetails, { type BuyerDetailsValue } from "./BuyerDetails";
+import Button from "./ui/Button";
+import Card from "./ui/Card";
+import { useUI } from "./ui/UIProvider";
+import Loading from "@/app/loading";
+import { CHILDRENS_CAMPAIGN } from "@/lib/campaign-content";
+export default function CampaignExperience({
+  slug,
+  salesApproved = true,
+}: {
+  slug: string;
+  salesApproved?: boolean;
+}) {
   const router = useRouter();
-  const referralSeller = (query.get("vendedor") || "").toUpperCase();
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const query = useSearchParams();
+  const referral = (query.get("vendedor") || "").toUpperCase();
+  const { toast } = useUI();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+  const [campaign, setCampaign] = useState<BuyerCampaign | null>(null);
   const [selected, setSelected] = useState<number[]>([]);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [selectedSeller,setSelectedSeller]=useState("");
-  const [consent, setConsent] = useState(false);
-  const [website, setWebsite] = useState("");
-  const [message, setMessage] = useState("");
+  const selectedRef = useRef<number[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [now,setNow]=useState(()=>Date.now());
-
-  async function load() {
-    try {
-      const suffix = referralSeller ? "?vendedor=" + encodeURIComponent(referralSeller) : "";
-      const res = await fetch("/api/campaigns/" + encodeURIComponent(slug) + suffix, { cache: "no-store" });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setCampaign(data);
-      setSelected((current) => current.filter((n) => !(data.unavailable || []).includes(n)));
-    } catch { setCampaign(null); }
-    finally { setLoading(false); }
+  const [refreshing, setRefreshing] = useState(false);
+  const [networkError, setNetworkError] = useState("");
+  const [selectionNotice, setSelectionNotice] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [step, setStep] = useState(1);
+  const [now, setNow] = useState(() => Date.now());
+  function select(numbers: number[]) {
+    selectedRef.current = numbers;
+    setSelected(numbers);
   }
-
+  const refresh = useCallback(
+    async (signal?: AbortSignal) => {
+      setRefreshing(true);
+      try {
+        const res = await fetch(
+          `/api/campaigns/${encodeURIComponent(slug)}${referral ? `?vendedor=${encodeURIComponent(referral)}` : ""}`,
+          {
+            cache: "no-store",
+            signal: signal
+              ? AbortSignal.any([signal, AbortSignal.timeout(10000)])
+              : AbortSignal.timeout(10000),
+          },
+        );
+        if (!res.ok)
+          throw new Error(
+            res.status === 404
+              ? "Não encontramos esta campanha. Confira o endereço."
+              : "Não foi possível atualizar a disponibilidade. Tente novamente antes de reservar.",
+          );
+        const data: BuyerCampaign = await res.json();
+        if (signal?.aborted) return;
+        setCampaign(data);
+        setNetworkError("");
+        const result = reconcileSelection(
+          selectedRef.current,
+          new Set(data.unavailable || []),
+        );
+        if (result.removed.length) {
+          select(result.kept);
+          const notice = `Os números ${result.removed.map((n) => String(n).padStart(3, "0")).join(", ")} foram reservados por outra pessoa e saíram da sua seleção. Escolha outros para continuar.`;
+          setSelectionNotice(notice);
+          toastRef.current(notice);
+        }
+      } catch (error) {
+        if (!signal?.aborted)
+          setNetworkError(
+            error instanceof Error
+              ? error.message
+              : "Falha de conexão. Tente novamente.",
+          );
+      } finally {
+        if (!signal?.aborted) {
+          setRefreshing(false);
+          setLoading(false);
+        }
+      }
+    },
+    [slug, referral],
+  );
   useEffect(() => {
-    load();
-    const timer = setInterval(load, 20000);
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    select([]);
+    setCampaign(null);
+    setLoading(true);
+    setStep(1);
+    setSelectionNotice("");
+    async function poll() {
+      if (!document.hidden) await refresh(controller.signal);
+      if (!controller.signal.aborted) timer = setTimeout(poll, 20000);
+    }
+    void poll();
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [refresh]);
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [slug, referralSeller]);
-
-  useEffect(()=>{
-    const timer=setInterval(()=>setNow(Date.now()),1000);
-    return()=>clearInterval(timer);
-  },[]);
-
-  const unavailable = useMemo(() => new Set(campaign?.unavailable || []), [campaign]);
+  }, []);
+  const unavailable = useMemo(
+    () => new Set(campaign?.unavailable || []),
+    [campaign],
+  );
+  const sold = useMemo(() => new Set(campaign?.sold || []), [campaign]);
+  const reserved = useMemo(() => new Set(campaign?.reserved || []), [campaign]);
+  const closed = Boolean(
+    campaign?.deadline_reached ||
+    campaign?.finalized_at ||
+    campaign?.status !== "active" ||
+    (campaign.ends_at && now >= Date.parse(campaign.ends_at)),
+  );
+  const salesOpen = salesApproved && !closed;
   const amount = (campaign?.price_cents || 0) * selected.length;
-  const sellerCode = referralSeller || selectedSeller;
-  const needsSeller = Boolean(campaign?.sellers?.length) && !campaign?.seller_name;
-  const chosenSeller = campaign?.seller_name ? {name:campaign.seller_name,whatsapp:campaign.seller_whatsapp||""} : campaign?.sellers?.find(s=>s.code===selectedSeller) || null;
-  const sellerWhatsApp = chosenSeller?.whatsapp?.replace(/\D/g,"") || "";
-  const deadlineMs=campaign?.ends_at?new Date(campaign.ends_at).getTime():null;
-  const deadlineReached=Boolean(campaign?.deadline_reached||(deadlineMs&&now>=deadlineMs));
-  const salesOpen=Boolean(salesApproved && campaign?.status === "active" && !deadlineReached);
-  const remainingSeconds=deadlineMs?Math.max(0,Math.floor((deadlineMs-now)/1000)):null;
-  const countdown=remainingSeconds==null?null:
-    remainingSeconds<=0?"Prazo encerrado":
-    Math.floor(remainingSeconds/86400)+"d "+Math.floor((remainingSeconds%86400)/3600)+"h "+Math.floor((remainingSeconds%3600)/60)+"m "+(remainingSeconds%60)+"s";
-
+  const drawRemaining = Math.max(
+    0,
+    Date.parse(CHILDRENS_CAMPAIGN.drawAt) - now,
+  );
+  const drawDays = Math.floor(drawRemaining / 86400000);
+  const drawHours = Math.floor((drawRemaining % 86400000) / 3600000);
   function toggle(n: number) {
     if (!salesOpen || unavailable.has(n)) return;
-    setSelected((current) => current.includes(n) ? current.filter((x) => x !== n) : current.length < 50 ? [...current, n] : current);
+    const current = selectedRef.current;
+    if (!current.includes(n) && current.length >= 50) {
+      toastRef.current("Você pode escolher até 50 números por pedido.");
+      return;
+    }
+    select(
+      current.includes(n) ? current.filter((v) => v !== n) : [...current, n],
+    );
   }
-
   function randomPick(qty: number) {
     if (!campaign || !salesOpen) return;
-    const available = Array.from({ length: campaign.total_numbers }, (_, i) => i + 1).filter((n) => !unavailable.has(n));
-    for (let i = available.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [available[i], available[j]] = [available[j], available[i]]; }
-    setSelected(available.slice(0, Math.min(qty, 50)));
+    // Reservoir sampling bounds memory even for campaigns with 100,000 numbers.
+    const picks: number[] = [];
+    let seen = 0;
+    for (let n = 1; n <= campaign.total_numbers; n++) {
+      if (unavailable.has(n)) continue;
+      seen++;
+      if (picks.length < qty) picks.push(n);
+      else {
+        const index = Math.floor(Math.random() * seen);
+        if (index < qty) picks[index] = n;
+      }
+    }
+    select(picks);
   }
-
-  async function submit() {
-    if (!campaign || !salesOpen || !consent || selected.length === 0) return;
-    setSubmitting(true); setMessage("");
+  function continueToDetails() {
+    if (!selected.length || !salesOpen) return;
+    setStep(2);
+    requestAnimationFrame(() => {
+      document.getElementById("details-heading")?.focus();
+      document
+        .getElementById("buyer-summary")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+  async function submit(value: BuyerDetailsValue) {
+    if (!salesOpen || !selectedRef.current.length || busy || networkError)
+      return;
+    setBusy(true);
+    setSubmitError("");
     try {
       const res = await fetch("/api/orders", {
-        method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ campaignSlug: slug, sellerCode, buyerName: name, buyerPhone: phone, buyerEmail: email, numbers: selected, website })
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          campaignSlug: slug,
+          ...value,
+          numbers: selectedRef.current,
+        }),
+        signal: AbortSignal.timeout(20000),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Falha na reserva");
-      router.push("/pedido/" + data.order.public_token);
-    } catch (e) { setMessage(e instanceof Error ? e.message : "Falha ao reservar."); await load(); }
-    finally { setSubmitting(false); }
+      if (!res.ok)
+        throw new Error(
+          data.error ||
+            "Não foi possível reservar. Confira os números e tente novamente.",
+        );
+      router.push(`/pedido/${data.order.public_token}`);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error && error.name === "TimeoutError"
+          ? "A resposta demorou. Antes de tentar novamente, verifique se a reserva foi criada para evitar pedidos duplicados."
+          : error instanceof Error
+            ? error.message
+            : "Não foi possível concluir a reserva.",
+      );
+      await refresh();
+    } finally {
+      setBusy(false);
+    }
   }
-
-  if (loading) return <main className="min-h-screen grid place-items-center"><RefreshCw className="animate-spin" /></main>;
-  if (!campaign) return <main className="min-h-screen grid place-items-center p-6 text-center"><div><h1 className="text-3xl font-bold">Campanha indisponível</h1><p className="text-zinc-400 mt-2">Ela pode ter sido encerrada ou o endereço está incorreto.</p></div></main>;
-
-  const progress = Math.round((campaign.sold_numbers / campaign.total_numbers) * 100);
-
-  return <main className="min-h-screen bg-zinc-950">
-    <header className="border-b border-zinc-800 bg-zinc-950/95 sticky top-0 z-20 backdrop-blur">
-      <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-        <a href="/" className="font-black tracking-tight text-xl">Rifa<span className="text-emerald-400">Track</span></a>
-        <span className="text-xs text-zinc-400 flex gap-2 items-center"><ShieldCheck size={16}/> reserva protegida</span>
-      </div>
-    </header>
-
-    <div className="max-w-6xl mx-auto px-5 py-8">
-      {slug === "dia-das-criancas" && <CampaignNotice />}
-      <section className="grid lg:grid-cols-[1fr_340px] gap-8">
-        <div>
-          <div className="mb-8">
-            <span className={salesOpen?"text-emerald-400 text-sm font-semibold uppercase tracking-wider":"text-amber-400 text-sm font-semibold uppercase tracking-wider"}>{salesOpen?"Campanha ativa":campaign.finalized_at?"Campanha finalizada":(!salesApproved ? "Campanha em preparação" : "Prazo encerrado")}</span>
-            <h1 className="text-4xl md:text-5xl font-black mt-2">{campaign.name}</h1>
-            <p className="text-zinc-400 mt-3 max-w-2xl">{campaign.description || "Escolha seus números e acompanhe a confirmação do pedido em tempo real."}</p>
-            {campaign.ends_at&&<div className={"mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm "+(deadlineReached?"border-amber-800 bg-amber-950/30 text-amber-200":"border-zinc-700 bg-zinc-900 text-zinc-300")}><Clock3 size={17}/><span>{deadlineReached?"Prazo de participação encerrado":<>Encerra em <b>{countdown}</b> · {new Date(campaign.ends_at).toLocaleString("pt-BR")}</>}</span></div>}
-            {campaign.seller_name && <div className="mt-4 flex flex-wrap gap-2 items-center"><div className="inline-flex items-center gap-2 bg-emerald-950 border border-emerald-800 rounded-full px-4 py-2 text-sm">Indicação de <strong>{campaign.seller_name}</strong> <CheckCircle2 size={15}/></div>{sellerWhatsApp&&<a target="_blank" rel="noreferrer" href={"https://wa.me/"+sellerWhatsApp} className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm"><MessageCircle size={15}/> Falar com vendedor</a>}</div>}
-            {campaign.draw_result && <div className="mt-5 rounded-2xl border border-amber-700 bg-amber-950/50 p-5"><p className="text-amber-300 text-sm font-bold uppercase tracking-wider">Resultado oficial</p><p className="text-4xl font-black mt-2">Número {String(campaign.draw_result.number).padStart(3,"0")}</p><p className="text-zinc-400 text-sm mt-1">Sorteado em {new Date(campaign.draw_result.drawn_at).toLocaleString("pt-BR")}.</p><a href={"/campanha/"+campaign.slug+"/transparencia"} className="inline-block mt-3 text-sm text-amber-300 underline">Ver prova criptográfica do sorteio</a></div>}
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
-            <div className="flex flex-wrap gap-3 items-end justify-between mb-5">
-              <div><p className="text-sm text-zinc-500">Escolha até 50 números</p><p className="font-bold">{campaign.sold_numbers} vendidos · {campaign.reserved_numbers} reservados</p></div>
-              <div className="flex gap-2">
-                {salesOpen && [5,10].map((q) => <button key={q} onClick={() => randomPick(q)} className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm">Escolher {q}</button>)}
-                <button onClick={load} title="Atualizar" className="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700"><RefreshCw size={18}/></button>
-              </div>
-            </div>
-            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden mb-6"><div className="h-full bg-emerald-500" style={{ width: progress + "%" }}/></div>
-            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[580px] overflow-y-auto pr-1">
-              {Array.from({ length: campaign.total_numbers }, (_, i) => i + 1).map((n) => {
-                const blocked = unavailable.has(n), chosen = selected.includes(n);
-                const disabled=blocked || !salesOpen;
-                return <button key={n} disabled={disabled} onClick={() => toggle(n)}
-                  className={"aspect-square rounded-xl border text-xs font-bold transition " + (disabled ? "bg-zinc-950 text-zinc-700 border-zinc-900 cursor-not-allowed" : chosen ? "bg-emerald-400 text-emerald-950 border-emerald-300 scale-95" : "bg-zinc-950 border-zinc-800 hover:border-zinc-600")}>
-                  {String(n).padStart(3,"0")}
-                </button>;
-              })}
-            </div>
-          </div>
+  if (loading) return <Loading />;
+  if (!campaign)
+    return (
+      <>
+        <PublicHeader />
+        <main className="max-w-xl mx-auto px-5 py-16">
+          <h1 className="text-3xl font-bold">
+            Não conseguimos abrir a campanha
+          </h1>
+          <p role="alert" className="ui-muted my-5">
+            {networkError}
+          </p>
+          <Button onClick={() => void refresh()} disabled={refreshing}>
+            Tentar novamente
+          </Button>
+          <a href="/" className="ml-4 underline">
+            Ver campanhas
+          </a>
+        </main>
+      </>
+    );
+  return (
+    <>
+      <PublicHeader />
+      <main className="max-w-6xl mx-auto px-5 pt-8 pb-32 lg:pb-12">
+        {slug === "dia-das-criancas" && <CampaignNotice />}
+        <div className="mt-8">
+          <p className="text-emerald-400 text-sm font-semibold">
+            {campaign.finalized_at
+              ? "Campanha finalizada"
+              : !salesApproved
+                ? "Campanha em preparação"
+                : closed
+                  ? "Participações encerradas"
+                  : "Escolha seus números"}
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mt-3 max-w-3xl">
+            {campaign.name}
+          </h1>
+          <p className="ui-muted mt-4 max-w-2xl text-lg">
+            {campaign.description ||
+              "Conheça a campanha, confira as informações e acompanhe seu pedido."}
+          </p>
         </div>
-
-        <aside className="lg:sticky lg:top-24 h-fit bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
-          <h2 className="text-xl font-bold">{salesOpen?"Seu pedido":campaign.finalized_at?"Campanha finalizada":(!salesApproved ? "Campanha em preparação" : "Prazo encerrado")}</h2>
-          {!salesOpen && <>{campaign.finalized_at?<><p className="text-zinc-400 text-sm mt-3">{campaign.draw_result?"O resultado do sorteio está publicado nesta página.":"As vendas foram finalizadas. O sorteio ainda não foi realizado pelo administrador."}</p><a href={"/campanha/"+campaign.slug+"/transparencia"} className="inline-block mt-3 text-sm text-emerald-400 underline">Transparência e integridade do sorteio</a></>:<p className="text-zinc-400 text-sm mt-3">{!salesApproved ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha." : "O prazo de participação terminou e novas reservas estão bloqueadas. A organização ainda precisa finalizar a campanha no painel administrativo."}</p>}</>}
-          {salesOpen && <>
-          <div className="mt-4 rounded-2xl bg-zinc-950 p-4 border border-zinc-800">
-            <div className="flex justify-between text-sm text-zinc-400"><span>Números</span><span>{selected.length}</span></div>
-            <div className="flex justify-between mt-2"><span>Total</span><strong className="text-2xl">R$ {(amount / 100).toFixed(2).replace(".", ",")}</strong></div>
+        {slug === "dia-das-criancas" && (
+          <p className="text-sm ui-muted mt-5" role="timer" aria-live="off">
+            {drawRemaining
+              ? `Faltam ${drawDays} dias e ${drawHours} horas para a data informada do sorteio.`
+              : "A data informada do sorteio foi alcançada. Aguarde a publicação do resultado."}
+          </p>
+        )}
+        <a href="#number-picker" className="ui-button ui-button-primary mt-5">
+          {salesOpen ? "Escolher meus números" : "Ver números da campanha"}
+        </a>
+        <CampaignFacts campaign={campaign} />
+        <div className="flex flex-wrap gap-3 text-sm mb-8">
+          <span className="ui-card !py-3">
+            Por número: <strong>{moneyBRL(campaign.price_cents)}</strong>
+          </span>
+          {campaign.ends_at && (
+            <span className="ui-card !py-3">
+              Participações até{" "}
+              <strong>
+                {new Date(campaign.ends_at).toLocaleString("pt-BR", {
+                  timeZone: "America/Sao_Paulo",
+                })}
+              </strong>
+            </span>
+          )}
+        </div>
+        {campaign.draw_result && (
+          <Card className="mb-6">
+            <p className="ui-muted">Resultado publicado</p>
+            <p className="text-3xl font-bold mt-2">
+              Número {String(campaign.draw_result.number).padStart(3, "0")}
+            </p>
+            <a
+              className="underline text-emerald-400 inline-block mt-3"
+              href={`/campanha/${slug}/transparencia`}
+            >
+              Conferir a prova do sorteio
+            </a>
+          </Card>
+        )}
+        {networkError && (
+          <div
+            role="alert"
+            className="rounded-xl border border-amber-700 bg-amber-950 text-amber-200 p-4 mb-5"
+          >
+            <p>{networkError}</p>
+            <Button
+              variant="secondary"
+              className="mt-3"
+              onClick={() => void refresh()}
+              disabled={refreshing}
+            >
+              Tentar atualizar
+            </Button>
           </div>
-          {selected.length > 0 && <p className="text-xs text-zinc-500 mt-3 break-words">{selected.sort((a,b)=>a-b).map(n=>String(n).padStart(3,"0")).join(", ")}</p>}
-          <div className="space-y-3 mt-5">
-            <input value={name} onChange={(e)=>setName(e.target.value)} maxLength={100} placeholder="Nome completo" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
-            <input value={phone} onChange={(e)=>setPhone(e.target.value)} maxLength={20} placeholder="WhatsApp / telefone" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
-            <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} maxLength={180} placeholder="E-mail (opcional)" className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"/>
-            {needsSeller && <select required value={selectedSeller} onChange={e=>setSelectedSeller(e.target.value)} className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-emerald-500"><option value="">Quem te indicou / vendedor</option>{campaign.sellers.map(s=><option key={s.code} value={s.code}>{s.name}{s.team?" — "+s.team:""}</option>)}</select>}
-            {chosenSeller&&<div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm"><span className="text-zinc-500">Venda atribuída a</span><div className="font-bold mt-1">{chosenSeller.name}</div>{sellerWhatsApp&&<a target="_blank" rel="noreferrer" href={"https://wa.me/"+sellerWhatsApp} className="text-emerald-400 text-xs inline-flex gap-1 items-center mt-2"><MessageCircle size={13}/> WhatsApp do vendedor</a>}</div>}
-            <input value={website} onChange={(e)=>setWebsite(e.target.value)} tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true"/>
-            <label className="flex gap-2 text-xs text-zinc-400"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>Concordo com o uso destes dados somente para identificação e gestão deste pedido, conforme a <a href="/privacidade" target="_blank" className="text-emerald-400 underline">Política de Privacidade</a>.</span></label>
+        )}
+        {selectionNotice && (
+          <div role="status" className="ui-card mb-5 text-sm">
+            <p>{selectionNotice}</p>
+            <button
+              type="button"
+              onClick={() => setSelectionNotice("")}
+              className="underline mt-2"
+            >
+              Entendi
+            </button>
           </div>
-          <button onClick={submit} disabled={!salesOpen || submitting || selected.length===0 || name.trim().length<2 || phone.trim().length<8 || (needsSeller&&!selectedSeller) || !consent}
-            className="w-full mt-5 bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 text-emerald-950 rounded-xl p-3 font-black">
-            {submitting ? "Reservando..." : "Reservar números"}
-          </button>
-          {message && <p className="text-sm text-rose-300 mt-3">{message}</p>}
-          <p className="mt-4 text-xs text-zinc-500 flex gap-2"><Clock3 size={15}/> A reserva e o código deste pedido expiram em 10 minutos se o pagamento não for confirmado.</p>
-          </>}
-        </aside>
-      </section>
-    </div>
-  </main>;
+        )}
+        <section className="grid lg:grid-cols-[1fr_350px] gap-6 items-start">
+          <Card id="number-picker" className="scroll-mt-6">
+            <div className="flex justify-between items-start gap-3 mb-5">
+              <div>
+                <p className="text-xs text-emerald-400 font-semibold">
+                  ETAPA 1 DE 2
+                </p>
+                <h2 className="text-2xl font-bold mt-2">
+                  Escolha seus números
+                </h2>
+                <p className="text-sm ui-muted mt-2">
+                  {campaign.sold_numbers} vendidos · {campaign.reserved_numbers}{" "}
+                  reservados
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                aria-label="Atualizar disponibilidade"
+                onClick={() => void refresh()}
+                disabled={refreshing}
+              >
+                <RefreshCw
+                  size={18}
+                  className={refreshing ? "animate-spin" : ""}
+                />
+              </Button>
+            </div>
+            {salesOpen && (
+              <div className="flex gap-2 mb-5">
+                <Button variant="secondary" onClick={() => randomPick(5)}>
+                  Escolher 5
+                </Button>
+                <Button variant="secondary" onClick={() => randomPick(10)}>
+                  Escolher 10
+                </Button>
+              </div>
+            )}
+            <NumberPicker
+              total={campaign.total_numbers}
+              unavailable={unavailable}
+              sold={sold}
+              reserved={reserved}
+              selected={selected}
+              salesOpen={salesOpen && !networkError && !busy}
+              onToggle={toggle}
+            />
+          </Card>
+          <Card id="buyer-summary" className="lg:sticky lg:top-6 scroll-mt-5">
+            {!salesOpen ? (
+              <>
+                <h2 className="text-xl font-bold">
+                  {!salesApproved
+                    ? "Campanha em preparação"
+                    : "Reservas encerradas"}
+                </h2>
+                <p className="text-sm ui-muted mt-3">
+                  {!salesApproved
+                    ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha."
+                    : "Não é possível criar novas reservas nesta campanha."}
+                </p>
+                <a
+                  href="/termos"
+                  className="underline text-sm inline-block mt-4"
+                >
+                  Consultar as regras
+                </a>
+              </>
+            ) : (
+              <>
+                <div hidden={step !== 1}>
+                  <h2 className="text-xl font-bold">Sua seleção</h2>
+                  <div className="flex justify-between my-4">
+                    <span>{selected.length} número(s)</span>
+                    <strong>{moneyBRL(amount)}</strong>
+                  </div>
+                  <p className="text-sm ui-muted break-words mb-5">
+                    {selected.length
+                      ? [...selected]
+                          .sort((a, b) => a - b)
+                          .map((n) => String(n).padStart(3, "0"))
+                          .join(", ")
+                      : "Escolha um número na grade para começar."}
+                  </p>
+                  <Button
+                    className="w-full"
+                    disabled={!selected.length || Boolean(networkError)}
+                    onClick={continueToDetails}
+                  >
+                    Continuar para seus dados
+                  </Button>
+                  <p className="text-xs ui-muted mt-3">
+                    Até 50 números por pedido. A reserva é criada no próximo
+                    passo.
+                  </p>
+                </div>
+                <div hidden={step !== 2}>
+                  <BuyerDetails
+                    campaign={campaign}
+                    selected={selected}
+                    referral={referral}
+                    busy={busy || Boolean(networkError)}
+                    error={submitError}
+                    onBack={() => setStep(1)}
+                    onSubmit={submit}
+                  />
+                </div>
+              </>
+            )}
+          </Card>
+        </section>
+        <footer className="ui-muted text-sm pt-10 flex flex-wrap gap-5">
+          <a href="/termos">Termos e regras</a>
+          <a href="/privacidade">Privacidade</a>
+          <a href="/">Outras campanhas</a>
+        </footer>
+      </main>
+      <div className="lg:hidden fixed bottom-0 inset-x-0 ui-header !border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center gap-4 z-30">
+        <div className="flex-1">
+          <p className="text-xs ui-muted">{selected.length} número(s)</p>
+          <strong>{moneyBRL(amount)}</strong>
+        </div>
+        <Button
+          disabled={
+            !salesOpen || !selected.length || Boolean(networkError) || busy
+          }
+          onClick={
+            step === 1
+              ? continueToDetails
+              : () =>
+                  (
+                    document.getElementById(
+                      "buyer-details",
+                    ) as HTMLFormElement | null
+                  )?.requestSubmit()
+          }
+        >
+          {!salesOpen
+            ? "Reservas fechadas"
+            : step === 1
+              ? "Continuar"
+              : busy
+                ? "Reservando…"
+                : "Reservar"}
+        </Button>
+      </div>
+    </>
+  );
 }
