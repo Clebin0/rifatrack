@@ -329,6 +329,7 @@ export default function CampaignExperience({
                   Escolha seus números
                 </h2>
                 <p className="text-sm ui-muted mt-2">
+                  {Math.max(0, campaign.total_numbers - unavailable.size)} disponíveis ·{" "}
                   {campaign.sold_numbers} vendidos · {campaign.reserved_numbers}{" "}
                   reservados
                 </p>
