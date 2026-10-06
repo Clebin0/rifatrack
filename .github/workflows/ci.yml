@@ -24,4 +24,5 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run audit:prod
       - run: npm run typecheck
+      - run: node --test scripts/test-auth-recovery.mjs
       - run: npm run build

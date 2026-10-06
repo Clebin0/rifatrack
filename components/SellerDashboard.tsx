@@ -68,7 +68,10 @@ export default function SellerDashboard() {
     setAccountEmail(userData.user?.email || "");
     const { data: d, error } = await sb().rpc("seller_dashboard");
     if (error) {
-      setClaim(true);
+      setClaim(error.message.includes("seller access required"));
+      if (!error.message.includes("seller access required")) {
+        setMessage("Não foi possível carregar o portal. Tente novamente; seu convite não precisa ser refeito por uma falha de conexão.");
+      }
       setData(null);
     } else {
       setClaim(false);
@@ -166,7 +169,7 @@ export default function SellerDashboard() {
         </form>
       </main>
     );
-  if (!data) return null;
+  if (!data) return <main className="min-h-screen grid place-items-center p-5"><section className="max-w-md space-y-4"><h1 className="text-2xl font-bold">Portal do vendedor</h1><p role="alert">{message || "Não foi possível carregar suas vendas."}</p><button className="ui-button" onClick={load}>Tentar novamente</button><button className="ui-button" onClick={logout}>Trocar de conta</button></section></main>;
   return (
     <main className="min-h-screen bg-zinc-950">
       <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur">
