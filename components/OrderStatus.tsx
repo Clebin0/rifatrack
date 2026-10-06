@@ -129,7 +129,9 @@ export default function OrderStatus({ token }: { token: string }) {
       try {
         await navigator.share({ title: "RifaTrack", text, url: location.href });
         return;
-      } catch {}
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
     }
     try {
       await navigator.clipboard.writeText(text + "\n" + location.href);
@@ -140,6 +142,15 @@ export default function OrderStatus({ token }: { token: string }) {
       return;
     }
     setUploadMessage("Resumo do pedido copiado.");
+  }
+
+  async function saveLink() {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      toast("Link copiado. Guarde para acompanhar seu pedido.");
+    } catch {
+      toast("Não foi possível copiar. Guarde o endereço desta página.");
+    }
   }
 
   async function copyPix() {
@@ -228,7 +239,7 @@ export default function OrderStatus({ token }: { token: string }) {
             </p>
           )}
           <p className="text-sm ui-muted mb-5">
-            1. Reserva criada · 2. Pagamento · 3. Confirmação
+            Seu pedido: reserva → Pix → confirmação
           </p>
           <div
             className={
@@ -252,11 +263,21 @@ export default function OrderStatus({ token }: { token: string }) {
               </>
             ) : null}
           </p>
-          {(order.status === "expired" || order.status === "cancelled") && (
-            <p
-              role="status"
-              className="mt-5 rounded-xl border border-amber-800 p-4 text-amber-200"
+          <div className="mt-5 rounded-xl border border-zinc-700 p-4">
+            <p className="text-sm ui-muted">
+              Guarde este link para voltar ao pedido. Não compartilhe
+              publicamente.
+            </p>
+            <button
+              type="button"
+              className="ui-button ui-button-secondary mt-3"
+              onClick={saveLink}
             >
+              <Copy size={18} aria-hidden="true" /> Copiar link do pedido
+            </button>
+          </div>
+          {(order.status === "expired" || order.status === "cancelled") && (
+            <p role="status" className="mt-5 rounded-xl ui-notice p-4">
               Não pague este pedido. Se você já pagou após o prazo, os números
               não são garantidos: entre em contato com a organização para
               conciliação e possível reembolso. Contato temporário:{" "}
@@ -323,6 +344,9 @@ export default function OrderStatus({ token }: { token: string }) {
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-bold text-xl">Pagamento por Pix</h2>
                 <div className="font-mono text-lg font-black text-amber-300">
+                  <span className="text-xs ui-muted font-sans block">
+                    Tempo para pagar
+                  </span>
                   {mm}:{ss}
                 </div>
               </div>
@@ -338,6 +362,18 @@ export default function OrderStatus({ token }: { token: string }) {
                 </div>
               ) : (
                 <>
+                  <ol className="mt-4 space-y-2 text-sm list-decimal pl-5">
+                    <li>Copie o código Pix abaixo ou escaneie o QR Code.</li>
+                    <li>
+                      No app do seu banco, abra Pix → Copia e Cola. Confira o
+                      valor e o recebedor antes de pagar.
+                    </li>
+                    <li>
+                      {order.payment_provider === "asaas"
+                        ? "Volte aqui e aguarde a confirmação automática."
+                        : "Volte aqui e envie o comprovante para a organização conferir."}
+                    </li>
+                  </ol>
                   <p className="text-sm text-zinc-400 mt-2">
                     {order.payment_provider === "asaas"
                       ? "Este QR Code é individual, expira com este pedido e a confirmação ocorre automaticamente após o Pix."
@@ -388,6 +424,7 @@ export default function OrderStatus({ token }: { token: string }) {
                         </code>
                         <button
                           onClick={copyPix}
+                          aria-label="Copiar chave Pix"
                           className="px-4 rounded-xl bg-white text-black"
                         >
                           <Copy size={18} />

@@ -11,6 +11,7 @@ export default function CampaignFacts({
     campaign.slug === "dia-das-criancas" ? CHILDRENS_CAMPAIGN : null;
   return (
     <section
+      id="campaign-information"
       aria-label="Informações da campanha"
       className="grid sm:grid-cols-2 gap-3 my-6"
     >
