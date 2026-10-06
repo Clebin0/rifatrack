@@ -19,7 +19,12 @@ const campaign=await request("/api/campaigns/dia-das-criancas");
 assert([200,404].includes(campaign.res.status),"campaign endpoint responds safely");
 
 const invalidOrder=await request("/api/orders",{method:"POST",headers:{"content-type":"text/plain"},body:"x"});
-assert(invalidOrder.res.status===415,"checkout rejects wrong content type");
+const closedMessage = "A campanha ainda está em preparação";
+assert(invalidOrder.res.status===415 || (invalidOrder.res.status===503 && invalidOrder.text.includes(closedMessage)),"checkout rejects invalid request or explicitly reports closed sales");
+if(invalidOrder.res.status===503)console.log("INFO  Sales are closed; this test does not certify payment processing.");
+
+const readiness=await request("/api/admin/readiness");
+assert(readiness.res.status===401,"readiness configuration requires admin authentication");
 
 const invalidToken=await request("/api/orders/not-a-token");
 assert(invalidToken.res.status===400,"order lookup rejects invalid token");
