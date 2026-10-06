@@ -1,4 +1,5 @@
 "use client";
+import CampaignNotice from "@/components/CampaignNotice";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Clock3, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
@@ -12,7 +13,7 @@ type Campaign = {
   draw_result:{number:number;drawn_at:string}|null;
 };
 
-export default function CampaignExperience({ slug }: { slug: string }) {
+export default function CampaignExperience({ slug, salesApproved = true }: { slug: string; salesApproved?: boolean }) {
   const query = useSearchParams();
   const router = useRouter();
   const referralSeller = (query.get("vendedor") || "").toUpperCase();
@@ -60,7 +61,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
   const sellerWhatsApp = chosenSeller?.whatsapp?.replace(/\D/g,"") || "";
   const deadlineMs=campaign?.ends_at?new Date(campaign.ends_at).getTime():null;
   const deadlineReached=Boolean(campaign?.deadline_reached||(deadlineMs&&now>=deadlineMs));
-  const salesOpen=Boolean(campaign?.status==="active"&&!deadlineReached);
+  const salesOpen=Boolean(salesApproved && campaign?.status === "active" && !deadlineReached);
   const remainingSeconds=deadlineMs?Math.max(0,Math.floor((deadlineMs-now)/1000)):null;
   const countdown=remainingSeconds==null?null:
     remainingSeconds<=0?"Prazo encerrado":
@@ -107,10 +108,11 @@ export default function CampaignExperience({ slug }: { slug: string }) {
     </header>
 
     <div className="max-w-6xl mx-auto px-5 py-8">
+      {slug === "dia-das-criancas" && <CampaignNotice />}
       <section className="grid lg:grid-cols-[1fr_340px] gap-8">
         <div>
           <div className="mb-8">
-            <span className={salesOpen?"text-emerald-400 text-sm font-semibold uppercase tracking-wider":"text-amber-400 text-sm font-semibold uppercase tracking-wider"}>{salesOpen?"Campanha ativa":campaign.finalized_at?"Campanha finalizada":"Prazo encerrado"}</span>
+            <span className={salesOpen?"text-emerald-400 text-sm font-semibold uppercase tracking-wider":"text-amber-400 text-sm font-semibold uppercase tracking-wider"}>{salesOpen?"Campanha ativa":campaign.finalized_at?"Campanha finalizada":(!salesApproved ? "Campanha em preparação" : "Prazo encerrado")}</span>
             <h1 className="text-4xl md:text-5xl font-black mt-2">{campaign.name}</h1>
             <p className="text-zinc-400 mt-3 max-w-2xl">{campaign.description || "Escolha seus números e acompanhe a confirmação do pedido em tempo real."}</p>
             {campaign.ends_at&&<div className={"mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm "+(deadlineReached?"border-amber-800 bg-amber-950/30 text-amber-200":"border-zinc-700 bg-zinc-900 text-zinc-300")}><Clock3 size={17}/><span>{deadlineReached?"Prazo de participação encerrado":<>Encerra em <b>{countdown}</b> · {new Date(campaign.ends_at).toLocaleString("pt-BR")}</>}</span></div>}
@@ -141,8 +143,8 @@ export default function CampaignExperience({ slug }: { slug: string }) {
         </div>
 
         <aside className="lg:sticky lg:top-24 h-fit bg-zinc-900 border border-zinc-800 rounded-3xl p-5">
-          <h2 className="text-xl font-bold">{salesOpen?"Seu pedido":campaign.finalized_at?"Campanha finalizada":"Prazo encerrado"}</h2>
-          {!salesOpen && <>{campaign.finalized_at?<><p className="text-zinc-400 text-sm mt-3">{campaign.draw_result?"O resultado do sorteio está publicado nesta página.":"As vendas foram finalizadas. O sorteio ainda não foi realizado pelo administrador."}</p><a href={"/campanha/"+campaign.slug+"/transparencia"} className="inline-block mt-3 text-sm text-emerald-400 underline">Transparência e integridade do sorteio</a></>:<p className="text-zinc-400 text-sm mt-3">O prazo de participação terminou e novas reservas estão bloqueadas. A organização ainda precisa finalizar a campanha no painel administrativo.</p>}</>}
+          <h2 className="text-xl font-bold">{salesOpen?"Seu pedido":campaign.finalized_at?"Campanha finalizada":(!salesApproved ? "Campanha em preparação" : "Prazo encerrado")}</h2>
+          {!salesOpen && <>{campaign.finalized_at?<><p className="text-zinc-400 text-sm mt-3">{campaign.draw_result?"O resultado do sorteio está publicado nesta página.":"As vendas foram finalizadas. O sorteio ainda não foi realizado pelo administrador."}</p><a href={"/campanha/"+campaign.slug+"/transparencia"} className="inline-block mt-3 text-sm text-emerald-400 underline">Transparência e integridade do sorteio</a></>:<p className="text-zinc-400 text-sm mt-3">{!salesApproved ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha." : "O prazo de participação terminou e novas reservas estão bloqueadas. A organização ainda precisa finalizar a campanha no painel administrativo."}</p>}</>}
           {salesOpen && <>
           <div className="mt-4 rounded-2xl bg-zinc-950 p-4 border border-zinc-800">
             <div className="flex justify-between text-sm text-zinc-400"><span>Números</span><span>{selected.length}</span></div>

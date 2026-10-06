@@ -7,6 +7,9 @@ import { processNotificationBatch } from "@/lib/notifications";
 import { logSystemEvent, requestId } from "@/lib/observability";
 
 export async function POST(req: Request) {
+  if (Boolean(process.env.VERCEL_ENV) && process.env.FINANCIAL_PRODUCTION_APPROVED !== "true") {
+    return NextResponse.json({ error: "A campanha ainda está em preparação. As compras serão liberadas após a organização concluir as pendências." }, { status: 503 });
+  }
   const rid=requestId(req);
   const headers={"Cache-Control":"no-store","Pragma":"no-cache","x-request-id":rid};
   try {

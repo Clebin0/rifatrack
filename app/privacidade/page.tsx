@@ -1,2 +1,59 @@
-export const metadata={title:"Privacidade | RifaTrack"};
-export default function Privacy(){return <main className="min-h-screen bg-zinc-950"><div className="max-w-3xl mx-auto px-5 py-12"><a href="/" className="font-black text-xl">Rifa<span className="text-emerald-400">Track</span></a><article className="mt-8 space-y-5 text-zinc-300 leading-7 [&_h1]:text-4xl [&_h1]:font-black [&_h1]:text-white [&_h1]:mb-6 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:pt-4 [&_p]:text-zinc-400"><h1>Política de Privacidade</h1><p>O RifaTrack utiliza dados pessoais somente para operar campanhas, identificar compradores e vendedores, processar reservas, conciliar pagamentos, prevenir fraude e manter registros administrativos.</p><h2>Dados tratados</h2><p>Podem ser tratados nome, telefone, e-mail, números escolhidos, vendedor responsável, dados do pedido, identificadores técnicos de segurança, status de pagamento e comprovante quando enviado voluntariamente.</p><h2>Finalidade</h2><p>Os dados são usados para executar o pedido, confirmar pagamento, evitar duplicidade de números, permitir contato operacional, gerar relatórios, atender suporte e manter trilha de auditoria.</p><h2>Comprovantes</h2><p>Comprovantes enviados ficam em armazenamento privado e somente usuários administrativos autorizados recebem acesso temporário para conferência.</p><h2>Compartilhamento</h2><p>Quando pagamentos automáticos estiverem ativos, dados estritamente necessários à cobrança poderão ser processados pelo provedor financeiro configurado. O vendedor vinculado ao pedido pode acessar somente informações das próprias vendas.</p><h2>Segurança e retenção</h2><p>São aplicados controles de acesso, Row Level Security, registros de auditoria, tokens aleatórios e proteção de segredos. Os dados devem ser mantidos apenas pelo período necessário às finalidades operacionais, financeiras e legais da campanha.</p><h2>Direitos</h2><p>Solicitações de correção, acesso ou exclusão devem ser encaminhadas ao responsável pela campanha, observadas as obrigações legais e registros que precisem ser preservados.</p></article><p className="text-xs text-zinc-600 mt-10">Versão: 01/10/2026</p></div></main>}
+export const metadata = { title: "Privacidade | RifaTrack" };
+export default function Privacy() {
+  return (
+    <main className="max-w-3xl mx-auto px-5 py-10">
+      <a href="/" className="text-emerald-300">
+        RifaTrack
+      </a>
+      <h1 className="text-4xl font-bold mt-6">Política de Privacidade</h1>
+      <article className="mt-6 space-y-5 text-zinc-300 leading-7">
+        <h2 className="text-xl font-bold text-white">Responsável e contato</h2>
+        <p>
+          A identificação do controlador responsável pela campanha de Dia das Crianças ainda está
+          pendente. O contato temporário para dúvidas e pedidos de acesso, correção ou exclusão é{" "}
+          <a href="https://www.instagram.com/impostoresuc/" className="underline text-emerald-300">
+            @impostoresuc
+          </a>
+          . Não envie documentos ou comprovantes publicamente nos comentários. A política final
+          precisa ser aprovada pelo responsável antes da operação financeira.
+        </p>
+        <h2 className="text-xl font-bold text-white">Dados e finalidades</h2>
+        <p>
+          Tratamos nome, telefone, e-mail opcional, números, vendedor indicado, referência e status
+          do pedido para executar a reserva, comunicar pagamentos e conciliar transações.
+          Comprovantes enviados voluntariamente ficam em armazenamento privado. Identificadores
+          técnicos ajudam a limitar abusos. A atualização em preparação prevê limitar acessos
+          por IP usando um hash, sem usar o navegador ou um segredo financeiro como identificador.
+        </p>
+        <h2 className="text-xl font-bold text-white">Base e compartilhamento</h2>
+        <p>
+          A política de lançamento deverá confirmar a base legal de cada finalidade, incluindo
+          procedimentos relacionados ao pedido, cumprimento das obrigações aplicáveis e prevenção de
+          fraude. O consentimento exibido não substitui essa definição. A hospedagem e o banco usam
+          Vercel e Supabase. Asaas e Resend recebem apenas os dados necessários quando suas
+          integrações estiverem habilitadas. Vendedores acessam somente suas próprias vendas;
+          administradores têm acesso conforme o perfil.
+        </p>
+        <h2 className="text-xl font-bold text-white">Proteção e retenção</h2>
+        <p>
+          A atualização em preparação prevê ocultar o nome na resposta pública do pedido.
+          Quem possui o link aleatório pode consultar informações do pedido; evite divulgá-lo.
+          Registros financeiros e de auditoria são preservados para conciliação. A tabela de
+          retenção e o procedimento de exclusão ainda dependem da aprovação do responsável; não há
+          promessa de exclusão automática já implantada. Isso permanece uma pendência para a
+          liberação financeira.
+        </p>
+        <h2 className="text-xl font-bold text-white">Direitos</h2>
+        <p>
+          É possível solicitar acesso, correção, informação sobre compartilhamento e exclusão pelo
+          canal temporário. O responsável deve verificar a titularidade sem expor os dados e avaliar
+          os registros que precisem ser mantidos por obrigação aplicável ou disputa. Nenhum dado é
+          utilizado para publicidade neste fluxo.
+        </p>
+      </article>
+      <p className="text-sm text-zinc-400 mt-8">
+        Versão de preparação: 05/10/2026. Controlador, base legal e retenção final pendentes.
+      </p>
+    </main>
+  );
+}
