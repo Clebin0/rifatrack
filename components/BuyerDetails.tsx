@@ -49,7 +49,7 @@ export default function BuyerDetails({
           : sellerRequired && !value.sellerCode
             ? "Escolha quem indicou a campanha."
             : !consent
-              ? "Leia e aceite a política de privacidade."
+              ? "Confirme sua maioridade e o uso dos dados do pedido."
               : "";
   function update(key: keyof BuyerDetailsValue, next: string) {
     setValue((current) => ({ ...current, [key]: next }));
@@ -63,9 +63,11 @@ export default function BuyerDetails({
       <div>
         <p className="text-xs font-semibold text-emerald-400">ETAPA 2 DE 2</p>
         <h2 tabIndex={-1} id="details-heading" className="text-xl font-bold mt-2">
-          Seus dados e reserva
+          Preencha seus dados
         </h2>
-        <p className="text-sm ui-muted mt-2">Confira os números antes de gerar o pedido.</p>
+        <p className="text-sm ui-muted mt-2">
+          Só precisamos do seu nome e telefone. Confira a seleção abaixo.
+        </p>
       </div>
       <div className="rounded-xl border border-zinc-700 p-4">
         <div className="flex justify-between">
@@ -102,16 +104,24 @@ export default function BuyerDetails({
         value={value.buyerPhone}
         onChange={(e) => update("buyerPhone", formatPhone(e.target.value))}
       />
-      <Input
-        label="E-mail (opcional)"
-        type="email"
-        autoComplete="email"
-        name="buyerEmail"
-        maxLength={180}
-        value={value.buyerEmail}
-        onChange={(e) => update("buyerEmail", e.target.value)}
-        hint="Para receber notificações, quando disponíveis."
-      />
+      <details className="rounded-xl border border-zinc-700 p-3">
+        <summary className="cursor-pointer min-h-11 flex items-center font-semibold text-sm">
+          Adicionar e-mail (opcional)
+          <span aria-hidden="true" className="ml-auto">
+            ▾
+          </span>
+        </summary>
+        <Input
+          label="E-mail"
+          type="email"
+          autoComplete="email"
+          name="buyerEmail"
+          maxLength={180}
+          value={value.buyerEmail}
+          onChange={(e) => update("buyerEmail", e.target.value)}
+          hint="Para receber notificações, quando disponíveis."
+        />
+      </details>
       {sellerRequired && (
         <div>
           <label htmlFor="buyer-seller" className="block text-sm font-semibold mb-2">
@@ -173,7 +183,8 @@ export default function BuyerDetails({
         </p>
       )}
       <p id="reservation-help" role="status" className="text-sm ui-muted">
-        {missing || "Tudo pronto. O próximo passo gera uma reserva de 10 minutos."}
+        {missing ||
+          "Tudo pronto. Reserve para ver as instruções do Pix. Você terá 10 minutos para pagar."}
       </p>
       <Button
         type="submit"
@@ -181,7 +192,7 @@ export default function BuyerDetails({
         disabled={Boolean(missing) || busy}
         aria-describedby="reservation-help"
       >
-        {busy ? "Gerando reserva…" : "Reservar e continuar"}
+        {busy ? "Criando seu pedido…" : "Reservar e ver o Pix"}
       </Button>
       <Button className="w-full" variant="secondary" onClick={onBack} disabled={busy}>
         Voltar aos números

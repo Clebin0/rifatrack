@@ -35,16 +35,16 @@ export default async function Home() {
               <HeartHandshake size={18} /> Campanhas e ações sociais
             </p>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mt-5 leading-tight">
-              Escolha seus números.
+              Apoie o Dia das Crianças.
               <br />
-              <span className="text-emerald-400">Acompanhe cada etapa.</span>
+              <span className="text-emerald-400">Concorra a prêmios.</span>
             </h1>
             <p className="text-lg ui-muted mt-6 max-w-lg">
-              Conheça os prêmios, veja quem organiza e consulte as regras antes de participar. Seu
-              pedido tem um link para acompanhar a confirmação.
+              A ação beneficia crianças atendidas pela ONG Minha Vida Mudou. Cada número custa R$ 5.
+              Confira os prêmios e escolha seus números.
             </p>
-            <a className="ui-button ui-button-primary mt-7" href="#campanhas">
-              Conhecer as campanhas <ArrowRight size={18} />
+            <a className="ui-button ui-button-primary mt-7" href="/campanha/dia-das-criancas">
+              Ver campanha e números <ArrowRight size={18} />
             </a>
           </div>
           <Card className="!p-7">
@@ -52,11 +52,9 @@ export default async function Home() {
             <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
               Dia das Crianças · ação social
             </p>
-            <h2 className="text-2xl font-bold mt-3">
-              Prêmios para conhecer. Uma ação para apoiar.
-            </h2>
+            <h2 className="text-2xl font-bold mt-3">Curso Wizard, vouchers, chocolates e mais</h2>
             <p className="ui-muted mt-4">
-              Curso Wizard, vouchers, chocolate e mais. Organização: {CHILDRENS_CAMPAIGN.organizer}.
+              Responsável pela campanha: {CHILDRENS_CAMPAIGN.organizer}.
             </p>
             <div className="border-t border-zinc-700 mt-5 pt-5 flex justify-between gap-3">
               <span className="ui-muted">Sorteio informado</span>
@@ -71,7 +69,7 @@ export default async function Home() {
               className="inline-flex gap-2 items-center underline mt-5"
               href="/campanha/dia-das-criancas"
             >
-              Ver prêmios e informações <ArrowRight size={16} />
+              Ver todos os prêmios <ArrowRight size={16} />
             </a>
           </Card>
         </section>

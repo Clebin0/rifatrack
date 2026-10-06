@@ -1,23 +1,11 @@
 export default function CampaignNotice() {
   return (
-    <aside className="max-w-7xl mx-auto px-5 py-4 text-sm ui-notice border-b">
-      <p>
-        Ação social de Dia das Crianças · Atléticas em Ação. Responsável informada: Bianca Oliveira
-        da Silva. Contato temporário:{" "}
-        <a
-          href="https://www.instagram.com/impostoresuc/"
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-        >
-          @impostoresuc
-        </a>
-        .
-      </p>
-      <p className="mt-2">
-        As regras finais e a regularização aplicável ainda estão pendentes. A operação com dinheiro
-        real depende da conclusão dessas etapas.
-      </p>
+    <aside className="ui-notice rounded-xl px-4 py-3 text-sm" role="note">
+      <strong>Novas compras ainda não estão liberadas.</strong> Você pode conhecer a ação e
+      consultar os números.{" "}
+      <a className="underline" href="/termos">
+        Entenda a preparação
+      </a>
     </aside>
   );
 }
