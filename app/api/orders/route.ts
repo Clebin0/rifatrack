@@ -7,10 +7,7 @@ import { publicRateLimit, requestIp } from "@/lib/rate-limit";
 import { logSystemEvent, requestId } from "@/lib/observability";
 
 export async function POST(req: Request) {
-  if (
-    process.env.VERCEL_ENV === "production" &&
-    process.env.FINANCIAL_PRODUCTION_APPROVED !== "true"
-  )
+  if (Boolean(process.env.VERCEL_ENV) && process.env.FINANCIAL_PRODUCTION_APPROVED !== "true")
     return NextResponse.json(
       {
         error:
