@@ -9,13 +9,14 @@ export default function Privacy() {
       <p className="mt-3 text-zinc-400">Atualizado em {updatedAt} · versão de preparação</p>
       <div className="mt-6 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 text-amber-100" role="alert">
         <strong>Identificação ainda pendente.</strong> A organização precisa publicar nome ou razão social, documento, endereço,
-        e-mail de privacidade e, quando aplicável, o encarregado. O Instagram provisório não substitui canal formal para direitos da LGPD.
+        e, quando aplicável, o encarregado. O canal indicado para atendimento e privacidade é <a className="underline" href="mailto:rifatrack@gmail.com">rifatrack@gmail.com</a>.
       </div>
       <article className="mt-6 space-y-7 text-zinc-300 leading-7">
         <section><h2 className="text-xl font-bold text-white">1. Quem trata os dados</h2><p>
           A organização é informada como Atléticas em Ação, conduzida por Bianca Oliveira da Silva. Antes de abrir compras,
           deve confirmar quem é o controlador e publicar seus dados de identificação. A RifaTrack atua como provedora de tecnologia
-          e pode operar dados conforme as instruções e serviços contratados. O contato provisório é
+          e pode operar dados conforme as instruções e serviços contratados. Solicitações de privacidade devem ser enviadas a
+          <a href="mailto:rifatrack@gmail.com" className="underline text-emerald-300"> rifatrack@gmail.com</a>. A organização também mantém o perfil
           <a href="https://www.instagram.com/atleticasemacao/" className="underline text-emerald-300"> @atleticasemacao</a>.
         </p></section>
         <section><h2 className="text-xl font-bold text-white">2. Dados coletados</h2><ul className="list-disc pl-5 space-y-1">
@@ -49,7 +50,7 @@ export default function Privacy() {
           eliminação de dados tratados com consentimento, oposição e revisão de decisões automatizadas, além de revogar consentimento.
           A organização verificará a identidade, responderá nos prazos aplicáveis e explicará quando retenção legal impedir a eliminação.
           Também é possível reclamar à <a className="underline text-emerald-300" href="https://www.gov.br/anpd/pt-br">ANPD</a>.
-        </p><p className="mt-3">Use o Instagram provisório enquanto o canal formal não for publicado; não compartilhe senha, token ou comprovante em local público.</p></section>
+        </p><p className="mt-3">Envie sua solicitação a <a className="underline text-emerald-300" href="mailto:rifatrack@gmail.com">rifatrack@gmail.com</a>, indicando o direito que deseja exercer. Não envie senhas ou códigos de autenticação. A organização poderá solicitar somente os dados necessários para verificar sua identidade, por canal privado.</p></section>
         <section><h2 className="text-xl font-bold text-white">7. Menores e mudanças</h2><p>
           A campanha é destinada somente a maiores de 18 anos. Não solicitamos dados de crianças ou adolescentes para participação.
           Esta política será atualizada antes da abertura financeira e quando finalidades, fornecedores ou regras mudarem.

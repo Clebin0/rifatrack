@@ -38,7 +38,7 @@ export default function ReadinessClient() {
       {items.map(([title, value, detail]) => <section key={title} className="rounded-2xl border border-zinc-700 p-5"><h2 className="text-lg font-bold">{title}</h2><p className="mt-2 font-medium">{value}</p><p className="mt-2 text-sm ui-muted">{detail}</p></section>)}
       <section className="rounded-2xl border border-amber-600 p-5 space-y-3">
         <h2 className="text-xl font-bold">Dados da organização e regulamento</h2>
-        <p>Os termos publicados ainda registram pendências. Confirme responsável legal, documento, endereço e contato de atendimento; autorização e enquadramento; extração e correspondência dos números; ordem dos dez prêmios, suplência e entrega. A data informada do sorteio é 12/10; a ação presencial é 17/10.</p>
+        <p>Responsável indicada: Bianca Oliveira da Silva. Atendimento e privacidade: <a className="underline" href="mailto:rifatrack@gmail.com">rifatrack@gmail.com</a>. Ainda faltam documento e endereço; autorização e enquadramento; extração e correspondência dos números; ordem dos dez prêmios, suplência e entrega. A data informada do sorteio é 12/10; a ação presencial é 17/10.</p>
         <a className="underline text-emerald-300" href="/termos">Revisar termos e pendências</a>{" · "}<a className="underline text-emerald-300" href="/privacidade">Revisar privacidade</a>
       </section>
       <section className="rounded-2xl border border-zinc-700 p-5 space-y-3">
