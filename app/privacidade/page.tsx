@@ -30,8 +30,9 @@ export default function Privacy() {
           referência e status do pedido para executar a reserva, comunicar
           pagamentos e conciliar transações. Comprovantes enviados
           voluntariamente ficam em armazenamento privado. Identificadores
-          técnicos ajudam a limitar abusos; o controle por IP armazena um hash,
-          sem usar o navegador ou um segredo financeiro como identificador.
+          técnicos ajudam a limitar abusos. A atualização financeira em preparação
+          prevê aprimorar os limites por IP e reduzir os dados expostos nas
+          consultas públicas.
         </p>
         <h2 className="text-xl font-bold text-white">
           Base e compartilhamento
@@ -48,9 +49,9 @@ export default function Privacy() {
         </p>
         <h2 className="text-xl font-bold text-white">Proteção e retenção</h2>
         <p>
-          A resposta pública do pedido oculta o nome e não informa o telefone ou
-          e-mail. Quem possui o link aleatório pode consultar o status e os
-          números do pedido; evite divulgá-lo. Registros financeiros e de
+          Quem possui o link aleatório pode consultar informações do pedido;
+          evite divulgá-lo. O mascaramento do nome faz parte da atualização
+          financeira em preparação. Registros financeiros e de
           auditoria são preservados para conciliação. A tabela de retenção e o
           procedimento de exclusão ainda dependem da aprovação do responsável;
           não há promessa de exclusão automática já implantada. Isso permanece
