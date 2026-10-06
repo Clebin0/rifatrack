@@ -30,7 +30,13 @@ type Campaign = {
   draw_result: { number: number; drawn_at: string } | null;
 };
 
-export default function CampaignExperience({ slug }: { slug: string }) {
+export default function CampaignExperience({
+  slug,
+  salesApproved = true,
+}: {
+  slug: string;
+  salesApproved?: boolean;
+}) {
   const query = useSearchParams();
   const router = useRouter();
   const referralSeller = (query.get("vendedor") || "").toUpperCase();
@@ -85,7 +91,7 @@ export default function CampaignExperience({ slug }: { slug: string }) {
   const sellerWhatsApp = chosenSeller?.whatsapp?.replace(/\D/g, "") || "";
   const deadlineMs = campaign?.ends_at ? new Date(campaign.ends_at).getTime() : null;
   const deadlineReached = Boolean(campaign?.deadline_reached || (deadlineMs && now >= deadlineMs));
-  const salesOpen = Boolean(campaign?.status === "active" && !deadlineReached);
+  const salesOpen = Boolean(salesApproved && campaign?.status === "active" && !deadlineReached);
   const remainingSeconds = deadlineMs ? Math.max(0, Math.floor((deadlineMs - now) / 1000)) : null;
   const countdown =
     remainingSeconds == null
@@ -202,7 +208,9 @@ export default function CampaignExperience({ slug }: { slug: string }) {
                   ? "Campanha ativa"
                   : campaign.finalized_at
                     ? "Campanha finalizada"
-                    : "Prazo encerrado"}
+                    : !salesApproved
+                      ? "Campanha em preparação"
+                      : "Prazo encerrado"}
               </span>
               <h1 className="text-4xl md:text-5xl font-black mt-2">{campaign.name}</h1>
               <p className="text-zinc-400 mt-3 max-w-2xl">
@@ -317,7 +325,9 @@ export default function CampaignExperience({ slug }: { slug: string }) {
                 ? "Seu pedido"
                 : campaign.finalized_at
                   ? "Campanha finalizada"
-                  : "Prazo encerrado"}
+                  : !salesApproved
+                    ? "Campanha em preparação"
+                    : "Prazo encerrado"}
             </h2>
             {!salesOpen && (
               <>
@@ -337,8 +347,9 @@ export default function CampaignExperience({ slug }: { slug: string }) {
                   </>
                 ) : (
                   <p className="text-zinc-400 text-sm mt-3">
-                    O prazo de participação terminou e novas reservas estão bloqueadas. A
-                    organização ainda precisa finalizar a campanha no painel administrativo.
+                    {!salesApproved
+                      ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha."
+                      : "O prazo de participação terminou e novas reservas estão bloqueadas. A organização ainda precisa finalizar a campanha no painel administrativo."}
                   </p>
                 )}
               </>
