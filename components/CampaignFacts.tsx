@@ -75,7 +75,7 @@ export default function CampaignFacts({
             target="_blank"
             rel="noreferrer"
           >
-            Falar com a organização · @impostoresuc
+            Falar com a organização · @atleticasemacao
           </a>
         )}
       </Card>
