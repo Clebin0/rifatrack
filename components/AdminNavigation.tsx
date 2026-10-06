@@ -1,6 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 const links = [
+  ["/admin/preparacao", "Preparação para operar", ["owner", "admin", "auditor"]],
   [
     "/admin",
     "Visão geral",
