@@ -38,6 +38,7 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
+      - run: node --test scripts/test-auth-recovery.mjs
       - run: npm test
       - run: npm run test:sql
       - run: node scripts/test-postgres.mjs

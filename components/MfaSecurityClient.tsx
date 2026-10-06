@@ -19,7 +19,15 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
   const [busy, setBusy] = useState(false);
 
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-  const returnTo = params?.get("return") || defaultReturn;
+  const requestedReturn = params?.get("return") || defaultReturn;
+  const returnTo =
+    (requestedReturn.startsWith("/" + area + "/") &&
+      !requestedReturn.includes("\\") &&
+      !requestedReturn.includes("%")) ||
+    requestedReturn === "/" + area
+      ? requestedReturn
+      : defaultReturn;
+  const recovering = returnTo === "/admin/redefinir-senha";
 
   async function refresh() {
     setLoading(true);
@@ -160,9 +168,10 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
               <h1 className="text-2xl font-black">Autenticação em duas etapas</h1>
             </div>
           </div>
-          <p className="text-zinc-500 text-sm mt-4">
-            O {area === "admin" ? "painel administrativo" : "portal do vendedor"} só libera dados e
-            ações após um código TOTP de um aplicativo autenticador.
+          <p className="text-zinc-300 text-sm mt-4">
+            {recovering
+              ? "Confirme o código do aplicativo autenticador que você já configurou. Depois você voltará para escolher a nova senha; não precisa solicitar outro e-mail."
+              : "Confirme o código do aplicativo autenticador para entrar com segurança."}
           </p>
 
           {aal2 && (
