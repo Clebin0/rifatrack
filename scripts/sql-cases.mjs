@@ -45,6 +45,9 @@ export async function securityCases(db) {
         )
       ).result;
     const first = await reserve([1, 2]);
+    const reservedView = (await q("select public_campaign('sql-security-test') result")).result;
+    assert.deepEqual(reservedView.reserved, [1, 2]);
+    assert.deepEqual(reservedView.sold, []);
     await db.query("savepoint rejected");
     await assert.rejects(() => reserve([1], "11999997777"), /number unavailable/);
     await db.query("rollback to savepoint rejected");
@@ -82,6 +85,9 @@ export async function securityCases(db) {
     );
     assert.equal((await q("select status from orders where id=$1", [first.id])).status, "pending");
     assert.equal((await event("evt-received")).note, "paid");
+    const soldView = (await q("select public_campaign('sql-security-test') result")).result;
+    assert.deepEqual(soldView.sold, [1, 2]);
+    assert.deepEqual(soldView.reserved, []);
     assert.equal((await event("evt-received")).duplicate, true);
     assert.equal(
       (

@@ -14,7 +14,7 @@ NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY são públicas. 
 
 ## Banco reproduzível
 
-supabase/migrations é a única fonte de schema. As primeiras 34 migrations foram recuperadas do histórico registrado no Supabase, com versões e SQL originais. Quatro migrations novas implementam segurança financeira e drand. O antigo schema.sql e os dois arquivos de histórico duplicado foram removidos. O replay completo é testado em PGlite e PostgreSQL 17. Não execute todas as migrations novamente na produção: ela já possui as primeiras 34.
+supabase/migrations é a única fonte de schema. As primeiras 34 migrations foram recuperadas do histórico registrado no Supabase, com versões e SQL originais. Quatro migrations implementam segurança financeira e drand; ainda aguardam cutover. A migration aditiva 20261006003716_buyer_number_states já foi aplicada para a nova interface, preservando grants. O histórico completo tem 39 arquivos. Não reaplique migrations existentes na produção. O antigo schema.sql e os dois arquivos duplicados foram removidos.
 
 ## Qualidade
 

@@ -9,8 +9,10 @@ export default function Privacy() {
       <article className="mt-6 space-y-5 text-zinc-300 leading-7">
         <h2 className="text-xl font-bold text-white">Responsável e contato</h2>
         <p>
-          A identificação do controlador responsável pela campanha de Dia das Crianças ainda está
-          pendente. O contato temporário para dúvidas e pedidos de acesso, correção ou exclusão é{" "}
+          A responsável informada pela campanha de Dia das Crianças é Bianca Oliveira da Silva, na
+          iniciativa Atléticas em Ação. A política final ainda precisa confirmar o controlador e as
+          bases de tratamento. O contato temporário para dúvidas e pedidos de acesso, correção ou
+          exclusão é{" "}
           <a href="https://www.instagram.com/impostoresuc/" className="underline text-emerald-300">
             @impostoresuc
           </a>

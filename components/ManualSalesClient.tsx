@@ -1,4 +1,5 @@
 "use client";
+import { useUI } from "@/components/ui/UIProvider";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
@@ -58,12 +59,16 @@ function parseNumbers(raw: string, total: number) {
 }
 
 export default function ManualSalesClient() {
+  const { confirm, toast } = useUI();
   const sb = () => supabaseBrowser();
   const [data, setData] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [mfa, setMfa] = useState(false);
   const [message, setMessage] = useState("");
+  useEffect(() => {
+    if (message) toast(message);
+  }, [message, toast]);
   const [form, setForm] = useState({
     campaign_id: "",
     seller_id: "",
@@ -140,13 +145,13 @@ export default function ManualSalesClient() {
       return;
     }
     if (
-      !confirm(
+      !(await confirm(
         "Registrar " +
           parsed.numbers.length +
           " número(s) como PAGOS por " +
           money(total) +
           "?\n\nUse esta opção somente para vendas que já foram realmente recebidas.",
-      )
+      ))
     ) {
       setSaving(false);
       return;

@@ -6,7 +6,7 @@
 2. Criar staging com banco Supabase separado; configurar as URLs e chaves somente nesse ambiente. Não reutilizar o banco de produção em preview que possa criar pedidos.
 3. Reproduzir as migrations em staging. Configurar SUPABASE_SECRET_KEY na Vercel somente no servidor. Não copiar a chave para o chat ou frontend.
 4. Homologar reservas concorrentes, MFA, comprovantes privados, webhook de Sandbox, datas inválidas, duplicidade, valor divergente, pagamento atrasado, reembolso, disputa, leases e sorteio com rodada futura.
-5. Gerar e verificar backup da produção. Testar restauração em destino isolado. As primeiras 34 migrations já existem na produção; aplicar somente as versões novas.
+5. Gerar e verificar backup da produção. Testar restauração em destino isolado. As primeiras 34 migrations e 20261006003716_buyer_number_states já existem na produção. Aplicar somente as quatro versões pendentes de hardening; em CLI db push, revisar a lista e usar include-all para essas versões anteriores à migration aditiva já aplicada, sem marcar arquivos aplicados manualmente como ausentes.
 6. Em janela sem checkout ativo, aplicar as quatro novas migrations na ordem dos arquivos: financial_security_hardening, external_draw_and_server_boundary, public_reads_through_server e backup_recovery_completeness; publicar o app novo imediatamente. A segunda migration revoga o protocolo antigo e a terceira restringe leituras ao servidor. Confirmar health, smoke, CSP/hidratação e leitura administrativa antes de reabrir.
 7. Em caso de falha, manter checkout fechado, corrigir a versão nova e repetir os testes. Um rollback de app sozinho não restaura o antigo protocolo de RPC. Não remover dados financeiros nem alterar migrations já aplicadas.
 8. Só habilitar true após responsável/regras/regularização, credenciais e controles externos aprovados e registrados.
@@ -37,6 +37,10 @@ Exportar backup criptografado no painel do proprietário. Verificar com npm run 
 
 ## Privacidade e lançamento
 
-Contato temporário: @impostoresuc. Falta definir o controlador/responsável, base legal por finalidade e tabela de retenção aprovada. Preparar canal privado de atendimento, verificação de titularidade, anonimização de dados quando cabível e preservação de auditoria/disputas. Não anunciar exclusão automática enquanto não implementada e validada. Termos/Privacidade publicados nesta alteração são versões de preparação e explicitam as pendências.
+Contato temporário: @impostoresuc. Responsável informada: Bianca Oliveira da Silva, iniciativa Atléticas em Ação, para a ONG Minha Vida Mudou. Confirmar o controlador, base legal por finalidade e retenção aprovada. Preparar canal privado de atendimento, verificação de titularidade e anonimização quando cabível. Não anunciar exclusão automática enquanto não implementada e validada.
+
+## Regulamento da campanha de Dia das Crianças
+
+Dados mais recentes fornecidos: R$ 5 por número e sorteio informado para 12/10/2026 às 18h (São Paulo), pela Loteria Federal. Isso substitui a data anterior de 17/10. O app impede aplicar drand a essa campanha; a organização precisa definir a extração, a correspondência dos números e a distribuição dos prêmios. Não converter a data informada em uma confirmação de extração oficial nem criar resultado sem evidências. A operação financeira continua bloqueada. Não importar contagens, nomes de compradores ou supostos pagamentos de outra plataforma sem dados verificáveis e autorização de migração.
 
 Backups de dados agora usam schema_version=2 e incluem financial_cases/notification_outbox. A verificação rejeita contagens divergentes; exportar durante uma janela sem escritas. Backups antigos de versão 1 continuam legíveis, mas não incluem as entidades novas. Na restauração, notificações históricas ficam pausadas (tentativas esgotadas) para evitar reenvio automático. A cópia de Auth/Storage continua separada.

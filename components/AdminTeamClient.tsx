@@ -1,4 +1,5 @@
 "use client";
+import { useUI } from "@/components/ui/UIProvider";
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Copy, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
@@ -17,11 +18,15 @@ type Data = { members: Member[]; pending_invites: Invite[] };
 const roles: Role[] = ["owner", "admin", "financeiro", "operador", "auditor"];
 
 export default function AdminTeamClient() {
+  const { confirm, toast } = useUI();
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("operador");
   const [message, setMessage] = useState("");
+  useEffect(() => {
+    if (message) toast(message);
+  }, [message, toast]);
   const sb = () => supabaseBrowser();
   async function load() {
     setLoading(true);
@@ -58,7 +63,9 @@ export default function AdminTeamClient() {
     await load();
   }
   async function update(m: Member, nextRole: Role, nextActive: boolean) {
-    if (!confirm(`Alterar ${m.email} para ${nextRole} · ${nextActive ? "ativo" : "inativo"}?`))
+    if (
+      !(await confirm(`Alterar ${m.email} para ${nextRole} · ${nextActive ? "ativo" : "inativo"}?`))
+    )
       return;
     const { error } = await sb().rpc("admin_set_team_member", {
       p_email: m.email,

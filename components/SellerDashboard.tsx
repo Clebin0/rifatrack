@@ -1,16 +1,11 @@
 "use client";
+import Loading from "@/app/loading";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import {
-  Copy,
-  Download,
-  LogOut,
-  RefreshCw,
-  Target,
-  Ticket,
-  Users,
-  WalletCards,
-} from "lucide-react";
+import { useUI } from "./ui/UIProvider";
+import SellerCampaignCard from "./SellerCampaignCard";
+import Input from "./ui/Input";
+import { LogOut, RefreshCw, Target, Ticket, Users, WalletCards } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { ensureMfa } from "@/lib/mfa-browser";
 
@@ -50,12 +45,16 @@ type Data = {
 const money = (v: number) => "R$ " + (v / 100).toFixed(2).replace(".", ",");
 
 export default function SellerDashboard() {
+  const { toast } = useUI();
   const sb = () => supabaseBrowser();
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [claim, setClaim] = useState(false);
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
+  useEffect(() => {
+    if (message) toast(message);
+  }, [message, toast]);
   const [search, setSearch] = useState("");
   async function load() {
     setLoading(true);
@@ -120,12 +119,7 @@ export default function SellerDashboard() {
       ) || [],
     [data, search],
   );
-  if (loading)
-    return (
-      <main className="min-h-screen grid place-items-center bg-zinc-950">
-        <RefreshCw className="animate-spin" />
-      </main>
-    );
+  if (loading) return <Loading />;
   if (claim)
     return (
       <main className="min-h-screen grid place-items-center bg-zinc-950 p-5">
@@ -138,7 +132,8 @@ export default function SellerDashboard() {
             Use o código individual criado pelo administrador. Ele é de uso único e vinculado ao seu
             e-mail.
           </p>
-          <input
+          <Input
+            label="Código de acesso do vendedor"
             required
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -164,10 +159,18 @@ export default function SellerDashboard() {
             <span className="ml-3 text-sm text-zinc-500 hidden sm:inline">Portal do vendedor</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={load} className="p-2 bg-zinc-900 rounded-xl border border-zinc-800">
+            <button
+              aria-label="Atualizar vendas"
+              onClick={load}
+              className="p-2 bg-zinc-900 rounded-xl border border-zinc-800"
+            >
               <RefreshCw size={18} />
             </button>
-            <button onClick={logout} className="p-2 bg-zinc-900 rounded-xl border border-zinc-800">
+            <button
+              aria-label="Sair do portal"
+              onClick={logout}
+              className="p-2 bg-zinc-900 rounded-xl border border-zinc-800"
+            >
               <LogOut size={18} />
             </button>
           </div>
@@ -202,50 +205,15 @@ export default function SellerDashboard() {
         <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
           <h2 className="text-xl font-black">Minhas campanhas</h2>
           <div className="grid lg:grid-cols-2 gap-4 mt-4">
-            {data.campaigns.map((c) => {
-              const pct = c.goal ? Math.min(100, Math.round((c.sold_numbers / c.goal) * 100)) : 0;
-              return (
-                <div key={c.id} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                  <div className="flex justify-between gap-3">
-                    <div>
-                      <b>{c.name}</b>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {c.status} · meta {c.goal}
-                      </p>
-                    </div>
-                    <b>{money(c.revenue_cents)}</b>
-                  </div>
-                  <div className="h-2 rounded-full bg-zinc-800 mt-4 overflow-hidden">
-                    <div className="h-full bg-emerald-400" style={{ width: pct + "%" }} />
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-2">
-                    {c.sold_numbers} números · {pct}% da meta
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <button
-                      onClick={() => copy(c)}
-                      className="px-3 py-2 rounded-lg bg-zinc-800 inline-flex gap-1 items-center"
-                    >
-                      <Copy size={14} /> Link
-                    </button>
-                    <button
-                      onClick={() => downloadQr(c)}
-                      className="px-3 py-2 rounded-lg bg-zinc-800 inline-flex gap-1 items-center"
-                    >
-                      <Download size={14} /> QR
-                    </button>
-                    <a
-                      target="_blank"
-                      rel="noreferrer"
-                      href={link(c)}
-                      className="px-3 py-2 rounded-lg bg-emerald-950 text-emerald-300"
-                    >
-                      Abrir
-                    </a>
-                  </div>
-                </div>
-              );
-            })}
+            {data.campaigns.map((c) => (
+              <SellerCampaignCard
+                key={c.id}
+                campaign={c}
+                code={data.seller.code}
+                onCopy={() => copy(c)}
+                onDownload={() => downloadQr(c)}
+              />
+            ))}
           </div>
         </section>
         <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
@@ -254,7 +222,8 @@ export default function SellerDashboard() {
               <h2 className="text-xl font-black">Minhas vendas</h2>
               <p className="text-sm text-zinc-500">Somente pedidos atribuídos ao seu código.</p>
             </div>
-            <input
+            <Input
+              label="Buscar pedido ou comprador"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar pedido ou comprador"
