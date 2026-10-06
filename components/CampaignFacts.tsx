@@ -61,7 +61,7 @@ export default function CampaignFacts({ campaign }: { campaign: BuyerCampaign })
             target="_blank"
             rel="noreferrer"
           >
-            Falar com a organização · @impostoresuc
+            Falar com a organização · @atleticasemacao
           </a>
         )}
       </Card>
