@@ -17,7 +17,11 @@ export default function ResetPasswordPage() {
     async function check() {
       const recoveryCode = new URLSearchParams(window.location.search).get("code");
       if (recoveryCode) {
-        await sb.auth.exchangeCodeForSession(recoveryCode);
+        try {
+          await sb.auth.exchangeCodeForSession(recoveryCode);
+        } catch {
+          // O SDK pode ter trocado o código automaticamente durante a inicialização.
+        }
       }
       const { data } = await sb.auth.getSession();
       if (mounted) {
