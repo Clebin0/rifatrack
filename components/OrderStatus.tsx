@@ -280,14 +280,14 @@ export default function OrderStatus({ token }: { token: string }) {
             <p role="status" className="mt-5 rounded-xl ui-notice p-4">
               Não pague este pedido. Se você já pagou após o prazo, os números
               não são garantidos: entre em contato com a organização para
-              conciliação e possível reembolso. Contato temporário:{" "}
+              conciliação e possível reembolso. Contato da organização:{" "}
               <a
                 className="underline"
-                href="https://www.instagram.com/impostoresuc/"
+                href="https://www.instagram.com/atleticasemacao/"
                 target="_blank"
                 rel="noreferrer"
               >
-                @impostoresuc
+                @atleticasemacao
               </a>
               .
             </p>
