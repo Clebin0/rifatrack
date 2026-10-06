@@ -23,6 +23,7 @@ export default function NumberPicker({
 }: Props) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const [found, setFound] = useState<number | null>(null);
   const window = numberPage(total, page);
   const chosen = new Set(selected);
   const searchNumber = Number(search);
@@ -30,6 +31,7 @@ export default function NumberPicker({
     Boolean(search) &&
     (!/^\d+$/.test(search) || searchNumber < 1 || searchNumber > total);
   function go(next: number) {
+    setFound(null);
     setPage(numberPage(total, next).page);
   }
   return (
@@ -48,8 +50,10 @@ export default function NumberPicker({
         className="flex items-end gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          if (search && !invalid)
+          if (search && !invalid) {
             go(Math.floor((searchNumber - 1) / NUMBER_PAGE_SIZE));
+            setFound(searchNumber);
+          }
         }}
       >
         <div className="flex-1">
@@ -68,30 +72,51 @@ export default function NumberPicker({
           Buscar
         </Button>
       </form>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => go(0)}>
-          Primeiros
-        </Button>
-        <Button variant="secondary" onClick={() => go(window.pages - 1)}>
-          Últimos
-        </Button>
-        <label className="sr-only" htmlFor="number-range">
-          Faixa de números
-        </label>
-        <select
-          id="number-range"
-          className="ui-input !w-auto flex-1 min-w-32"
-          value={window.page}
-          onChange={(e) => go(Number(e.target.value))}
-        >
-          {Array.from({ length: window.pages }, (_, i) => (
-            <option key={i} value={i}>
-              {i * NUMBER_PAGE_SIZE + 1}–
-              {Math.min(total, (i + 1) * NUMBER_PAGE_SIZE)}
-            </option>
-          ))}
-        </select>
-      </div>
+      {found !== null && (
+        <p role="status" className="text-sm ui-muted">
+          Número {String(found).padStart(3, "0")}:{" "}
+          {sold.has(found)
+            ? "já comprado"
+            : reserved.has(found)
+              ? "reservado"
+              : unavailable.has(found)
+                ? "indisponível"
+                : "livre"}
+          . Está destacado na página encontrada.
+        </p>
+      )}
+      <details className="rounded-xl border border-zinc-700 p-3">
+        <summary className="cursor-pointer min-h-11 flex items-center text-sm font-semibold">
+          Ir para outra faixa de números
+          <span aria-hidden="true" className="ml-auto">
+            ▾
+          </span>
+        </summary>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <Button variant="secondary" onClick={() => go(0)}>
+            Primeiros
+          </Button>
+          <Button variant="secondary" onClick={() => go(window.pages - 1)}>
+            Últimos
+          </Button>
+          <label className="sr-only" htmlFor="number-range">
+            Faixa de números
+          </label>
+          <select
+            id="number-range"
+            className="ui-input !w-auto flex-1 min-w-32"
+            value={window.page}
+            onChange={(e) => go(Number(e.target.value))}
+          >
+            {Array.from({ length: window.pages }, (_, i) => (
+              <option key={i} value={i}>
+                {i * NUMBER_PAGE_SIZE + 1}–
+                {Math.min(total, (i + 1) * NUMBER_PAGE_SIZE)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </details>
       <p role="status" className="text-sm ui-muted">
         Mostrando {window.start}–{window.end} de {total.toLocaleString("pt-BR")}{" "}
         números. {selected.length} selecionados.
@@ -131,7 +156,7 @@ export default function NumberPicker({
               aria-label={`Número ${n}: ${state}${!salesOpen ? ". Reservas fechadas" : ""}`}
               title={state}
               onClick={() => onToggle(n)}
-              className={`min-h-14 rounded-xl border p-1 font-semibold text-xs ${state === "Selecionado" ? "bg-emerald-300 text-emerald-950 border-emerald-300" : state === "Reservado" ? "bg-amber-950 text-amber-200 border-amber-700" : state === "Vendido" ? "bg-indigo-950 text-indigo-200 border-indigo-700" : "bg-zinc-950 text-zinc-300 border-zinc-700"}`}
+              className={`min-h-14 rounded-xl border p-1 font-semibold text-xs ${found === n ? "ring-2 ring-emerald-500 ring-offset-2 " : ""}${state === "Selecionado" ? "bg-emerald-300 text-emerald-950 border-emerald-300" : state === "Reservado" ? "bg-amber-950 text-amber-200 border-amber-700" : state === "Vendido" ? "bg-indigo-950 text-indigo-200 border-indigo-700" : "bg-zinc-950 text-zinc-300 border-zinc-700"}`}
             >
               <span className="block">{String(n).padStart(3, "0")}</span>
               <span aria-hidden="true" className="block text-xs mt-1">
