@@ -7,6 +7,7 @@ import { moneyBRL, reconcileSelection } from "@/lib/buyer";
 import PublicHeader from "./PublicHeader";
 import CampaignNotice from "./CampaignNotice";
 import CampaignFacts from "./CampaignFacts";
+import CampaignCommunity from "./CampaignCommunity";
 import NumberPicker from "./NumberPicker";
 import BuyerDetails, { type BuyerDetailsValue } from "./BuyerDetails";
 import Button from "./ui/Button";
@@ -451,6 +452,7 @@ export default function CampaignExperience({
           </Card>
         </section>
         <CampaignFacts campaign={campaign} />
+        {slug === "dia-das-criancas" && <CampaignCommunity />}
         <footer className="ui-muted text-sm pt-10 flex flex-wrap gap-5">
           <a href="/termos">Termos e regras</a>
           <a href="/privacidade">Privacidade</a>
