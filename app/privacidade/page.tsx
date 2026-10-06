@@ -1,75 +1,62 @@
 export const metadata = { title: "Privacidade | RifaTrack" };
+const updatedAt = "06/10/2026";
+
 export default function Privacy() {
   return (
     <main className="max-w-3xl mx-auto px-5 py-10">
-      <a href="/" className="text-emerald-300">
-        RifaTrack
-      </a>
+      <a href="/" className="text-emerald-300">RifaTrack</a>
       <h1 className="text-4xl font-bold mt-6">Política de Privacidade</h1>
-      <article className="mt-6 space-y-5 text-zinc-300 leading-7">
-        <h2 className="text-xl font-bold text-white">Responsável e contato</h2>
-        <p>
-          A responsável informada pela campanha de Dia das Crianças é Bianca
-          Oliveira da Silva, na iniciativa Atléticas em Ação. A política final
-          ainda precisa confirmar o controlador e as bases de tratamento. O
-          contato da organização para dúvidas e pedidos de acesso, correção ou
-          exclusão é{" "}
-          <a
-            href="https://www.instagram.com/atleticasemacao/"
-            className="underline text-emerald-300"
-          >
-            @atleticasemacao
-          </a>
-          . Não envie documentos ou comprovantes publicamente nos comentários. A
-          política final precisa ser aprovada pelo responsável antes da operação
-          financeira.
-        </p>
-        <h2 className="text-xl font-bold text-white">Dados e finalidades</h2>
-        <p>
-          Tratamos nome, telefone, e-mail opcional, números, vendedor indicado,
-          referência e status do pedido para executar a reserva, comunicar
-          pagamentos e conciliar transações. Comprovantes enviados
-          voluntariamente ficam em armazenamento privado. Identificadores
-          técnicos ajudam a limitar abusos. A atualização financeira em preparação
-          prevê aprimorar os limites por IP e reduzir os dados expostos nas
-          consultas públicas.
-        </p>
-        <h2 className="text-xl font-bold text-white">
-          Base e compartilhamento
-        </h2>
-        <p>
-          A política de lançamento deverá confirmar a base legal de cada
-          finalidade, incluindo procedimentos relacionados ao pedido,
-          cumprimento das obrigações aplicáveis e prevenção de fraude. O
-          consentimento exibido não substitui essa definição. A hospedagem e o
-          banco usam Vercel e Supabase. Asaas e Resend recebem apenas os dados
-          necessários quando suas integrações estiverem habilitadas. Vendedores
-          acessam somente suas próprias vendas; administradores têm acesso
-          conforme o perfil.
-        </p>
-        <h2 className="text-xl font-bold text-white">Proteção e retenção</h2>
-        <p>
-          Quem possui o link aleatório pode consultar informações do pedido;
-          evite divulgá-lo. O mascaramento do nome faz parte da atualização
-          financeira em preparação. Registros financeiros e de
-          auditoria são preservados para conciliação. A tabela de retenção e o
-          procedimento de exclusão ainda dependem da aprovação do responsável;
-          não há promessa de exclusão automática já implantada. Isso permanece
-          uma pendência para a liberação financeira.
-        </p>
-        <h2 className="text-xl font-bold text-white">Direitos</h2>
-        <p>
-          É possível solicitar acesso, correção, informação sobre
-          compartilhamento e exclusão pelo canal da organização. O responsável deve
-          verificar a titularidade sem expor os dados e avaliar os registros que
-          precisem ser mantidos por obrigação aplicável ou disputa. Nenhum dado
-          é utilizado para publicidade neste fluxo.
-        </p>
+      <p className="mt-3 text-zinc-400">Atualizado em {updatedAt} · versão de preparação</p>
+      <div className="mt-6 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 text-amber-100" role="alert">
+        <strong>Identificação ainda pendente.</strong> A organização precisa publicar nome ou razão social, documento, endereço,
+        e-mail de privacidade e, quando aplicável, o encarregado. O Instagram provisório não substitui canal formal para direitos da LGPD.
+      </div>
+      <article className="mt-6 space-y-7 text-zinc-300 leading-7">
+        <section><h2 className="text-xl font-bold text-white">1. Quem trata os dados</h2><p>
+          A organização é informada como Atléticas em Ação, conduzida por Bianca Oliveira da Silva. Antes de abrir compras,
+          deve confirmar quem é o controlador e publicar seus dados de identificação. A RifaTrack atua como provedora de tecnologia
+          e pode operar dados conforme as instruções e serviços contratados. O contato provisório é
+          <a href="https://www.instagram.com/atleticasemacao/" className="underline text-emerald-300"> @atleticasemacao</a>.
+        </p></section>
+        <section><h2 className="text-xl font-bold text-white">2. Dados coletados</h2><ul className="list-disc pl-5 space-y-1">
+          <li>nome, telefone e e-mail informado pelo comprador;</li><li>números, pedido, vendedor, valor e status de pagamento;</li>
+          <li>nome declarado do pagador e referência da transação quando a conta é de terceiro;</li>
+          <li>comprovante enviado voluntariamente, em área privada quando habilitada;</li>
+          <li>identificadores técnicos necessários para sessão, segurança, prevenção de abuso e auditoria.</li>
+        </ul><p className="mt-3">Não peça documentos ou dados sensíveis em comentários públicos.</p></section>
+        <section><h2 className="text-xl font-bold text-white">3. Finalidades e bases</h2><p>
+          Os dados podem ser usados para criar e acompanhar pedidos, conciliar pagamentos, identificar o pagador indicado,
+          atender suporte, prevenir fraude, cumprir obrigações legais e proteger a segurança. A organização deve confirmar a
+          base legal de cada finalidade antes do lançamento; podem envolver execução de procedimento ou contrato, obrigação legal,
+          exercício regular de direitos e legítimo interesse de segurança, sempre com necessidade e proporcionalidade. Consentimento
+          não substitui definição da base adequada.
+        </p></section>
+        <section><h2 className="text-xl font-bold text-white">4. Compartilhamento e fornecedores</h2><p>
+          O tratamento pode envolver Supabase (banco e autenticação), Vercel (hospedagem) e, somente se habilitados, provedor de
+          pagamentos e e-mail. Vendedores devem acessar apenas suas vendas; administradores, conforme perfil e necessidade. Dados
+          podem ser fornecidos a autoridades, instituições financeiras, contabilidade ou assessoria jurídica quando houver obrigação
+          ou necessidade de defesa. A organização deve manter contratos e avaliar transferências internacionais com fornecedores.
+        </p></section>
+        <section><h2 className="text-xl font-bold text-white">5. Retenção, segurança e cookies</h2><p>
+          Registros de pedidos, pagamentos, auditoria e disputas podem ser mantidos pelo tempo necessário a obrigações e defesa.
+          Comprovantes e dados de suporte devem ser eliminados ou anonimizados quando a finalidade terminar e não houver base para
+          conservação. O prazo exato depende da organização e de orientação profissional; não prometemos exclusão imediata. São
+          aplicados autenticação, permissões, RLS e armazenamento privado quando configurados, mas nenhum serviço garante risco zero.
+          Usamos apenas cookies e armazenamento necessários; não há publicidade comportamental prevista neste fluxo.
+        </p></section>
+        <section><h2 className="text-xl font-bold text-white">6. Direitos do titular</h2><p>
+          O titular pode pedir confirmação e acesso, correção, informação sobre uso e compartilhamento, portabilidade quando aplicável,
+          eliminação de dados tratados com consentimento, oposição e revisão de decisões automatizadas, além de revogar consentimento.
+          A organização verificará a identidade, responderá nos prazos aplicáveis e explicará quando retenção legal impedir a eliminação.
+          Também é possível reclamar à <a className="underline text-emerald-300" href="https://www.gov.br/anpd/pt-br">ANPD</a>.
+        </p><p className="mt-3">Use o Instagram provisório enquanto o canal formal não for publicado; não compartilhe senha, token ou comprovante em local público.</p></section>
+        <section><h2 className="text-xl font-bold text-white">7. Menores e mudanças</h2><p>
+          A campanha é destinada somente a maiores de 18 anos. Não solicitamos dados de crianças ou adolescentes para participação.
+          Esta política será atualizada antes da abertura financeira e quando finalidades, fornecedores ou regras mudarem.
+        </p></section>
       </article>
-      <p className="text-sm text-zinc-400 mt-8">
-        Versão de preparação: 05/10/2026. Controlador, base legal e retenção
-        final pendentes.
-      </p>
+      <p className="text-sm text-zinc-400 mt-8">Esta página informa o funcionamento previsto e não substitui a definição formal do controlador,
+        do encarregado, das bases legais ou a revisão por profissional de privacidade. A LGPD e outros direitos obrigatórios prevalecem.</p>
     </main>
   );
 }
