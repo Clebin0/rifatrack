@@ -19,7 +19,9 @@ export default function MfaSecurityClient({area,defaultReturn}:Props){
   const [busy,setBusy]=useState(false);
 
   const params=typeof window!=="undefined"?new URLSearchParams(window.location.search):null;
-  const returnTo=params?.get("return")||defaultReturn;
+  const requestedReturn=params?.get("return")||defaultReturn;
+  const returnTo=requestedReturn.startsWith("/"+area+"/")&&!requestedReturn.includes("\\")&&!requestedReturn.includes("%")||requestedReturn==="/"+area?requestedReturn:defaultReturn;
+  const recovering=returnTo==="/admin/redefinir-senha";
 
   async function refresh(){
     setLoading(true);setMessage("");
@@ -86,7 +88,7 @@ export default function MfaSecurityClient({area,defaultReturn}:Props){
       <a href="/" className="font-black text-xl">Rifa<span className="text-emerald-400">Track</span></a>
       <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
         <div className="flex items-center gap-3"><div className="w-11 h-11 rounded-2xl bg-emerald-950 border border-emerald-800 text-emerald-300 grid place-items-center"><ShieldCheck/></div><div><p className="text-xs font-bold text-emerald-400 uppercase">Segurança obrigatória</p><h1 className="text-2xl font-black">Autenticação em duas etapas</h1></div></div>
-        <p className="text-zinc-500 text-sm mt-4">O {area==="admin"?"painel administrativo":"portal do vendedor"} só libera dados e ações após um código TOTP de um aplicativo autenticador.</p>
+        <p className="text-zinc-300 text-sm mt-4">{recovering?"Confirme o código do aplicativo autenticador que você já configurou. Depois você voltará para escolher a nova senha; não precisa solicitar outro e-mail.":"Confirme o código do aplicativo autenticador para entrar com segurança."}</p>
 
         {aal2&&<div className="mt-5 rounded-2xl border border-emerald-800 bg-emerald-950/30 p-4 flex gap-3 text-emerald-200"><CheckCircle2/><div><b>Sessão protegida com AAL2.</b><p className="text-sm text-emerald-300/70">Você pode continuar para o sistema.</p></div></div>}
 
