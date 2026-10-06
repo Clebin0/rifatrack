@@ -4,7 +4,7 @@ Gestão de campanhas, vendedores, reservas, Pix, conciliação e sorteios verifi
 
 ## Estado financeiro
 
-Pré-produção financeira. A campanha de Dia das Crianças é uma ação social; o contato temporário é https://www.instagram.com/impostoresuc/. Responsável, regras finais e autorização aplicável ainda não foram definidos. Não habilitar dinheiro real enquanto as pendências do ROADMAP e de OPERATIONS não forem encerradas.
+Pré-produção financeira. A campanha de Dia das Crianças é uma ação social; o contato da organização é https://www.instagram.com/atleticasemacao/. A ação social está divulgada para 17/10/2026; o sorteio foi informado para 12/10/2026 às 18h. Extração, responsável legal, regras finais e autorização aplicável ainda precisam ser definidos. Não habilitar dinheiro real enquanto as pendências do ROADMAP e de OPERATIONS não forem encerradas.
 
 ## Desenvolvimento
 
