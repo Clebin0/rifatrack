@@ -5,6 +5,11 @@ import { CHILDRENS_CAMPAIGN as campaign } from "@/lib/campaign-content";
 const base = "/campaigns/dia-das-criancas/";
 const artwork = [
   {
+    file: "premios.jpg",
+    title: "Prêmios da rifa",
+    alt: "Arte com os dez prêmios da rifa solidária, incluindo caneca Patronos, curso Wizard, vouchers, chocolates e bebidas.",
+  },
+  {
     file: "acao-social.jpg",
     title: "Onde e quando acontece",
     alt: "Arte da ação social: 17/10, Rua Verônica Tribek Moro, 493, Cidade Industrial de Curitiba, ONG Minha Vida Mudou.",
