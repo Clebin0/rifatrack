@@ -16,6 +16,7 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 
 import type { Order } from "@/lib/order-types";
 import OrderReceipt from "@/components/OrderReceipt";
+import PayerDeclaration from "@/components/PayerDeclaration";
 
 export default function OrderStatus({ token }: { token: string }) {
   const { toast } = useUI();
@@ -251,6 +252,7 @@ export default function OrderStatus({ token }: { token: string }) {
             {statusInfo.label}
           </div>
           <h1 className="text-3xl font-black mt-5">{order.campaign_name}</h1>
+          <PayerDeclaration token={token} />
           <p className="text-zinc-500 text-sm mt-1">
             Pedido {order.payment_reference}
           </p>
