@@ -51,6 +51,7 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [claim, setClaim] = useState(false);
   const [code, setCode] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
   const [message, setMessage] = useState("");
   useEffect(() => {
     if (message) toast(message);
@@ -63,6 +64,8 @@ export default function SellerDashboard() {
       setLoading(false);
       return;
     }
+    const { data: userData } = await sb().auth.getUser();
+    setAccountEmail(userData.user?.email || "");
     const { data: d, error } = await sb().rpc("seller_dashboard");
     if (error) {
       setClaim(true);
@@ -78,8 +81,14 @@ export default function SellerDashboard() {
   }, []);
   async function claimAccess(e: FormEvent) {
     e.preventDefault();
-    const { error } = await sb().rpc("claim_seller_access", { p_code: code.trim() });
-    if (error) setMessage("Código inválido, expirado ou vinculado a outro e-mail.");
+    const pastedCode = code.toUpperCase().match(/SV-[A-Z0-9_-]+/)?.[0] || code.trim().toUpperCase();
+    const { error } = await sb().rpc("claim_seller_access", { p_code: pastedCode });
+    if (error) {
+      const detail = error.message?.includes("mfa_required")
+        ? "Ative a autenticação em duas etapas antes de vincular o portal."
+        : "Código inválido, expirado ou criado para outro e-mail.";
+      setMessage(detail);
+    }
     else {
       setMessage("Acesso ativado.");
       await load();
@@ -129,9 +138,15 @@ export default function SellerDashboard() {
         >
           <h1 className="text-2xl font-black">Vincular acesso de vendedor</h1>
           <p className="text-sm text-zinc-500 mt-2">
-            Use o código individual criado pelo administrador. Ele é de uso único e vinculado ao seu
-            e-mail.
+            Cole o código individual criado pelo administrador. Você também pode colar a mensagem
+            inteira do convite; o portal identifica automaticamente o trecho <b>SV-...</b>.
           </p>
+          {accountEmail && (
+            <p className="text-xs text-zinc-400 mt-3 rounded-xl bg-zinc-950 border border-zinc-800 p-3">
+              Conta conectada: <b>{accountEmail}</b>. O convite precisa ter sido criado para este
+              mesmo e-mail.
+            </p>
+          )}
           <Input
             label="Código de acesso do vendedor"
             required
@@ -144,6 +159,10 @@ export default function SellerDashboard() {
             Ativar portal
           </button>
           {message && <p className="text-sm mt-3">{message}</p>}
+          <p className="text-xs text-zinc-500 mt-4">
+            Sem código? Entre no painel administrativo, abra Vendedores e use <b>Acesso</b> para
+            gerar um convite para o e-mail acima.
+          </p>
         </form>
       </main>
     );
