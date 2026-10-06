@@ -1,6 +1,6 @@
 export default function CampaignNotice() {
   return (
-    <aside className="max-w-7xl mx-auto px-5 py-4 text-sm text-amber-200 bg-amber-950/30 border-b border-amber-900">
+    <aside className="max-w-7xl mx-auto px-5 py-4 text-sm ui-notice border-b">
       <p>
         Ação social de Dia das Crianças · Atléticas em Ação. Responsável
         informada: Bianca Oliveira da Silva. Contato temporário:{" "}
