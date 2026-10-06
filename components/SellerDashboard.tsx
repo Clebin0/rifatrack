@@ -5,14 +5,7 @@ import QRCode from "qrcode";
 import { useUI } from "./ui/UIProvider";
 import SellerCampaignCard from "./SellerCampaignCard";
 import Input from "./ui/Input";
-import {
-  LogOut,
-  RefreshCw,
-  Target,
-  Ticket,
-  Users,
-  WalletCards,
-} from "lucide-react";
+import { LogOut, RefreshCw, Target, Ticket, Users, WalletCards } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { ensureMfa } from "@/lib/mfa-browser";
 
@@ -44,20 +37,8 @@ type Order = {
   numbers: number[];
 };
 type Data = {
-  seller: {
-    id: string;
-    name: string;
-    code: string;
-    team: string;
-    whatsapp: string;
-    email: string;
-  };
-  summary: {
-    sold_numbers: number;
-    revenue_cents: number;
-    pending_orders: number;
-    buyers: number;
-  };
+  seller: { id: string; name: string; code: string; team: string; whatsapp: string; email: string };
+  summary: { sold_numbers: number; revenue_cents: number; pending_orders: number; buyers: number };
   campaigns: Campaign[];
   orders: Order[];
 };
@@ -70,6 +51,7 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [claim, setClaim] = useState(false);
   const [code, setCode] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
   const [message, setMessage] = useState("");
   useEffect(() => {
     if (message) toast(message);
@@ -82,6 +64,8 @@ export default function SellerDashboard() {
       setLoading(false);
       return;
     }
+    const { data: userData } = await sb().auth.getUser();
+    setAccountEmail(userData.user?.email || "");
     const { data: d, error } = await sb().rpc("seller_dashboard");
     if (error) {
       setClaim(true);
@@ -97,11 +81,14 @@ export default function SellerDashboard() {
   }, []);
   async function claimAccess(e: FormEvent) {
     e.preventDefault();
-    const { error } = await sb().rpc("claim_seller_access", {
-      p_code: code.trim(),
-    });
-    if (error)
-      setMessage("Código inválido, expirado ou vinculado a outro e-mail.");
+    const pastedCode = code.toUpperCase().match(/SV-[A-Z0-9_-]+/)?.[0] || code.trim().toUpperCase();
+    const { error } = await sb().rpc("claim_seller_access", { p_code: pastedCode });
+    if (error) {
+      const detail = error.message?.includes("mfa_required")
+        ? "Ative a autenticação em duas etapas antes de vincular o portal."
+        : "Código inválido, expirado ou criado para outro e-mail.";
+      setMessage(detail);
+    }
     else {
       setMessage("Acesso ativado.");
       await load();
@@ -109,11 +96,7 @@ export default function SellerDashboard() {
   }
   function link(c: Campaign) {
     return (
-      location.origin +
-      "/campanha/" +
-      c.slug +
-      "?vendedor=" +
-      encodeURIComponent(data!.seller.code)
+      location.origin + "/campanha/" + c.slug + "?vendedor=" + encodeURIComponent(data!.seller.code)
     );
   }
   async function copy(c: Campaign) {
@@ -128,13 +111,7 @@ export default function SellerDashboard() {
     });
     const a = document.createElement("a");
     a.href = src;
-    a.download = (
-      "rifatrack-" +
-      c.slug +
-      "-" +
-      data!.seller.code +
-      ".png"
-    ).toLowerCase();
+    a.download = ("rifatrack-" + c.slug + "-" + data!.seller.code + ".png").toLowerCase();
     a.click();
   }
   async function logout() {
@@ -161,9 +138,15 @@ export default function SellerDashboard() {
         >
           <h1 className="text-2xl font-black">Vincular acesso de vendedor</h1>
           <p className="text-sm text-zinc-500 mt-2">
-            Use o código individual criado pelo administrador. Ele é de uso
-            único e vinculado ao seu e-mail.
+            Cole o código individual criado pelo administrador. Você também pode colar a mensagem
+            inteira do convite; o portal identifica automaticamente o trecho <b>SV-...</b>.
           </p>
+          {accountEmail && (
+            <p className="text-xs text-zinc-400 mt-3 rounded-xl bg-zinc-950 border border-zinc-800 p-3">
+              Conta conectada: <b>{accountEmail}</b>. O convite precisa ter sido criado para este
+              mesmo e-mail.
+            </p>
+          )}
           <Input
             label="Código de acesso do vendedor"
             required
@@ -176,6 +159,10 @@ export default function SellerDashboard() {
             Ativar portal
           </button>
           {message && <p className="text-sm mt-3">{message}</p>}
+          <p className="text-xs text-zinc-500 mt-4">
+            Sem código? Entre no painel administrativo, abra Vendedores e use <b>Acesso</b> para
+            gerar um convite para o e-mail acima.
+          </p>
         </form>
       </main>
     );
@@ -188,9 +175,7 @@ export default function SellerDashboard() {
             <b className="text-xl">
               Rifa<span className="text-emerald-400">Track</span>
             </b>
-            <span className="ml-3 text-sm text-zinc-500 hidden sm:inline">
-              Portal do vendedor
-            </span>
+            <span className="ml-3 text-sm text-zinc-500 hidden sm:inline">Portal do vendedor</span>
           </div>
           <div className="flex gap-2">
             <button
@@ -216,34 +201,20 @@ export default function SellerDashboard() {
           <h1 className="text-4xl font-black mt-1">{data.seller.name}</h1>
           <p className="text-zinc-500 mt-1">
             {data.seller.code}
-            {data.seller.team ? " · " + data.seller.team : ""} ·{" "}
-            {data.seller.email}
+            {data.seller.team ? " · " + data.seller.team : ""} · {data.seller.email}
           </p>
         </div>
         {message && (
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm">
-            {message}
-          </div>
+          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm">{message}</div>
         )}
         <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             [<Ticket key="a" />, data.summary.sold_numbers, "Números pagos"],
-            [
-              <WalletCards key="b" />,
-              money(data.summary.revenue_cents),
-              "Arrecadado",
-            ],
-            [
-              <Target key="c" />,
-              data.summary.pending_orders,
-              "Pedidos pendentes",
-            ],
+            [<WalletCards key="b" />, money(data.summary.revenue_cents), "Arrecadado"],
+            [<Target key="c" />, data.summary.pending_orders, "Pedidos pendentes"],
             [<Users key="d" />, data.summary.buyers, "Compradores"],
           ].map(([i, v, l]) => (
-            <div
-              key={String(l)}
-              className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"
-            >
+            <div key={String(l)} className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
               <div className="text-zinc-500">{i}</div>
               <p className="text-3xl font-black mt-4">{v}</p>
               <p className="text-zinc-500 text-sm">{l}</p>
@@ -268,9 +239,7 @@ export default function SellerDashboard() {
           <div className="flex flex-col sm:flex-row justify-between gap-3">
             <div>
               <h2 className="text-xl font-black">Minhas vendas</h2>
-              <p className="text-sm text-zinc-500">
-                Somente pedidos atribuídos ao seu código.
-              </p>
+              <p className="text-sm text-zinc-500">Somente pedidos atribuídos ao seu código.</p>
             </div>
             <Input
               label="Buscar pedido ou comprador"
@@ -295,14 +264,10 @@ export default function SellerDashboard() {
               <tbody>
                 {orders.map((o) => (
                   <tr key={o.id} className="border-t border-zinc-800">
-                    <td className="py-4 font-mono text-xs">
-                      {o.payment_reference}
-                    </td>
+                    <td className="py-4 font-mono text-xs">{o.payment_reference}</td>
                     <td>
                       <b>{o.buyer_name}</b>
-                      <div className="text-xs text-zinc-500">
-                        {o.buyer_phone}
-                      </div>
+                      <div className="text-xs text-zinc-500">{o.buyer_phone}</div>
                     </td>
                     <td>{o.campaign_name}</td>
                     <td className="max-w-[220px]">{o.numbers.join(", ")}</td>
@@ -326,9 +291,7 @@ export default function SellerDashboard() {
               </tbody>
             </table>
             {!orders.length && (
-              <p className="text-sm text-zinc-500 py-8 text-center">
-                Nenhum pedido encontrado.
-              </p>
+              <p className="text-sm text-zinc-500 py-8 text-center">Nenhum pedido encontrado.</p>
             )}
           </div>
         </section>
