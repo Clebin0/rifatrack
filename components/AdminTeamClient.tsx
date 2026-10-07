@@ -1,13 +1,7 @@
 "use client";
 import { useUI } from "@/components/ui/UIProvider";
 import { FormEvent, useEffect, useState } from "react";
-import {
-  ArrowLeft,
-  Copy,
-  RefreshCw,
-  ShieldCheck,
-  UserPlus,
-} from "lucide-react";
+import { ArrowLeft, Copy, RefreshCw, ShieldCheck, UserPlus } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { ensureMfa } from "@/lib/mfa-browser";
 
@@ -19,13 +13,7 @@ type Member = {
   created_at: string;
   updated_at: string;
 };
-type Invite = {
-  id: string;
-  email: string;
-  role: Role;
-  expires_at: string;
-  created_at: string;
-};
+type Invite = { id: string; email: string; role: Role; expires_at: string; created_at: string };
 type Data = { members: Member[]; pending_invites: Invite[] };
 const roles: Role[] = ["owner", "admin", "financeiro", "operador", "auditor"];
 
@@ -67,12 +55,7 @@ export default function AdminTeamClient() {
       setMessage(error.message);
       return;
     }
-    const x = i as {
-      code: string;
-      email: string;
-      role: Role;
-      expires_at: string;
-    };
+    const x = i as { code: string; email: string; role: Role; expires_at: string };
     const text = `Convite administrativo RifaTrack\nE-mail: ${x.email}\nPerfil: ${x.role}\nPortal: ${location.origin}/admin/login\nCódigo: ${x.code}\nExpira: ${new Date(x.expires_at).toLocaleString("pt-BR")}`;
     await navigator.clipboard.writeText(text);
     setEmail("");
@@ -81,9 +64,7 @@ export default function AdminTeamClient() {
   }
   async function update(m: Member, nextRole: Role, nextActive: boolean) {
     if (
-      !(await confirm(
-        `Alterar ${m.email} para ${nextRole} · ${nextActive ? "ativo" : "inativo"}?`,
-      ))
+      !(await confirm(`Alterar ${m.email} para ${nextRole} · ${nextActive ? "ativo" : "inativo"}?`))
     )
       return;
     const { error } = await sb().rpc("admin_set_team_member", {
@@ -105,9 +86,7 @@ export default function AdminTeamClient() {
       <main className="min-h-screen grid place-items-center bg-zinc-950 p-5">
         <div className="text-center">
           <ShieldCheck className="mx-auto" />
-          <p className="mt-3">
-            {message || "Acesso restrito ao proprietário."}
-          </p>
+          <p className="mt-3">{message || "Acesso restrito ao proprietário."}</p>
           <a href="/admin" className="text-emerald-400 inline-block mt-3">
             Voltar
           </a>
@@ -118,22 +97,16 @@ export default function AdminTeamClient() {
     <main className="min-h-screen bg-zinc-950">
       <div className="max-w-6xl mx-auto px-5 py-8 space-y-6">
         <div>
-          <a
-            href="/admin"
-            className="inline-flex gap-2 items-center text-sm text-zinc-400"
-          >
+          <a href="/admin" className="inline-flex gap-2 items-center text-sm text-zinc-400">
             <ArrowLeft size={16} /> Painel
           </a>
           <h1 className="text-4xl font-black mt-3">Equipe administrativa</h1>
           <p className="text-zinc-500 mt-1">
-            Privilégio mínimo por função. Todos os acessos administrativos
-            exigem MFA.
+            Privilégio mínimo por função. Todos os acessos administrativos exigem MFA.
           </p>
         </div>
         {message && (
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm">
-            {message}
-          </div>
+          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm">{message}</div>
         )}
         <form
           onSubmit={invite}
@@ -181,9 +154,7 @@ export default function AdminTeamClient() {
                     <td>
                       <select
                         value={m.role}
-                        onChange={(e) =>
-                          update(m, e.target.value as Role, m.active)
-                        }
+                        onChange={(e) => update(m, e.target.value as Role, m.active)}
                         className="bg-zinc-950 border border-zinc-700 rounded-lg p-2"
                       >
                         {roles.map((r) => (
@@ -224,8 +195,7 @@ export default function AdminTeamClient() {
                 <div>
                   <b>{i.email}</b>
                   <p className="text-xs text-zinc-500">
-                    {i.role} · expira{" "}
-                    {new Date(i.expires_at).toLocaleString("pt-BR")}
+                    {i.role} · expira {new Date(i.expires_at).toLocaleString("pt-BR")}
                   </p>
                 </div>
                 <Copy size={17} className="text-zinc-600" />

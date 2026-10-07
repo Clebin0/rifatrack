@@ -2,11 +2,22 @@ import { readFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 import assert from "node:assert/strict";
 import { test } from "node:test";
-const code = stripTypeScriptTypes(readFileSync(new URL("../lib/password-recovery.ts", import.meta.url), "utf8"));
-const { checkPasswordSession, authErrorMessage } = await import("data:text/javascript;base64," + Buffer.from(code).toString("base64"));
+const code = stripTypeScriptTypes(
+  readFileSync(new URL("../lib/password-recovery.ts", import.meta.url), "utf8"),
+);
+const { checkPasswordSession, authErrorMessage } = await import(
+  "data:text/javascript;base64," + Buffer.from(code).toString("base64")
+);
 function fake(session, currentLevel, nextLevel, failure = null) {
-  return { getSession: async () => ({ data: { session }, error: null }),
-    mfa: { getAuthenticatorAssuranceLevel: async () => ({ data: { currentLevel, nextLevel }, error: failure }) } };
+  return {
+    getSession: async () => ({ data: { session }, error: null }),
+    mfa: {
+      getAuthenticatorAssuranceLevel: async () => ({
+        data: { currentLevel, nextLevel },
+        error: failure,
+      }),
+    },
+  };
 }
 test("recovery session with MFA must challenge before password update", async () => {
   assert.equal(await checkPasswordSession(fake({}, "aal1", "aal2")), "mfa");

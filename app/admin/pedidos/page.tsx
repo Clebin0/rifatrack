@@ -1,1 +1,4 @@
-import OrdersClient from "@/components/OrdersClient";export default function OrdersPage(){return <OrdersClient/>}
+import OrdersClient from "@/components/OrdersClient";
+export default function OrdersPage() {
+  return <OrdersClient />;
+}

@@ -7,7 +7,12 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
     <Suspense
       fallback={<main className="min-h-screen grid place-items-center">Carregando...</main>}
     >
-      <CampaignExperience slug={slug} salesApproved={!process.env.VERCEL_ENV || process.env.FINANCIAL_PRODUCTION_APPROVED === "true"} />
+      <CampaignExperience
+        slug={slug}
+        salesApproved={
+          !process.env.VERCEL_ENV || process.env.FINANCIAL_PRODUCTION_APPROVED === "true"
+        }
+      />
     </Suspense>
   );
 }

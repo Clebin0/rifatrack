@@ -1,0 +1,14 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set search_path=public,extensions;
+select plan(8);
+select ok(not has_function_privilege('anon','public.reserve_raffle_numbers(text,text,text,text,text,text,integer[])','execute'),'anonymous reservation denied');
+select ok(has_function_privilege('service_role','public.reserve_raffle_numbers(text,text,text,text,text,text,integer[])','execute'),'server reservation allowed');
+select ok(not has_function_privilege('authenticated','public.complete_drand_draw_internal(uuid,bigint,text,text,text)','execute'),'direct client draw denied');
+select ok(not has_function_privilege('anon','public.process_asaas_event(text,text,text,text,text,integer,integer,timestamptz,text,jsonb,uuid)','execute'),'public webhook processing denied');
+select ok(not has_function_privilege('service_role','public.admin_draw_campaign(uuid)','execute'),'legacy operator-known seed draw disabled');
+select ok(public.health_check_internal(),'health performs database query');
+select ok((select relrowsecurity from pg_class where oid='public.financial_cases'::regclass),'financial cases protected by RLS');
+select ok((select count(*)=0 from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname like '%_internal' and has_function_privilege('authenticated',p.oid,'execute')),'all internal RPCs denied to authenticated users');
+select * from finish();
+rollback;

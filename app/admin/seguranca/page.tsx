@@ -1,1 +1,4 @@
-import MfaSecurityClient from "@/components/MfaSecurityClient";export default function AdminSecurityPage(){return <MfaSecurityClient area="admin" defaultReturn="/admin"/>}
+import MfaSecurityClient from "@/components/MfaSecurityClient";
+export default function AdminSecurityPage() {
+  return <MfaSecurityClient area="admin" defaultReturn="/admin" />;
+}

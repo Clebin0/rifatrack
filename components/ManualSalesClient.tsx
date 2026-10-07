@@ -1,13 +1,7 @@
 "use client";
 import { useUI } from "@/components/ui/UIProvider";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  MessageCircle,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { ensureMfa, ensureSession, getMfaLevel } from "@/lib/mfa-browser";
 
@@ -35,9 +29,7 @@ const input =
   "w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 outline-none focus:border-indigo-500";
 function localNow() {
   const d = new Date();
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 function parseNumbers(raw: string, total: number) {
   const values = new Set<number>();
@@ -60,13 +52,9 @@ function parseNumbers(raw: string, total: number) {
       if (!Number.isInteger(n) || n < 1 || n > total) bad.push(token);
       else values.add(n);
     }
-    if (values.size > 500)
-      throw new Error("Máximo de 500 números por lançamento.");
+    if (values.size > 500) throw new Error("Máximo de 500 números por lançamento.");
   }
-  if (bad.length)
-    throw new Error(
-      "Números/intervalos inválidos: " + bad.slice(0, 8).join(", "),
-    );
+  if (bad.length) throw new Error("Números/intervalos inválidos: " + bad.slice(0, 8).join(", "));
   return [...values].sort((a, b) => a - b);
 }
 
@@ -109,8 +97,7 @@ export default function ManualSalesClient() {
       setData(x);
       if (!form.campaign_id) {
         const campaign =
-          x.campaigns.find((c) => !c.finalized_at && c.status !== "closed") ||
-          x.campaigns[0];
+          x.campaigns.find((c) => !c.finalized_at && c.status !== "closed") || x.campaigns[0];
         if (campaign) setForm((v) => ({ ...v, campaign_id: campaign.id }));
       }
     }
@@ -119,21 +106,14 @@ export default function ManualSalesClient() {
   useEffect(() => {
     load();
   }, []);
-  const campaign =
-    data?.campaigns.find((c) => c.id === form.campaign_id) || null;
+  const campaign = data?.campaigns.find((c) => c.id === form.campaign_id) || null;
   const sellers = useMemo(
-    () =>
-      data?.sellers.filter(
-        (s) => s.campaign_id === form.campaign_id && s.active,
-      ) || [],
+    () => data?.sellers.filter((s) => s.campaign_id === form.campaign_id && s.active) || [],
     [data, form.campaign_id],
   );
   const parsed = useMemo(() => {
     try {
-      return {
-        numbers: parseNumbers(form.numbers, campaign?.total_numbers || 0),
-        error: "",
-      };
+      return { numbers: parseNumbers(form.numbers, campaign?.total_numbers || 0), error: "" };
     } catch (e) {
       return {
         numbers: [] as number[],
@@ -176,22 +156,17 @@ export default function ManualSalesClient() {
       setSaving(false);
       return;
     }
-    const { data: result, error } = await sb().rpc(
-      "admin_import_paid_numbers",
-      {
-        p_campaign_id: campaign.id,
-        p_seller_id: form.seller_id || undefined,
-        p_buyer_name: form.buyer_name,
-        p_buyer_phone: form.buyer_phone,
-        p_buyer_email: form.buyer_email,
-        p_numbers: parsed.numbers,
-        p_sales_channel: form.sales_channel,
-        p_paid_at: form.paid_at
-          ? new Date(form.paid_at).toISOString()
-          : undefined,
-        p_note: form.note,
-      },
-    );
+    const { data: result, error } = await sb().rpc("admin_import_paid_numbers", {
+      p_campaign_id: campaign.id,
+      p_seller_id: form.seller_id || undefined,
+      p_buyer_name: form.buyer_name,
+      p_buyer_phone: form.buyer_phone,
+      p_buyer_email: form.buyer_email,
+      p_numbers: parsed.numbers,
+      p_sales_channel: form.sales_channel,
+      p_paid_at: form.paid_at ? new Date(form.paid_at).toISOString() : undefined,
+      p_note: form.note,
+    });
     if (error) {
       const msg = error.message || "";
       setMessage(
@@ -248,10 +223,7 @@ export default function ManualSalesClient() {
     <main className="min-h-screen bg-zinc-950">
       <div className="max-w-4xl mx-auto px-5 py-8 space-y-6">
         <div>
-          <a
-            href="/admin"
-            className="inline-flex gap-2 items-center text-sm text-zinc-400"
-          >
+          <a href="/admin" className="inline-flex gap-2 items-center text-sm text-zinc-400">
             <ArrowLeft size={16} /> Painel
           </a>
           <div className="flex gap-3 items-center mt-4">
@@ -259,18 +231,13 @@ export default function ManualSalesClient() {
               <MessageCircle />
             </div>
             <div>
-              <p className="text-indigo-300 text-sm font-bold">
-                CONCILIAÇÃO MANUAL
-              </p>
-              <h1 className="text-4xl font-black">
-                Vendas feitas fora do site
-              </h1>
+              <p className="text-indigo-300 text-sm font-bold">CONCILIAÇÃO MANUAL</p>
+              <h1 className="text-4xl font-black">Vendas feitas fora do site</h1>
             </div>
           </div>
           <p className="text-zinc-500 mt-3">
-            Use para números vendidos e já pagos por WhatsApp, presencialmente
-            ou em outra rifa manual. O lançamento entra no financeiro, no
-            vendedor e no sorteio como uma venda paga.
+            Use para números vendidos e já pagos por WhatsApp, presencialmente ou em outra rifa
+            manual. O lançamento entra no financeiro, no vendedor e no sorteio como uma venda paga.
           </p>
         </div>
         {!mfa && (
@@ -279,16 +246,13 @@ export default function ManualSalesClient() {
             <div>
               <b>MFA necessário para confirmar.</b>
               <p className="text-amber-200/70 mt-1">
-                Você pode preencher tudo agora. Ao registrar, o sistema abre a
-                etapa de segurança.
+                Você pode preencher tudo agora. Ao registrar, o sistema abre a etapa de segurança.
               </p>
             </div>
           </div>
         )}
         {message && (
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm">
-            {message}
-          </div>
+          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-sm">{message}</div>
         )}
         <form
           onSubmit={submit}
@@ -299,13 +263,7 @@ export default function ManualSalesClient() {
               <span className="text-xs text-zinc-500">Campanha</span>
               <select
                 value={form.campaign_id}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    campaign_id: e.target.value,
-                    seller_id: "",
-                  })
-                }
+                onChange={(e) => setForm({ ...form, campaign_id: e.target.value, seller_id: "" })}
                 className={input + " mt-1"}
               >
                 {data.campaigns.map((c) => (
@@ -326,9 +284,7 @@ export default function ManualSalesClient() {
               </span>
               <select
                 value={form.seller_id}
-                onChange={(e) =>
-                  setForm({ ...form, seller_id: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, seller_id: e.target.value })}
                 className={input + " mt-1"}
               >
                 <option value="">Venda direta / sem vendedor</option>
@@ -352,9 +308,7 @@ export default function ManualSalesClient() {
               className={input + " mt-1 font-mono"}
             />
             <div className="mt-2 flex flex-wrap gap-3 text-xs">
-              <span
-                className={parsed.error ? "text-rose-300" : "text-zinc-500"}
-              >
+              <span className={parsed.error ? "text-rose-300" : "text-zinc-500"}>
                 {parsed.error || parsed.numbers.length + " número(s) válido(s)"}
               </span>
               {!parsed.error && parsed.numbers.length > 0 && (
@@ -371,18 +325,14 @@ export default function ManualSalesClient() {
             />
             <input
               value={form.buyer_phone}
-              onChange={(e) =>
-                setForm({ ...form, buyer_phone: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, buyer_phone: e.target.value })}
               placeholder="Telefone (opcional)"
               className={input}
             />
             <input
               type="email"
               value={form.buyer_email}
-              onChange={(e) =>
-                setForm({ ...form, buyer_email: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, buyer_email: e.target.value })}
               placeholder="E-mail (opcional)"
               className={input}
             />
@@ -392,9 +342,7 @@ export default function ManualSalesClient() {
               <span className="text-xs text-zinc-500">Origem</span>
               <select
                 value={form.sales_channel}
-                onChange={(e) =>
-                  setForm({ ...form, sales_channel: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, sales_channel: e.target.value })}
                 className={input + " mt-1"}
               >
                 <option value="whatsapp">WhatsApp</option>
@@ -403,9 +351,7 @@ export default function ManualSalesClient() {
               </select>
             </label>
             <label>
-              <span className="text-xs text-zinc-500">
-                Data/hora do pagamento
-              </span>
+              <span className="text-xs text-zinc-500">Data/hora do pagamento</span>
               <input
                 type="datetime-local"
                 value={form.paid_at}
@@ -425,10 +371,9 @@ export default function ManualSalesClient() {
           <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 flex gap-3">
             <CheckCircle2 className="text-emerald-400 shrink-0" />
             <p className="text-sm text-zinc-400">
-              Ao confirmar, esses números passam diretamente para{" "}
-              <b className="text-white">Pago</b>. Se algum já estiver reservado
-              ou pago, o banco recusa o lançamento inteiro para evitar
-              duplicidade.
+              Ao confirmar, esses números passam diretamente para <b className="text-white">Pago</b>
+              . Se algum já estiver reservado ou pago, o banco recusa o lançamento inteiro para
+              evitar duplicidade.
             </p>
           </div>
           <button

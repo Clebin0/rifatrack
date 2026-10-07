@@ -1,10 +1,6 @@
 export default function Loading() {
   return (
-    <main
-      className="max-w-6xl mx-auto px-5 py-12"
-      aria-busy="true"
-      aria-label="Carregando página"
-    >
+    <main className="max-w-6xl mx-auto px-5 py-12" aria-busy="true" aria-label="Carregando página">
       <p className="ui-muted mb-6" role="status">
         Carregando informações…
       </p>
