@@ -8,3 +8,6 @@ node_modules/
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+supabase/.temp/
+work/

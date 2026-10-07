@@ -66,10 +66,7 @@ export default function CampaignExperience({
         if (signal?.aborted) return;
         setCampaign(data);
         setNetworkError("");
-        const result = reconcileSelection(
-          selectedRef.current,
-          new Set(data.unavailable || []),
-        );
+        const result = reconcileSelection(selectedRef.current, new Set(data.unavailable || []));
         if (result.removed.length) {
           select(result.kept);
           const notice = `Os números ${result.removed.map((n) => String(n).padStart(3, "0")).join(", ")} foram reservados por outra pessoa e saíram da sua seleção. Escolha outros para continuar.`;
@@ -79,9 +76,7 @@ export default function CampaignExperience({
       } catch (error) {
         if (!signal?.aborted)
           setNetworkError(
-            error instanceof Error
-              ? error.message
-              : "Falha de conexão. Tente novamente.",
+            error instanceof Error ? error.message : "Falha de conexão. Tente novamente.",
           );
       } finally {
         if (!signal?.aborted) {
@@ -114,10 +109,7 @@ export default function CampaignExperience({
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
-  const unavailable = useMemo(
-    () => new Set(campaign?.unavailable || []),
-    [campaign],
-  );
+  const unavailable = useMemo(() => new Set(campaign?.unavailable || []), [campaign]);
   const sold = useMemo(() => new Set(campaign?.sold || []), [campaign]);
   const reserved = useMemo(() => new Set(campaign?.reserved || []), [campaign]);
   const closed = Boolean(
@@ -128,10 +120,7 @@ export default function CampaignExperience({
   );
   const salesOpen = salesApproved && !closed;
   const amount = (campaign?.price_cents || 0) * selected.length;
-  const drawRemaining = Math.max(
-    0,
-    Date.parse(CHILDRENS_CAMPAIGN.drawAt) - now,
-  );
+  const drawRemaining = Math.max(0, Date.parse(CHILDRENS_CAMPAIGN.drawAt) - now);
   const drawDays = Math.floor(drawRemaining / 86400000);
   const drawHours = Math.floor((drawRemaining % 86400000) / 3600000);
   function toggle(n: number) {
@@ -141,9 +130,7 @@ export default function CampaignExperience({
       toastRef.current("Você pode escolher até 50 números por pedido.");
       return;
     }
-    select(
-      current.includes(n) ? current.filter((v) => v !== n) : [...current, n],
-    );
+    select(current.includes(n) ? current.filter((v) => v !== n) : [...current, n]);
   }
   function randomPick(qty: number) {
     if (!campaign || !salesOpen) return;
@@ -172,8 +159,7 @@ export default function CampaignExperience({
     });
   }
   async function submit(value: BuyerDetailsValue) {
-    if (!salesOpen || !selectedRef.current.length || busy || networkError)
-      return;
+    if (!salesOpen || !selectedRef.current.length || busy || networkError) return;
     setBusy(true);
     setSubmitError("");
     try {
@@ -190,8 +176,7 @@ export default function CampaignExperience({
       const data = await res.json();
       if (!res.ok)
         throw new Error(
-          data.error ||
-            "Não foi possível reservar. Confira os números e tente novamente.",
+          data.error || "Não foi possível reservar. Confira os números e tente novamente.",
         );
       router.push(`/pedido/${data.order.public_token}`);
     } catch (error) {
@@ -213,9 +198,7 @@ export default function CampaignExperience({
       <>
         <PublicHeader />
         <main className="max-w-xl mx-auto px-5 py-16">
-          <h1 className="text-3xl font-bold">
-            Não conseguimos abrir a campanha
-          </h1>
+          <h1 className="text-3xl font-bold">Não conseguimos abrir a campanha</h1>
           <p role="alert" className="ui-muted my-5">
             {networkError}
           </p>
@@ -327,11 +310,7 @@ export default function CampaignExperience({
         {selectionNotice && (
           <div role="status" className="ui-card mb-5 text-sm">
             <p>{selectionNotice}</p>
-            <button
-              type="button"
-              onClick={() => setSelectionNotice("")}
-              className="underline mt-2"
-            >
+            <button type="button" onClick={() => setSelectionNotice("")} className="underline mt-2">
               Entendi
             </button>
           </div>
@@ -340,21 +319,16 @@ export default function CampaignExperience({
           <Card id="number-picker" className="scroll-mt-6">
             <div className="flex justify-between items-start gap-3 mb-5">
               <div>
-                <p className="text-xs text-emerald-400 font-semibold">
-                  ETAPA 1 DE 2
-                </p>
-                <h2 className="text-2xl font-bold mt-2">
-                  Escolha seus números
-                </h2>
+                <p className="text-xs text-emerald-400 font-semibold">ETAPA 1 DE 2</p>
+                <h2 className="text-2xl font-bold mt-2">Escolha seus números</h2>
                 <p className="text-sm ui-muted mt-2">
                   {salesOpen
                     ? "Toque em um número livre para escolher. Toque de novo para remover."
                     : "Consulte os números disponíveis. As reservas ainda estão fechadas."}
                 </p>
                 <p className="text-sm ui-muted mt-2">
-                  {Math.max(0, campaign.total_numbers - unavailable.size)}{" "}
-                  disponíveis · {campaign.sold_numbers} vendidos ·{" "}
-                  {campaign.reserved_numbers} reservados
+                  {Math.max(0, campaign.total_numbers - unavailable.size)} disponíveis ·{" "}
+                  {campaign.sold_numbers} vendidos · {campaign.reserved_numbers} reservados
                 </p>
               </div>
               <Button
@@ -363,10 +337,7 @@ export default function CampaignExperience({
                 onClick={() => void refresh()}
                 disabled={refreshing}
               >
-                <RefreshCw
-                  size={18}
-                  className={refreshing ? "animate-spin" : ""}
-                />
+                <RefreshCw size={18} className={refreshing ? "animate-spin" : ""} />
               </Button>
             </div>
             {salesOpen && (
@@ -393,19 +364,14 @@ export default function CampaignExperience({
             {!salesOpen ? (
               <>
                 <h2 className="text-xl font-bold">
-                  {!salesApproved
-                    ? "Campanha em preparação"
-                    : "Reservas encerradas"}
+                  {!salesApproved ? "Campanha em preparação" : "Reservas encerradas"}
                 </h2>
                 <p className="text-sm ui-muted mt-3">
                   {!salesApproved
                     ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha."
                     : "Não é possível criar novas reservas nesta campanha."}
                 </p>
-                <a
-                  href="/termos"
-                  className="underline text-sm inline-block mt-4"
-                >
+                <a href="/termos" className="underline text-sm inline-block mt-4">
                   Consultar as regras
                 </a>
                 {slug === "dia-das-criancas" && (
@@ -429,9 +395,7 @@ export default function CampaignExperience({
                   </div>
                   {selected.length ? (
                     <div className="mb-5">
-                      <p className="text-sm ui-muted mb-2">
-                        Toque no × para remover um número.
-                      </p>
+                      <p className="text-sm ui-muted mb-2">Toque no × para remover um número.</p>
                       <div className="flex flex-wrap gap-2">
                         {[...selected]
                           .sort((a, b) => a - b)
@@ -442,15 +406,10 @@ export default function CampaignExperience({
                               disabled={busy}
                               aria-label={`Remover número ${n} da seleção`}
                               onClick={() =>
-                                select(
-                                  selectedRef.current.filter(
-                                    (value) => value !== n,
-                                  ),
-                                )
+                                select(selectedRef.current.filter((value) => value !== n))
                               }
                             >
-                              {String(n).padStart(3, "0")}{" "}
-                              <span aria-hidden="true">×</span>
+                              {String(n).padStart(3, "0")} <span aria-hidden="true">×</span>
                             </Button>
                           ))}
                       </div>
@@ -464,9 +423,7 @@ export default function CampaignExperience({
                       </Button>
                     </div>
                   ) : (
-                    <p className="text-sm ui-muted mb-5">
-                      Toque em um número livre para começar.
-                    </p>
+                    <p className="text-sm ui-muted mb-5">Toque em um número livre para começar.</p>
                   )}
                   <Button
                     className="w-full"
@@ -476,8 +433,7 @@ export default function CampaignExperience({
                     Continuar para seus dados
                   </Button>
                   <p className="text-xs ui-muted mt-3">
-                    Até 50 números por pedido. A reserva é criada no próximo
-                    passo.
+                    Até 50 números por pedido. A reserva é criada no próximo passo.
                   </p>
                 </div>
                 <div hidden={step !== 2}>
@@ -506,9 +462,7 @@ export default function CampaignExperience({
       <div className="lg:hidden fixed bottom-0 inset-x-0 ui-header !border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center gap-4 z-30">
         <div className="flex-1">
           <p className="text-xs ui-muted">
-            {salesOpen
-              ? `${selected.length} número(s)`
-              : "Novas compras bloqueadas"}
+            {salesOpen ? `${selected.length} número(s)` : "Novas compras bloqueadas"}
           </p>
           <strong>{salesOpen ? moneyBRL(amount) : "Em preparação"}</strong>
         </div>
@@ -523,17 +477,13 @@ export default function CampaignExperience({
           </a>
         ) : (
           <Button
-            disabled={
-              !salesOpen || !selected.length || Boolean(networkError) || busy
-            }
+            disabled={!salesOpen || !selected.length || Boolean(networkError) || busy}
             onClick={
               step === 1
                 ? continueToDetails
                 : () =>
                     (
-                      document.getElementById(
-                        "buyer-details",
-                      ) as HTMLFormElement | null
+                      document.getElementById("buyer-details") as HTMLFormElement | null
                     )?.requestSubmit()
             }
           >

@@ -1,24 +1,198 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
-import {ArrowLeft,RefreshCw,ShieldAlert,TriangleAlert} from "lucide-react";
-import {supabaseBrowser} from "@/lib/supabase-browser";
-import {ensureSession} from "@/lib/mfa-browser";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, RefreshCw, ShieldAlert, TriangleAlert } from "lucide-react";
+import { supabaseBrowser } from "@/lib/supabase-browser";
+import { ensureSession } from "@/lib/mfa-browser";
 
-type Event={id:number;request_id:string|null;severity:"info"|"warn"|"error"|"critical";category:string;code:string;route:string|null;metadata:Record<string,unknown>;created_at:string};
-type Top={code:string;count_value:number;last_seen:string};
-type Data={summary:{errors_24h:number;warnings_24h:number;payment_alerts_24h:number;failed_notifications:number};recent_events:Event[];top_codes:Top[]};
+type Event = {
+  id: number;
+  request_id: string | null;
+  severity: "info" | "warn" | "error" | "critical";
+  category: string;
+  code: string;
+  route: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+type Top = { code: string; count_value: number; last_seen: string };
+type Data = {
+  summary: {
+    errors_24h: number;
+    warnings_24h: number;
+    payment_alerts_24h: number;
+    failed_notifications: number;
+  };
+  recent_events: Event[];
+  top_codes: Top[];
+};
 
-export default function ObservabilityClient(){
- const [data,setData]=useState<Data|null>(null);const [loading,setLoading]=useState(true);const [severity,setSeverity]=useState("");const [search,setSearch]=useState("");
- async function load(){setLoading(true);if(!(await ensureSession("admin","/admin/observabilidade"))){setLoading(false);return;}const {data:d}=await supabaseBrowser().rpc("admin_system_health_dashboard");setData((d as Data)||null);setLoading(false)}
- useEffect(()=>{load()},[]);
- const events=useMemo(()=>data?.recent_events.filter(e=>(!severity||e.severity===severity)&&[e.code,e.category,e.route||"",e.request_id||""].join(" ").toLowerCase().includes(search.toLowerCase()))||[],[data,severity,search]);
- if(loading)return <main className="min-h-screen grid place-items-center bg-zinc-950"><RefreshCw className="animate-spin"/></main>;
- if(!data)return <main className="min-h-screen grid place-items-center bg-zinc-950">Acesso de auditoria necessário.</main>;
- return <main className="min-h-screen bg-zinc-950"><div className="max-w-7xl mx-auto px-5 py-8 space-y-6"><div className="flex justify-between gap-4"><div><a href="/admin" className="inline-flex items-center gap-2 text-sm text-zinc-400"><ArrowLeft size={16}/> Painel</a><h1 className="text-4xl font-black mt-3">Observabilidade</h1><p className="text-zinc-500 mt-1">Erros, alertas técnicos e correlação por request ID.</p></div><button onClick={load} className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 h-fit"><RefreshCw/></button></div>
- <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">{[["Erros 24h",data.summary.errors_24h],["Avisos 24h",data.summary.warnings_24h],["Alertas de pagamento",data.summary.payment_alerts_24h],["E-mails com falha",data.summary.failed_notifications]].map(([l,v])=><div key={String(l)} className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"><TriangleAlert className={Number(v)>0?"text-amber-400":"text-zinc-600"}/><p className="text-3xl font-black mt-4">{v}</p><p className="text-zinc-500 text-sm">{l}</p></div>)}</section>
- {(data.summary.errors_24h>0||data.summary.payment_alerts_24h>0)&&<div className="rounded-2xl border border-rose-800 bg-rose-950/30 p-4 flex gap-3 text-rose-200"><ShieldAlert/><div><b>Há eventos que merecem revisão.</b><p className="text-sm text-rose-300/80">Use o request ID e o código abaixo para correlacionar com logs da Vercel, auditoria e eventos financeiros.</p></div></div>}
- <section className="grid lg:grid-cols-[300px_1fr] gap-5"><div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"><h2 className="font-black text-xl">Códigos 24h</h2><div className="mt-4 space-y-3">{data.top_codes.map(x=><div key={x.code} className="border-b border-zinc-800 pb-3"><div className="flex justify-between gap-3"><code className="text-xs">{x.code}</code><b>{x.count_value}</b></div><p className="text-xs text-zinc-600 mt-1">{new Date(x.last_seen).toLocaleString("pt-BR")}</p></div>)}</div></div>
- <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5"><div className="grid sm:grid-cols-[1fr_180px] gap-2"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar código, rota ou request ID" className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"/><select value={severity} onChange={e=>setSeverity(e.target.value)} className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"><option value="">Todas severidades</option><option value="info">info</option><option value="warn">warn</option><option value="error">error</option><option value="critical">critical</option></select></div><div className="overflow-x-auto mt-4"><table className="w-full text-sm min-w-[850px]"><thead className="text-zinc-500 text-left"><tr><th className="pb-3">Data</th><th>Severidade</th><th>Código</th><th>Rota</th><th>Request ID</th></tr></thead><tbody>{events.map(e=><tr key={e.id} className="border-t border-zinc-800"><td className="py-3 whitespace-nowrap">{new Date(e.created_at).toLocaleString("pt-BR")}</td><td><span className={"px-2 py-1 rounded-full text-xs "+(e.severity==="error"||e.severity==="critical"?"bg-rose-950 text-rose-300":e.severity==="warn"?"bg-amber-950 text-amber-300":"bg-zinc-800 text-zinc-400")}>{e.severity}</span></td><td className="font-mono text-xs">{e.code}</td><td>{e.route||"—"}</td><td className="font-mono text-xs text-zinc-500">{e.request_id||"—"}</td></tr>)}</tbody></table></div></div></section>
- </div></main>
+export default function ObservabilityClient() {
+  const [data, setData] = useState<Data | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [severity, setSeverity] = useState("");
+  const [search, setSearch] = useState("");
+  async function load() {
+    setLoading(true);
+    if (!(await ensureSession("admin", "/admin/observabilidade"))) {
+      setLoading(false);
+      return;
+    }
+    const { data: d } = await supabaseBrowser().rpc("admin_system_health_dashboard");
+    setData((d as Data) || null);
+    setLoading(false);
+  }
+  useEffect(() => {
+    load();
+  }, []);
+  const events = useMemo(
+    () =>
+      data?.recent_events.filter(
+        (e) =>
+          (!severity || e.severity === severity) &&
+          [e.code, e.category, e.route || "", e.request_id || ""]
+            .join(" ")
+            .toLowerCase()
+            .includes(search.toLowerCase()),
+      ) || [],
+    [data, severity, search],
+  );
+  if (loading)
+    return (
+      <main className="min-h-screen grid place-items-center bg-zinc-950">
+        <RefreshCw className="animate-spin" />
+      </main>
+    );
+  if (!data)
+    return (
+      <main className="min-h-screen grid place-items-center bg-zinc-950">
+        Acesso de auditoria necessário.
+      </main>
+    );
+  return (
+    <main className="min-h-screen bg-zinc-950">
+      <div className="max-w-7xl mx-auto px-5 py-8 space-y-6">
+        <div className="flex justify-between gap-4">
+          <div>
+            <a href="/admin" className="inline-flex items-center gap-2 text-sm text-zinc-400">
+              <ArrowLeft size={16} /> Painel
+            </a>
+            <h1 className="text-4xl font-black mt-3">Observabilidade</h1>
+            <p className="text-zinc-500 mt-1">
+              Erros, alertas técnicos e correlação por request ID.
+            </p>
+          </div>
+          <button
+            onClick={load}
+            className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 h-fit"
+          >
+            <RefreshCw />
+          </button>
+        </div>
+        <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            ["Erros 24h", data.summary.errors_24h],
+            ["Avisos 24h", data.summary.warnings_24h],
+            ["Alertas de pagamento", data.summary.payment_alerts_24h],
+            ["E-mails com falha", data.summary.failed_notifications],
+          ].map(([l, v]) => (
+            <div key={String(l)} className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
+              <TriangleAlert className={Number(v) > 0 ? "text-amber-400" : "text-zinc-600"} />
+              <p className="text-3xl font-black mt-4">{v}</p>
+              <p className="text-zinc-500 text-sm">{l}</p>
+            </div>
+          ))}
+        </section>
+        {(data.summary.errors_24h > 0 || data.summary.payment_alerts_24h > 0) && (
+          <div className="rounded-2xl border border-rose-800 bg-rose-950/30 p-4 flex gap-3 text-rose-200">
+            <ShieldAlert />
+            <div>
+              <b>Há eventos que merecem revisão.</b>
+              <p className="text-sm text-rose-300/80">
+                Use o request ID e o código abaixo para correlacionar com logs da Vercel, auditoria
+                e eventos financeiros.
+              </p>
+            </div>
+          </div>
+        )}
+        <section className="grid lg:grid-cols-[300px_1fr] gap-5">
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
+            <h2 className="font-black text-xl">Códigos 24h</h2>
+            <div className="mt-4 space-y-3">
+              {data.top_codes.map((x) => (
+                <div key={x.code} className="border-b border-zinc-800 pb-3">
+                  <div className="flex justify-between gap-3">
+                    <code className="text-xs">{x.code}</code>
+                    <b>{x.count_value}</b>
+                  </div>
+                  <p className="text-xs text-zinc-600 mt-1">
+                    {new Date(x.last_seen).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5">
+            <div className="grid sm:grid-cols-[1fr_180px] gap-2">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar código, rota ou request ID"
+                className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+              />
+              <select
+                value={severity}
+                onChange={(e) => setSeverity(e.target.value)}
+                className="bg-zinc-950 border border-zinc-700 rounded-xl px-3 py-2"
+              >
+                <option value="">Todas severidades</option>
+                <option value="info">info</option>
+                <option value="warn">warn</option>
+                <option value="error">error</option>
+                <option value="critical">critical</option>
+              </select>
+            </div>
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-sm min-w-[850px]">
+                <thead className="text-zinc-500 text-left">
+                  <tr>
+                    <th className="pb-3">Data</th>
+                    <th>Severidade</th>
+                    <th>Código</th>
+                    <th>Rota</th>
+                    <th>Request ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {events.map((e) => (
+                    <tr key={e.id} className="border-t border-zinc-800">
+                      <td className="py-3 whitespace-nowrap">
+                        {new Date(e.created_at).toLocaleString("pt-BR")}
+                      </td>
+                      <td>
+                        <span
+                          className={
+                            "px-2 py-1 rounded-full text-xs " +
+                            (e.severity === "error" || e.severity === "critical"
+                              ? "bg-rose-950 text-rose-300"
+                              : e.severity === "warn"
+                                ? "bg-amber-950 text-amber-300"
+                                : "bg-zinc-800 text-zinc-400")
+                          }
+                        >
+                          {e.severity}
+                        </span>
+                      </td>
+                      <td className="font-mono text-xs">{e.code}</td>
+                      <td>{e.route || "—"}</td>
+                      <td className="font-mono text-xs text-zinc-500">{e.request_id || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }

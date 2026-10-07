@@ -7,11 +7,7 @@ export default function Input({
   id,
   className = "",
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & {
-  label: string;
-  hint?: string;
-  error?: string;
-}) {
+}: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string }) {
   const generated = useId();
   const fieldId = id || generated;
   return (
@@ -27,10 +23,7 @@ export default function Input({
         aria-describedby={error || hint ? `${fieldId}-hint` : undefined}
       />
       {(error || hint) && (
-        <p
-          id={`${fieldId}-hint`}
-          className={error ? "text-sm text-rose-300" : "text-sm ui-muted"}
-        >
+        <p id={`${fieldId}-hint`} className={error ? "text-sm text-rose-300" : "text-sm ui-muted"}>
           {error || hint}
         </p>
       )}

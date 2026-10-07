@@ -1,25 +1,3 @@
 # Checklist de segurança
 
-- [x] Repositório privado
-- [x] Segredos fora do Git
-- [x] Dependências com versões fixadas
-- [x] `npm audit` bloqueando vulnerabilidades high/critical na CI
-- [x] Dependabot
-- [x] CODEOWNERS
-- [x] RLS e tabelas privadas
-- [x] Comprovantes em bucket privado
-- [x] URLs temporárias para comprovantes
-- [x] Reserva transacional de números
-- [x] Rate limit no checkout
-- [x] Webhook autenticado
-- [x] Idempotência de eventos
-- [x] Validação do valor recebido
-- [x] CSP com nonce por requisição
-- [x] HSTS, anti-clickjacking e nosniff
-- [x] Perfis separados de administrador e vendedor
-- [x] Convites de vendedor de uso único
-- [x] Auditoria administrativa
-- [ ] Proteção da branch `main` habilitada nas configurações do GitHub
-- [ ] Leaked Password Protection habilitada no Supabase Auth
-- [ ] Asaas Sandbox homologado
-- [ ] Credenciais Asaas de produção configuradas
+Os controles implementados e pendências com evidências estão em [SECURITY.md](../SECURITY.md) e [ROADMAP.md](../ROADMAP.md). Os controles da branch ainda precisam ser implantados e homologados antes de serem declarados ativos em produção.

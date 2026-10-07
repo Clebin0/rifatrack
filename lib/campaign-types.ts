@@ -15,7 +15,6 @@ export type BuyerCampaign = {
     name: string;
     code: string;
     team: string | null;
-    whatsapp: string;
   }[];
   unavailable: number[];
   sold?: number[];

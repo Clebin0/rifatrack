@@ -2,38 +2,19 @@
 import { usePathname } from "next/navigation";
 const links = [
   ["/admin/preparacao", "Preparação para operar", ["owner", "admin", "auditor"]],
-  [
-    "/admin",
-    "Visão geral",
-    ["owner", "admin", "operador", "financeiro", "auditor"],
-  ],
+  ["/admin", "Visão geral", ["owner", "admin", "operador", "financeiro", "auditor"]],
   ["/admin/nova-campanha", "Nova campanha", ["owner", "admin"]],
-  [
-    "/admin/pedidos",
-    "Pedidos",
-    ["owner", "admin", "operador", "financeiro", "auditor"],
-  ],
+  ["/admin/pedidos", "Pedidos", ["owner", "admin", "operador", "financeiro", "auditor"]],
   ["/admin/vendas-manuais", "Vendas manuais", ["owner", "admin", "financeiro"]],
-  [
-    "/admin/financeiro",
-    "Financeiro",
-    ["owner", "admin", "financeiro", "auditor"],
-  ],
+  ["/admin/financeiro", "Financeiro", ["owner", "admin", "financeiro", "auditor"]],
+  ["/admin/conciliacao", "Conciliação", ["owner", "admin", "financeiro", "auditor"]],
   ["/admin/auditoria", "Auditoria", ["owner", "admin", "auditor"]],
-  [
-    "/admin/notificacoes",
-    "Notificações",
-    ["owner", "admin", "operador", "financeiro", "auditor"],
-  ],
+  ["/admin/notificacoes", "Notificações", ["owner", "admin", "operador", "financeiro", "auditor"]],
   ["/admin/observabilidade", "Observabilidade", ["owner", "admin", "auditor"]],
   ["/admin/qrs", "Links e QRs", ["owner", "admin", "operador"]],
   ["/admin/equipe", "Equipe", ["owner"]],
   ["/admin/backup", "Backup", ["owner"]],
-  [
-    "/admin/seguranca",
-    "Segurança",
-    ["owner", "admin", "operador", "financeiro", "auditor"],
-  ],
+  ["/admin/seguranca", "Segurança", ["owner", "admin", "operador", "financeiro", "auditor"]],
 ] as const;
 export default function AdminNavigation({ role }: { role: string }) {
   const pathname = usePathname();
