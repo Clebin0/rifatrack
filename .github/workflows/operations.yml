@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   maintenance:
-    if: github.event_name != 'deployment_status'
+    if: github.event_name != 'deployment_status' && vars.OPERATIONS_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Run reservation cleanup and notification worker

@@ -1,25 +1,38 @@
 # Segurança
 
-## Controles implementados nesta alteração
+## Controles implementados
 
-- RPCs financeiros/internos exclusivamente service_role; chave Supabase server-only, sem segredo em parâmetros.
-- Revogação dos RPCs antigos e exclusão do hash do segredo interno no cutover.
-- Permissões administrativas e MFA para alterações críticas; sorteio via API autenticada com verificação de MFA.
-- Reserva transacional com locks; apenas um pedido recebe cada número.
-- Webhook autenticado, valor exato, referência e provedor vinculados ao pedido, eventos idempotentes.
-- Pagamentos atrasados/divergentes e disputas geram conciliação; nada os transforma automaticamente em números pagos.
-- Lista congelada e rodada drand futura; verificação BLS contra chave pública fixa no servidor e navegador.
-- Nonce CSP por requisição, sem unsafe-inline para scripts de produção. Estilos inline ainda permitidos.
-- Limite por IP em transação independente; 429 para limite, 409 para conflito, 500 para erro interno.
-- Links aleatórios de pedido; nome mascarado, ausência de telefone/e-mail e de IDs/valores financeiros internos na resposta pública.
-- Upload de comprovante e declaração do pagador passam pelo servidor; o bucket privado não aceita INSERT anônimo direto.
-- Fila durável com lease, claim_token, tentativas limitadas e envio idempotente.
-- Timeouts em Asaas, Supabase, Resend e drand; health consulta o banco.
+- RPCs financeiros/internos restritos a `service_role` e chave Supabase exclusivamente server-side.
+- Revogação dos RPCs antigos baseados em segredo enviado como parâmetro.
+- Permissões administrativas e MFA para alterações críticas.
+- Reserva transacional com locks.
+- Webhook autenticado, idempotente e validado por referência, valor e estado.
+- Pagamentos tardios/divergentes, reembolsos e disputas tratados por conciliação.
+- Sorteio verificável com fonte externa futura.
+- CSP com nonce por requisição; scripts sem `unsafe-inline` em produção.
+- Rate limit atômico por IP e códigos HTTP distintos para limite, conflito e erro interno.
+- Dados públicos minimizados; comprovantes e declaração do pagador passam pelo servidor.
+- Fila durável com lease, tentativas limitadas e idempotência.
+- Timeouts em Asaas, Supabase, Resend e fonte de aleatoriedade.
+- Health check consulta o banco.
+- Bucket de comprovantes privado.
 
-## Controles externos ainda dependentes de configuração/evidência
+## Supabase Security Advisor
 
-Não considerar concluídos apenas porque o código passou: proteção da main, confirmação do Leaked Password Protection, staging separado, Sandbox Asaas, credenciais reais, cron/alertas configurados e exercício de restauração. A situação de cada item está no ROADMAP.
+Nenhuma função `SECURITY DEFINER` está executável por `anon`.
 
-Nunca armazene chaves em commits, logs, payloads do navegador ou comentários de PR. Reporte incidentes privadamente ao proprietário do repositório. Revogue credenciais comprometidas, preserve os registros de auditoria, interrompa compras e execute a reconciliação antes de reabrir.
+O advisor ainda sinaliza funções `SECURITY DEFINER` deliberadamente disponíveis a usuários autenticados. Essas funções possuem `search_path` fixado e guarda de identidade/role; mutações administrativas críticas exigem AAL2. O alerta permanece como lembrete de arquitetura e deve ser reavaliado sempre que uma função nova for criada.
 
-O modelo de confiança inclui a chave administrativa do servidor: quem controla o servidor ou o banco pode alterar os registros. Drand elimina a semente escolhida pelo operador; não promete tornar um administrador do banco incapaz de adulterar o sistema. Publicar e preservar a lista/rodada antes da emissão do beacon permite auditoria externa.
+Leaked Password Protection ainda é reportada como desativada pelo Security Advisor. Não considerar esse controle ativo enquanto o advisor não confirmar a configuração em um plano compatível.
+
+## Publicação do repositório
+
+A árvore atual não deve ser confundida com o histórico completo do repositório. Uma varredura encontrou um valor sensível antigo em commits históricos. O mecanismo associado foi aposentado e seus grants foram revogados, mas o histórico não deve ser publicado.
+
+Para disponibilizar o código publicamente, use um snapshot/histórico limpo sem os commits antigos. Não transforme o repositório histórico em público apenas porque a versão atual não contém o valor.
+
+## Segredos
+
+Nunca armazene chaves em commits, logs, payloads do navegador ou comentários de PR. Em incidente, revogue a credencial, preserve auditoria, interrompa compras e reconcilie pagamentos antes de reabrir.
+
+O modelo de confiança inclui a chave administrativa do servidor: quem controla servidor ou banco pode alterar registros. A verificabilidade do sorteio reduz a possibilidade de escolha prévia do resultado, mas não transforma um administrador do banco em parte não confiável por definição.

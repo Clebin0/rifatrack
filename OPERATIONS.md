@@ -1,46 +1,63 @@
 # Operação e implantação
 
-## Implantação coordenada
+## Estado atual
 
-1. Revisar e testar a PR. Manter FINANCIAL_PRODUCTION_APPROVED=false.
-2. Criar staging com banco Supabase separado; configurar as URLs e chaves somente nesse ambiente. Não reutilizar o banco de produção em preview que possa criar pedidos.
-3. Reproduzir as migrations em staging. Configurar SUPABASE_SECRET_KEY na Vercel somente no servidor. Não copiar a chave para o chat ou frontend.
-4. Homologar reservas concorrentes, MFA, comprovantes privados, webhook de Sandbox, datas inválidas, duplicidade, valor divergente, pagamento atrasado, reembolso, disputa, leases e sorteio com rodada futura.
-5. Gerar e verificar backup da produção. Testar restauração em destino isolado. As primeiras 34 migrations, 20261006003716_buyer_number_states e 20261006043026_order_payer_declarations já existem na produção. Aplicar somente as cinco versões pendentes de hardening; em CLI db push, revisar a lista e usar include-all para essas versões anteriores à migration aditiva já aplicada, sem marcar arquivos aplicados manualmente como ausentes.
-6. Em janela sem checkout ativo, aplicar as cinco migrations pendentes na ordem dos arquivos: financial_security_hardening, external_draw_and_server_boundary, public_reads_through_server, backup_recovery_completeness e payer_and_proof_server_boundary; publicar o app novo imediatamente. A segunda migration revoga o protocolo antigo e a terceira restringe leituras ao servidor. Confirmar health, smoke, CSP/hidratação e leitura administrativa antes de reabrir.
-7. Em caso de falha, manter checkout fechado, corrigir a versão nova e repetir os testes. Um rollback de app sozinho não restaura o antigo protocolo de RPC. Não remover dados financeiros nem alterar migrations já aplicadas.
-8. Só habilitar true após responsável/regras/regularização, credenciais e controles externos aprovados e registrados.
+O hardening de banco e aplicação já foi publicado em produção com o checkout financeiro bloqueado por `FINANCIAL_PRODUCTION_APPROVED=false`. As 42 migrations registradas estão aplicadas. `PAYMENT_PROVIDER=manual` e `ASAAS_ENV=sandbox` permanecem como configuração conservadora.
+
+O deployment atual passou pela CI e pelo smoke operacional. Isso valida a implantação técnica; não substitui homologação financeira, jurídica ou de restauração.
+
+## Procedimento para próximas releases
+
+1. Manter `FINANCIAL_PRODUCTION_APPROVED=false` durante mudanças relevantes.
+2. Criar uma nova migration para qualquer alteração de banco; nunca editar migrations aplicadas.
+3. Validar lint, format, typecheck, testes, replay SQL, concorrência, pgTAP e build.
+4. Publicar primeiro em preview/staging quando o fluxo puder alterar estado.
+5. Executar smoke e conferir `/api/health`, autenticação, CSP, checkout fechado e rotas administrativas.
+6. Só reabrir operação financeira após conciliação e validação da release.
 
 ## Agenda e monitoramento
 
-.github/workflows/operations.yml executa manutenção a cada 10 minutos (agenda GitHub pode sofrer atrasos) e smoke após deployment_status de sucesso. Configure no GitHub a variável OPERATIONS_URL, SMOKE_SLUG e o secret CRON_SECRET; o mesmo CRON_SECRET precisa existir na Vercel. É possível disparar o workflow manualmente. Para limpeza em cinco minutos com SLA maior, mover o mesmo endpoint a um scheduler que suporte essa frequência; não declarar isso ativo sem confirmar execuções.
+`.github/workflows/operations.yml` executa smoke após deployment bem-sucedido. A manutenção agendada só roda quando a variável `OPERATIONS_ENABLED` for explicitamente definida como `true`.
 
-Falhas dos workflows aparecem no GitHub Actions; habilitar a notificação da conta responsável. Conectar monitor externo de disponibilidade a /api/health, com alerta após duas falhas consecutivas. O health devolve 503 sem expor detalhes quando não alcança o banco. Inspecionar /admin/observabilidade, /admin/notificacoes e /admin/conciliacao diariamente enquanto a campanha estiver ativa. Casos abertos bloqueiam encerramento/sorteio. Nenhum serviço externo de alerta foi provisionado automaticamente nesta alteração.
+Para habilitar a manutenção:
+
+- definir `OPERATIONS_URL` no GitHub;
+- definir `CRON_SECRET` no GitHub Secrets e na Vercel;
+- testar manualmente `/api/internal/maintenance`;
+- somente então definir `OPERATIONS_ENABLED=true`.
+
+Conectar monitor externo a `/api/health` e alertar após falhas consecutivas. Enquanto houver campanha ativa, revisar observabilidade, notificações e conciliação.
 
 ## Fluxos financeiros
 
-- Recebimento dentro do prazo + QR/payment id vinculado + externalReference correto + valor exato: marcar pago uma vez.
-- PAYMENT_CONFIRMED: registrar estado, aguardar PAYMENT_RECEIVED.
-- Datas do provedor sem horário ou sem fuso não provam o instante do pagamento. Nesses casos, usar o recebimento do evento como referência conservadora; uma entrega durante a tolerância pode exigir conciliação. Validar esse caso no Sandbox. Referência: [eventos de cobrança Asaas](https://docs.asaas.com/docs/webhook-para-cobrancas).
-- Tardio ou referência/valor divergente: abrir caso; preservar evento; verificar no provedor. Não reassociar números que já foram liberados ou vendidos.
-- Reembolso confirmado antes da finalização: pedido cancelado, receita líquida zero, números disponíveis. Depois de finalizada: manter a lista e resultado históricos congelados; registrar o impacto financeiro e conciliação.
-- Chargeback/disputa: abrir caso e sinalizar provedor. Não presumir que a disputa já terminou, nem eliminar números da lista congelada. Resolver conforme evidência do provedor, com MFA e nota de auditoria.
-- Reembolso de pagamento tardio: efetuar no painel/API do Asaas com permissão financeira, guardar o identificador e então resolver o caso no RifaTrack. O botão de resolução não envia dinheiro.
+- Recebimento dentro do prazo, referência correta e valor exato: confirmar uma única vez.
+- `PAYMENT_CONFIRMED`: registrar estado e aguardar `PAYMENT_RECEIVED`.
+- Data ambígua, atraso, referência divergente ou valor divergente: abrir conciliação.
+- Reembolso antes da finalização: cancelar pedido e liberar números conforme evidência do provedor.
+- Reembolso após finalização: preservar histórico do sorteio e registrar impacto financeiro.
+- Chargeback/disputa: abrir caso e não presumir encerramento sem evidência.
+- Resolver um caso no RifaTrack não envia dinheiro; reembolso financeiro ocorre no provedor.
 
 ## Rotação de segredos
 
-Rodar após incidente ou troca de acesso e revisar trimestralmente. Emitir substituto no provedor, atualizar ambiente servidor, publicar, testar, revogar anterior e registrar data/responsável sem valor da chave. Supabase: chave secret server-only; testar health e checkout em Sandbox. Asaas: testar criação do Pix antes de revogar a anterior. Webhook: coordenar token no provedor e ASAAS_WEBHOOK_TOKEN no app em janela controlada, depois reenviar eventos pendentes. Cron: atualizar Vercel e GitHub/scheduler na mesma janela e confirmar uma execução. Resend: testar um envio sem duplicar transação. Remover RIFATRACK_INTERNAL_API_SECRET depois do cutover.
+Após incidente, troca de acesso ou revisão periódica:
+
+1. emitir credencial substituta no provedor;
+2. atualizar somente ambiente server-side;
+3. publicar/testar;
+4. revogar a credencial anterior;
+5. registrar data e responsável, nunca o valor da chave.
+
+O código atual não utiliza mais `RIFATRACK_INTERNAL_API_SECRET`. A variável legada deve ser removida da Vercel quando a limpeza operacional for feita.
 
 ## Backups e restauração
 
-Exportar backup criptografado no painel do proprietário. Verificar com npm run backup:verify e guardar a senha fora do arquivo. Exercício mensal em ambiente isolado: criar destino vazio, aplicar schema, configurar RESTORE_SUPABASE_URL, RESTORE_SUPABASE_SERVICE_ROLE_KEY, BACKUP_PASSPHRASE e ALLOW_RIFATRACK_RESTORE=YES e executar npm run backup:restore -- caminho-do-arquivo. PRODUCTION_SUPABASE_URL é obrigatória para impedir destino de produção; não usar ALLOW_PRODUCTION_RESTORE no exercício. Conferir contagem, pedidos, transações, lista congelada, Auth e objetos de Storage. O export de dados não é um backup completo de Auth/Storage/segredos. Guardar evidência do ensaio sem dados pessoais. Uma agenda documental não equivale a um ensaio executado; o primeiro ensaio continua pendente.
+Exportar backup criptografado pelo fluxo de proprietário, verificar com `npm run backup:verify` e guardar a senha separadamente.
+
+O exercício de restauração deve usar destino isolado, vazio e diferente da produção. Configure `RESTORE_SUPABASE_URL`, `RESTORE_SUPABASE_SERVICE_ROLE_KEY`, `BACKUP_PASSPHRASE`, `PRODUCTION_SUPABASE_URL` e `ALLOW_RIFATRACK_RESTORE=YES`. Não usar `ALLOW_PRODUCTION_RESTORE` em ensaio.
+
+Conferir contagens, pedidos, eventos, conciliação, lista congelada, Auth e objetos do Storage. O export de dados não substitui backup de Auth, Storage e segredos.
 
 ## Privacidade e lançamento
 
-Contato da organização: @atleticasemacao. Responsável informada: Bianca Oliveira da Silva, iniciativa Atléticas em Ação, para a ONG Minha Vida Mudou. A ação social está divulgada para 17/10/2026; o sorteio foi informado para 12/10/2026 às 18h e ainda precisa de extração, autorização e regulamento confirmados. Confirmar o controlador, base legal por finalidade e retenção aprovada. Preparar canal privado de atendimento, verificação de titularidade e anonimização quando cabível. Não anunciar exclusão automática enquanto não implementada e validada.
-
-## Regulamento da campanha de Dia das Crianças
-
-Dados mais recentes fornecidos: R$ 5 por número e sorteio informado para 12/10/2026 às 18h (São Paulo), pela Loteria Federal. Isso substitui a data anterior de 17/10. O app impede aplicar drand a essa campanha; a organização precisa definir a extração, a correspondência dos números e a distribuição dos prêmios. Não converter a data informada em uma confirmação de extração oficial nem criar resultado sem evidências. A operação financeira continua bloqueada. Não importar contagens, nomes de compradores ou supostos pagamentos de outra plataforma sem dados verificáveis e autorização de migração.
-
-Backups de dados agora usam schema_version=2 e incluem financial_cases/notification_outbox. A verificação rejeita contagens divergentes; exportar durante uma janela sem escritas. Backups antigos de versão 1 continuam legíveis, mas não incluem as entidades novas. Na restauração, notificações históricas ficam pausadas (tentativas esgotadas) para evitar reenvio automático. A cópia de Auth/Storage continua separada.
+Antes de dinheiro real, confirmar controlador, base legal, retenção, canal do titular, responsável legal, regulamento, autorização aplicável, extração e entrega dos prêmios. A trava financeira só deve mudar para `true` após essas evidências e a homologação de pagamento.
