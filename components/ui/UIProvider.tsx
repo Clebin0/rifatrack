@@ -1,22 +1,9 @@
 "use client";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import Modal from "./Modal";
 import Button from "./Button";
 import Input from "./Input";
-type Field = {
-  key: string;
-  label: string;
-  value?: string;
-  type?: string;
-  required?: boolean;
-};
+type Field = { key: string; label: string; value?: string; type?: string; required?: boolean };
 type Answer = Record<string, string> | null;
 type API = {
   confirm: (message: string) => Promise<boolean>;
@@ -31,9 +18,7 @@ export function useUI() {
   return value;
 }
 export default function UIProvider({ children }: { children: ReactNode }) {
-  const [modal, setModal] = useState<{ title: string; fields: Field[] } | null>(
-    null,
-  );
+  const [modal, setModal] = useState<{ title: string; fields: Field[] } | null>(null);
   const [notice, setNotice] = useState("");
   useEffect(() => {
     try {
@@ -73,8 +58,7 @@ export default function UIProvider({ children }: { children: ReactNode }) {
         form,
         confirm: async (message) => Boolean(await form(message, [])),
         prompt: async (label, value) =>
-          (await form(label, [{ key: "value", label, value, required: true }]))
-            ?.value ?? null,
+          (await form(label, [{ key: "value", label, value, required: true }]))?.value ?? null,
         toast: setNotice,
       }}
     >
@@ -91,10 +75,7 @@ export default function UIProvider({ children }: { children: ReactNode }) {
             const values = new FormData(e.currentTarget);
             finish(
               Object.fromEntries(
-                Array.from(values.entries()).map(([key, value]) => [
-                  key,
-                  String(value),
-                ]),
+                Array.from(values.entries()).map(([key, value]) => [key, String(value)]),
               ),
             );
           }}

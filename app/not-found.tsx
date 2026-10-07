@@ -4,8 +4,7 @@ export default function NotFound() {
       <p className="text-emerald-400 font-semibold">Página não encontrada</p>
       <h1 className="text-4xl font-bold mt-3">Vamos voltar às campanhas?</h1>
       <p className="ui-muted my-6">
-        O endereço pode estar incompleto. Confira o link enviado pela
-        organização.
+        O endereço pode estar incompleto. Confira o link enviado pela organização.
       </p>
       <a href="/" className="ui-button ui-button-primary">
         Ver campanhas

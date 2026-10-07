@@ -37,8 +37,7 @@ export default function BuyerDetails({
     website: "",
   });
   const [consent, setConsent] = useState(false);
-  const sellerRequired =
-    Boolean(campaign.sellers?.length) && !campaign.seller_name;
+  const sellerRequired = Boolean(campaign.sellers?.length) && !campaign.seller_name;
   const phoneDigits = value.buyerPhone.replace(/\D/g, "");
   const missing =
     selected.length === 0
@@ -60,24 +59,15 @@ export default function BuyerDetails({
     if (!missing && !busy) void onSubmit({ ...value, adultConfirmed: consent });
   }
   return (
-    <form
-      id="buyer-details"
-      onSubmit={submit}
-      className="space-y-5"
-      aria-busy={busy}
-    >
+    <form id="buyer-details" onSubmit={submit} className="space-y-5" aria-busy={busy}>
       <div>
         <p className="text-xs font-semibold text-emerald-400">ETAPA 2 DE 2</p>
-        <h2
-          tabIndex={-1}
-          id="details-heading"
-          className="text-xl font-bold mt-2"
-        >
+        <h2 tabIndex={-1} id="details-heading" className="text-xl font-bold mt-2">
           Preencha seus dados
         </h2>
         <p className="text-sm ui-muted mt-2">
-          Só precisamos do seu nome e telefone. Confira a seleção abaixo.
-          Use os dados de quem ficará com os números, mesmo se outra pessoa fizer o Pix.
+          Só precisamos do seu nome e telefone. Confira a seleção abaixo. Use os dados de quem
+          ficará com os números, mesmo se outra pessoa fizer o Pix.
         </p>
       </div>
       <div className="rounded-xl border border-zinc-700 p-4">
@@ -135,10 +125,7 @@ export default function BuyerDetails({
       </details>
       {sellerRequired && (
         <div>
-          <label
-            htmlFor="buyer-seller"
-            className="block text-sm font-semibold mb-2"
-          >
+          <label htmlFor="buyer-seller" className="block text-sm font-semibold mb-2">
             Quem indicou a campanha?
           </label>
           <select
@@ -180,14 +167,9 @@ export default function BuyerDetails({
           onChange={(e) => setConsent(e.target.checked)}
         />
         <span>
-          Confirmo que tenho 18 anos ou mais e concordo com o uso dos dados para
-          gestão deste pedido, conforme a{" "}
-          <a
-            href="/privacidade"
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
-          >
+          Confirmo que tenho 18 anos ou mais e concordo com o uso dos dados para gestão deste
+          pedido, conforme a{" "}
+          <a href="/privacidade" target="_blank" rel="noreferrer" className="underline">
             Política de Privacidade
           </a>
           .
@@ -213,17 +195,11 @@ export default function BuyerDetails({
       >
         {busy ? "Criando seu pedido…" : "Reservar e ver o Pix"}
       </Button>
-      <Button
-        className="w-full"
-        variant="secondary"
-        onClick={onBack}
-        disabled={busy}
-      >
+      <Button className="w-full" variant="secondary" onClick={onBack} disabled={busy}>
         Voltar aos números
       </Button>
       <p className="text-xs ui-muted">
-        A reserva não confirma pagamento. Não pague depois do vencimento do
-        pedido.
+        A reserva não confirma pagamento. Não pague depois do vencimento do pedido.
       </p>
     </form>
   );

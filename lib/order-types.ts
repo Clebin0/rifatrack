@@ -15,10 +15,6 @@ export type Order = {
   proof_status: "none" | "submitted" | "approved" | "rejected";
   proof_uploaded_at: string | null;
   payment_provider: "manual" | "asaas" | string;
-  provider_payment_id: string | null;
-  provider_status: string | null;
   provider_paid_at: string | null;
-  provider_net_value_cents: number | null;
-  pix_transaction_id: string | null;
   numbers: number[];
 };
