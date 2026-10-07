@@ -36,9 +36,7 @@ export default function CampaignCommunity() {
       <Card>
         <div className="flex flex-wrap justify-between items-start gap-4">
           <div>
-            <p className="text-sm text-emerald-400 font-semibold">
-              Juntos pela mesma causa
-            </p>
+            <p className="text-sm text-emerald-400 font-semibold">Juntos pela mesma causa</p>
             <h2 className="text-2xl font-bold mt-2">Atléticas em Ação</h2>
             <p className="ui-muted text-sm mt-2">
               Atléticas participantes de {campaign.universities.join(", ")}.
@@ -70,8 +68,7 @@ export default function CampaignCommunity() {
             />
           </a>
           <figcaption className="text-sm ui-muted mt-2">
-            Todos os escudos da arte enviada pela organização. Toque na imagem
-            para ampliar.
+            Todos os escudos da arte enviada pela organização. Toque na imagem para ampliar.
           </figcaption>
         </figure>
       </Card>
@@ -96,24 +93,18 @@ export default function CampaignCommunity() {
               sizes="(max-width: 768px) 100vw, 550px"
               className="w-full h-auto"
             />
-            <span className="block text-sm underline py-3">
-              Ampliar todos os logos
-            </span>
+            <span className="block text-sm underline py-3">Ampliar todos os logos</span>
           </a>
           <div>
             <ul className="grid gap-3 text-sm">
               {campaign.partners.map((name) => (
-                <li
-                  key={name}
-                  className="rounded-xl border border-zinc-700 p-3"
-                >
+                <li key={name} className="rounded-xl border border-zinc-700 p-3">
                   {name}
                 </li>
               ))}
             </ul>
             <p className="text-sm ui-muted mt-4">
-              Os nomes seguem a arte enviada. O logo da Wizard aparece duas
-              vezes no cartaz.
+              Os nomes seguem a arte enviada. O logo da Wizard aparece duas vezes no cartaz.
             </p>
           </div>
         </div>
@@ -125,19 +116,12 @@ export default function CampaignCommunity() {
           {campaign.beneficiary} · {campaign.address}.
         </p>
         <p className="text-sm ui-muted mt-2">
-          Esta é a data do evento presencial. O sorteio foi informado para{" "}
-          {campaign.drawDate}; a extração e as regras ainda precisam ser
-          confirmadas.
+          Esta é a data do evento presencial. O sorteio foi informado para {campaign.drawDate}; a
+          extração e as regras ainda precisam ser confirmadas.
         </p>
-        <ul
-          className="flex flex-wrap gap-2 mt-4 text-sm"
-          aria-label="Atividades da ação"
-        >
+        <ul className="flex flex-wrap gap-2 mt-4 text-sm" aria-label="Atividades da ação">
           {campaign.activities.map((activity) => (
-            <li
-              key={activity}
-              className="rounded-xl border border-zinc-700 px-3 py-2"
-            >
+            <li key={activity} className="rounded-xl border border-zinc-700 px-3 py-2">
               {activity}
             </li>
           ))}
@@ -175,14 +159,8 @@ export default function CampaignCommunity() {
           ))}
         </div>
         <p className="text-sm ui-muted mt-5">
-          Para doar diretamente ou participar da ação presencial, fale com a
-          organização pelo{" "}
-          <a
-            href={campaign.contact}
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
-          >
+          Para doar diretamente ou participar da ação presencial, fale com a organização pelo{" "}
+          <a href={campaign.contact} target="_blank" rel="noreferrer" className="underline">
             @atleticasemacao
           </a>
           .

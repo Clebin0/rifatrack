@@ -1,1 +1,4 @@
-import FinanceClient from "@/components/FinanceClient";export default function FinancePage(){return <FinanceClient/>}
+import FinanceClient from "@/components/FinanceClient";
+export default function FinancePage() {
+  return <FinanceClient />;
+}

@@ -6,10 +6,7 @@ export default function PublicHeader() {
         <a href="/" className="text-xl font-extrabold tracking-tight">
           Rifa<span className="text-emerald-400">Track</span>
         </a>
-        <nav
-          aria-label="Navegação principal"
-          className="flex items-center gap-4 text-sm"
-        >
+        <nav aria-label="Navegação principal" className="flex items-center gap-4 text-sm">
           <a href="/#campanhas">Campanhas</a>
           <a href="/termos" className="hidden sm:block">
             Como participar

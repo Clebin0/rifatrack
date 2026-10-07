@@ -4,10 +4,6 @@ export const metadata: Metadata = {
   title: "Administração",
   robots: { index: false, follow: false },
 };
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return <AdminShell>{children}</AdminShell>;
 }

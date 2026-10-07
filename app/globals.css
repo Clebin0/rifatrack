@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
 :root {
   color-scheme: dark;
@@ -191,25 +190,25 @@ button:disabled {
   }
 }
 
-.theme-light .bg-zinc-950 {
-  background-color: var(--surface);
+.ui-notice {
+  background: #24170b;
+  color: #fde68a;
+  border-color: #92400e;
 }
-.theme-light .bg-zinc-900 {
-  background-color: var(--surface-raised);
+.number-reserved-label {
+  color: #fcd34d;
 }
-.theme-light .text-zinc-300,
-.theme-light .text-zinc-400,
-.theme-light .text-zinc-500 {
-  color: var(--muted);
+.number-sold-label {
+  color: #a5b4fc;
 }
-.theme-light .border-zinc-800,
-.theme-light .border-zinc-700 {
-  border-color: var(--line);
+.theme-light .ui-notice {
+  background: #fff7ed;
+  color: #78350f;
+  border-color: #b45309;
 }
-
-.ui-notice { background: #24170b; color: #fde68a; border-color: #92400e; }
-.number-reserved-label { color: #fcd34d; }
-.number-sold-label { color: #a5b4fc; }
-.theme-light .ui-notice { background: #fff7ed; color: #78350f; border-color: #b45309; }
-.theme-light .number-reserved-label { color: #92400e; }
-.theme-light .number-sold-label { color: #3730a3; }
+.theme-light .number-reserved-label {
+  color: #92400e;
+}
+.theme-light .number-sold-label {
+  color: #3730a3;
+}
