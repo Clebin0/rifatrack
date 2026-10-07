@@ -1,1 +1,4 @@
-import ObservabilityClient from "@/components/ObservabilityClient";export default function ObservabilityPage(){return <ObservabilityClient/>}
+import ObservabilityClient from "@/components/ObservabilityClient";
+export default function ObservabilityPage() {
+  return <ObservabilityClient />;
+}

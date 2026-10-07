@@ -7,8 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 export default function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState("");
-  const login =
-    pathname === "/admin/login" || pathname === "/admin/redefinir-senha";
+  const login = pathname === "/admin/login" || pathname === "/admin/redefinir-senha";
   useEffect(() => {
     if (login) return;
     let active = true;
@@ -38,9 +37,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
       </aside>
       <div className="lg:hidden ui-header px-5 py-4">
         <details>
-          <summary className="cursor-pointer font-bold">
-            Menu da organização
-          </summary>
+          <summary className="cursor-pointer font-bold">Menu da organização</summary>
           <div className="mt-4">
             <AdminNavigation role={role} />
           </div>

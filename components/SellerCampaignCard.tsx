@@ -5,13 +5,7 @@ import QRCode from "qrcode";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import { useUI } from "./ui/UIProvider";
-type Campaign = {
-  name: string;
-  slug: string;
-  goal: number;
-  sold_numbers: number;
-  status: string;
-};
+type Campaign = { name: string; slug: string; goal: number; sold_numbers: number; status: string };
 export default function SellerCampaignCard({
   campaign,
   code,
@@ -45,11 +39,7 @@ export default function SellerCampaignCard({
   async function share() {
     try {
       if (navigator.share)
-        await navigator.share({
-          title: campaign.name,
-          text: "Conheça esta campanha",
-          url: link,
-        });
+        await navigator.share({ title: campaign.name, text: "Conheça esta campanha", url: link });
       else await onCopy();
     } catch (error) {
       if (!(error instanceof Error && error.name === "AbortError"))
@@ -86,8 +76,7 @@ export default function SellerCampaignCard({
           />
         )}
         <p className="text-sm ui-muted">
-          Este link e QR atribuem os pedidos ao seu código. Mostre o QR ou
-          compartilhe pelo celular.
+          Este link e QR atribuem os pedidos ao seu código. Mostre o QR ou compartilhe pelo celular.
         </p>
       </div>
       <label className="sr-only" htmlFor={`seller-link-${campaign.slug}`}>
@@ -105,20 +94,14 @@ export default function SellerCampaignCard({
         <Button
           variant="secondary"
           onClick={() =>
-            void onCopy().catch(() =>
-              toast("Não foi possível copiar. Selecione o link acima."),
-            )
+            void onCopy().catch(() => toast("Não foi possível copiar. Selecione o link acima."))
           }
         >
           Copiar link
         </Button>
         <Button
           variant="secondary"
-          onClick={() =>
-            void onDownload().catch(() =>
-              toast("Não foi possível baixar o QR."),
-            )
-          }
+          onClick={() => void onDownload().catch(() => toast("Não foi possível baixar o QR."))}
         >
           Baixar QR
         </Button>

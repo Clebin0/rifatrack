@@ -4,16 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useUI } from "./ui/UIProvider";
 import QRCode from "qrcode";
 import Image from "next/image";
-import {
-  CheckCircle2,
-  Clock3,
-  Copy,
-  RefreshCw,
-  Upload,
-  XCircle,
-} from "lucide-react";
-import { supabaseBrowser } from "@/lib/supabase-browser";
-
+import { CheckCircle2, Clock3, Copy, RefreshCw, Upload, XCircle } from "lucide-react";
 import type { Order } from "@/lib/order-types";
 import OrderReceipt from "@/components/OrderReceipt";
 import PayerDeclaration from "@/components/PayerDeclaration";
@@ -52,9 +43,7 @@ export default function OrderStatus({ token }: { token: string }) {
       else setQr("");
     } catch (error) {
       setRefreshError(
-        error instanceof Error
-          ? error.message
-          : "Falha de conexão. Tente novamente.",
+        error instanceof Error ? error.message : "Falha de conexão. Tente novamente.",
       );
     } finally {
       setLoading(false);
@@ -73,10 +62,7 @@ export default function OrderStatus({ token }: { token: string }) {
 
   const remaining = useMemo(() => {
     if (!order) return 0;
-    return Math.max(
-      0,
-      Math.floor((new Date(order.expires_at).getTime() - now) / 1000),
-    );
+    return Math.max(0, Math.floor((new Date(order.expires_at).getTime() - now) / 1000));
   }, [order, now]);
   const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
   const ss = String(remaining % 60).padStart(2, "0");
@@ -86,9 +72,7 @@ export default function OrderStatus({ token }: { token: string }) {
     return (
       <main className="min-h-screen grid place-items-center p-6 text-center">
         <div>
-          <h1 className="text-3xl font-bold">
-            Não conseguimos consultar o pedido
-          </h1>
+          <h1 className="text-3xl font-bold">Não conseguimos consultar o pedido</h1>
           <p role="alert" className="ui-muted mt-4">
             {refreshError}
           </p>
@@ -116,10 +100,7 @@ export default function OrderStatus({ token }: { token: string }) {
             cls: "text-amber-300 bg-amber-950 border-amber-800",
           }
         : {
-            label:
-              order.status === "expired"
-                ? "Reserva expirada"
-                : "Pedido cancelado",
+            label: order.status === "expired" ? "Reserva expirada" : "Pedido cancelado",
             icon: <XCircle />,
             cls: "text-rose-300 bg-rose-950 border-rose-800",
           };
@@ -137,9 +118,7 @@ export default function OrderStatus({ token }: { token: string }) {
     try {
       await navigator.clipboard.writeText(text + "\n" + location.href);
     } catch {
-      toast(
-        "Não foi possível copiar. Guarde o endereço desta página para acompanhar o pedido.",
-      );
+      toast("Não foi possível copiar. Guarde o endereço desta página para acompanhar o pedido.");
       return;
     }
     setUploadMessage("Resumo do pedido copiado.");
@@ -160,9 +139,7 @@ export default function OrderStatus({ token }: { token: string }) {
     try {
       await navigator.clipboard.writeText(value);
     } catch {
-      toast(
-        "Não foi possível copiar o Pix. Tente pelo navegador ou use o QR Code.",
-      );
+      toast("Não foi possível copiar o Pix. Tente pelo navegador ou use o QR Code.");
       return;
     }
     setCopied(true);
@@ -173,55 +150,34 @@ export default function OrderStatus({ token }: { token: string }) {
     setUploadMessage("");
     const current = order;
     if (!current || current.status !== "pending" || remaining <= 0) {
-      setUploadMessage(
-        "A reserva expirou. Não envie comprovante deste pedido.",
-      );
+      setUploadMessage("A reserva expirou. Não envie comprovante deste pedido.");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
       setUploadMessage("O arquivo deve ter no máximo 5 MB.");
       return;
     }
-    const ext =
-      file.type === "application/pdf"
-        ? "pdf"
-        : file.type === "image/png"
-          ? "png"
-          : file.type === "image/jpeg"
-            ? file.name.toLowerCase().endsWith(".jpeg")
-              ? "jpeg"
-              : "jpg"
-            : "";
-    if (!ext) {
+    if (!["application/pdf", "image/png", "image/jpeg"].includes(file.type)) {
       setUploadMessage("Envie JPG, PNG ou PDF.");
       return;
     }
     setUploading(true);
-    const sb = supabaseBrowser();
-    const path = `${token}/comprovante.${ext}`;
-    const { error: uploadError } = await sb.storage
-      .from("payment-proofs")
-      .upload(path, file, { contentType: file.type, upsert: false });
-    if (uploadError && !uploadError.message.toLowerCase().includes("already")) {
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const response = await fetch(`/api/orders/${token}/proof`, { method: "POST", body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setUploadMessage(result.error || "Não foi possível enviar o comprovante.");
+      } else {
+        setUploadMessage("Comprovante enviado. A organização já consegue visualizá-lo no painel.");
+        await load();
+      }
+    } catch {
       setUploadMessage("Não foi possível enviar o comprovante.");
+    } finally {
       setUploading(false);
-      return;
     }
-    const { error } = await sb.rpc("register_payment_proof", {
-      p_token: token,
-      p_path: path,
-    });
-    if (error)
-      setUploadMessage(
-        "Arquivo enviado, mas não foi possível vinculá-lo ao pedido. Atualize e tente novamente.",
-      );
-    else {
-      setUploadMessage(
-        "Comprovante enviado. A organização já consegue visualizá-lo no painel.",
-      );
-      await load();
-    }
-    setUploading(false);
   }
 
   return (
@@ -239,9 +195,7 @@ export default function OrderStatus({ token }: { token: string }) {
               {refreshError} O status exibido é da última atualização.
             </p>
           )}
-          <p className="text-sm ui-muted mb-5">
-            Seu pedido: reserva → Pix → confirmação
-          </p>
+          <p className="text-sm ui-muted mb-5">Seu pedido: reserva → Pix → confirmação</p>
           <div
             className={
               "inline-flex items-center gap-2 border rounded-full px-3 py-2 text-sm " +
@@ -253,9 +207,7 @@ export default function OrderStatus({ token }: { token: string }) {
           </div>
           <h1 className="text-3xl font-black mt-5">{order.campaign_name}</h1>
           <PayerDeclaration token={token} />
-          <p className="text-zinc-500 text-sm mt-1">
-            Pedido {order.payment_reference}
-          </p>
+          <p className="text-zinc-500 text-sm mt-1">Pedido {order.payment_reference}</p>
           <p className="text-zinc-400 text-sm mt-2">
             Comprador: <strong>{order.buyer_name}</strong>
             {order.seller_name ? (
@@ -267,22 +219,17 @@ export default function OrderStatus({ token }: { token: string }) {
           </p>
           <div className="mt-5 rounded-xl border border-zinc-700 p-4">
             <p className="text-sm ui-muted">
-              Guarde este link para voltar ao pedido. Não compartilhe
-              publicamente.
+              Guarde este link para voltar ao pedido. Não compartilhe publicamente.
             </p>
-            <button
-              type="button"
-              className="ui-button ui-button-secondary mt-3"
-              onClick={saveLink}
-            >
+            <button type="button" className="ui-button ui-button-secondary mt-3" onClick={saveLink}>
               <Copy size={18} aria-hidden="true" /> Copiar link do pedido
             </button>
           </div>
           {(order.status === "expired" || order.status === "cancelled") && (
             <p role="status" className="mt-5 rounded-xl ui-notice p-4">
-              Não pague este pedido. Se você já pagou após o prazo, os números
-              não são garantidos: entre em contato com a organização para
-              conciliação e possível reembolso. Contato da organização:{" "}
+              Não pague este pedido. Se você já pagou após o prazo, os números não são garantidos:
+              entre em contato com a organização para conciliação e possível reembolso. Contato da
+              organização:{" "}
               <a
                 className="underline"
                 href="https://www.instagram.com/atleticasemacao/"
@@ -298,27 +245,8 @@ export default function OrderStatus({ token }: { token: string }) {
             <div className="mt-5 rounded-2xl border border-emerald-800 bg-emerald-950/40 p-4 text-sm">
               <p className="font-bold text-emerald-300">Pagamento confirmado</p>
               <div className="mt-2 space-y-1 text-zinc-300">
-                {order.provider_payment_id && (
-                  <p>
-                    ID da transação:{" "}
-                    <span className="font-mono">
-                      {order.provider_payment_id}
-                    </span>
-                  </p>
-                )}
-                {order.pix_transaction_id && (
-                  <p>
-                    Pix transaction ID:{" "}
-                    <span className="font-mono">
-                      {order.pix_transaction_id}
-                    </span>
-                  </p>
-                )}
                 {order.provider_paid_at && (
-                  <p>
-                    Pago em:{" "}
-                    {new Date(order.provider_paid_at).toLocaleString("pt-BR")}
-                  </p>
+                  <p>Pago em: {new Date(order.provider_paid_at).toLocaleString("pt-BR")}</p>
                 )}
               </div>
             </div>
@@ -334,9 +262,7 @@ export default function OrderStatus({ token }: { token: string }) {
             <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4">
               <p className="text-zinc-500 text-sm">Números</p>
               <p className="font-bold mt-1">
-                {order.numbers
-                  .map((n) => String(n).padStart(3, "0"))
-                  .join(", ") || "—"}
+                {order.numbers.map((n) => String(n).padStart(3, "0")).join(", ") || "—"}
               </p>
             </div>
           </div>
@@ -346,20 +272,16 @@ export default function OrderStatus({ token }: { token: string }) {
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-bold text-xl">Pagamento por Pix</h2>
                 <div className="font-mono text-lg font-black text-amber-300">
-                  <span className="text-xs ui-muted font-sans block">
-                    Tempo para pagar
-                  </span>
+                  <span className="text-xs ui-muted font-sans block">Tempo para pagar</span>
                   {mm}:{ss}
                 </div>
               </div>
               {remaining === 0 ? (
                 <div className="mt-4 rounded-2xl border border-amber-800 bg-amber-950/30 p-4">
-                  <p className="font-bold text-amber-300">
-                    Prazo de pagamento encerrado
-                  </p>
+                  <p className="font-bold text-amber-300">Prazo de pagamento encerrado</p>
                   <p className="text-sm text-zinc-400 mt-1">
-                    Não pague este pedido. Se você pagou dentro do prazo,
-                    aguarde a confirmação. Esta página atualiza automaticamente.
+                    Não pague este pedido. Se você pagou dentro do prazo, aguarde a confirmação.
+                    Esta página atualiza automaticamente.
                   </p>
                 </div>
               ) : (
@@ -367,8 +289,8 @@ export default function OrderStatus({ token }: { token: string }) {
                   <ol className="mt-4 space-y-2 text-sm list-decimal pl-5">
                     <li>Copie o código Pix abaixo ou escaneie o QR Code.</li>
                     <li>
-                      No app do seu banco, abra Pix → Copia e Cola. Confira o
-                      valor e o recebedor antes de pagar.
+                      No app do seu banco, abra Pix → Copia e Cola. Confira o valor e o recebedor
+                      antes de pagar.
                     </li>
                     <li>
                       {order.payment_provider === "asaas"
@@ -386,13 +308,7 @@ export default function OrderStatus({ token }: { token: string }) {
                     <>
                       {qr && (
                         <div className="mt-5 bg-white rounded-2xl p-4 w-fit mx-auto">
-                          <Image
-                            src={qr}
-                            alt="QR Code Pix"
-                            width={224}
-                            height={224}
-                            unoptimized
-                          />
+                          <Image src={qr} alt="QR Code Pix" width={224} height={224} unoptimized />
                         </div>
                       )}
                       <button
@@ -402,10 +318,7 @@ export default function OrderStatus({ token }: { token: string }) {
                         <Copy size={18} /> Copiar Pix Copia e Cola
                       </button>
                       {copied && (
-                        <p
-                          role="status"
-                          className="text-emerald-400 text-sm mt-2"
-                        >
+                        <p role="status" className="text-emerald-400 text-sm mt-2">
                           Código Pix copiado.
                         </p>
                       )}
@@ -435,8 +348,7 @@ export default function OrderStatus({ token }: { token: string }) {
                     </>
                   ) : (
                     <p className="text-sm text-zinc-400 mt-3">
-                      A organização ainda não cadastrou uma chave Pix nesta
-                      campanha.
+                      A organização ainda não cadastrou uma chave Pix nesta campanha.
                     </p>
                   )}
 
@@ -476,20 +388,14 @@ export default function OrderStatus({ token }: { token: string }) {
                             : "aguardando conferência"}
                       </div>
                     )}
-                    {uploadMessage && (
-                      <p className="text-sm mt-3 text-zinc-300">
-                        {uploadMessage}
-                      </p>
-                    )}
+                    {uploadMessage && <p className="text-sm mt-3 text-zinc-300">{uploadMessage}</p>}
                   </div>
                 </>
               )}
             </div>
           )}
 
-          {order.status === "paid" && (
-            <OrderReceipt order={order} shareOrder={shareOrder} />
-          )}
+          {order.status === "paid" && <OrderReceipt order={order} shareOrder={shareOrder} />}
           <button
             onClick={load}
             className="mt-6 inline-flex gap-2 items-center bg-zinc-800 hover:bg-zinc-700 rounded-xl px-4 py-2"
