@@ -2,7 +2,7 @@
 
 ## Implementado e publicado
 
-- Histórico do banco recuperado e sincronizado: 42 migrations aplicadas em produção.
+- Histórico do banco recuperado e sincronizado: 43 migrations aplicadas em produção.
 - Chave Supabase server-only e RPCs internos restritos a `service_role`.
 - Protocolo antigo de segredo em parâmetro aposentado e grants antigos revogados.
 - Webhook com validação de data, referência e valor, idempotência, atrasos, reembolso e chargeback.

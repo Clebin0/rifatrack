@@ -16,7 +16,7 @@ Use Node 24. Execute `npm ci`, copie `.env.example` para `.env.local` e preencha
 
 ## Banco reproduzível
 
-`supabase/migrations` é a fonte de schema. O histórico registrado no Supabase foi recuperado e as migrations de hardening já foram aplicadas em produção. Produção e repositório estão sincronizados em 42 migrations, incluindo a negação explícita de acesso direto às declarações do pagador.
+`supabase/migrations` é a fonte de schema. O histórico registrado no Supabase foi recuperado e as migrations de hardening já foram aplicadas em produção. Produção e repositório estão sincronizados em 43 migrations, incluindo a negação explícita de acesso direto às declarações do pagador.
 
 Não edite nem reaplique migrations já publicadas. Toda mudança de schema deve entrar como uma nova migration.
 

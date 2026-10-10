@@ -1,4 +1,5 @@
 import { publicRateLimit } from "@/lib/rate-limit";
+import { sanitizePublicCampaign } from "@/lib/public-campaign";
 import { NextResponse } from "next/server";
 import { supabaseInternal } from "@/lib/supabase";
 
@@ -16,15 +17,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
     });
     if (error || !data)
       return NextResponse.json({ error: "Campanha não encontrada" }, { status: 404 });
-    const campaign = data as unknown as {
-      sellers?: Array<{ name: string; code: string; team: string | null; whatsapp?: string }>;
-      [key: string]: unknown;
-    };
-    const sellers = (campaign.sellers || []).map(({ whatsapp: _whatsapp, ...seller }) => seller);
-    return NextResponse.json(
-      { ...campaign, sellers },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+
+    return NextResponse.json(sanitizePublicCampaign(data as unknown as Record<string, unknown>), {
+      headers: { "Cache-Control": "public, s-maxage=5, stale-while-revalidate=15" },
+    });
   } catch {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
