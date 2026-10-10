@@ -13,6 +13,12 @@ async function request(path, init) {
   return { res, text: await res.text() };
 }
 
+function servedFromVercelCache(response) {
+  const cacheStatus = (response.headers.get("x-vercel-cache") || "").toUpperCase();
+  const age = Number(response.headers.get("age") || "0");
+  return ["HIT", "STALE", "REVALIDATED"].includes(cacheStatus) || age > 0;
+}
+
 function assert(ok, label) {
   checks.push({ label, ok });
   if (!ok) process.exitCode = 1;
@@ -27,8 +33,13 @@ assert(!health.res.headers.get("x-powered-by"), "framework header hidden");
 const campaigns = await request("/api/campaigns");
 assert(campaigns.res.status === 200, "campaign list API succeeds");
 assert(
-  (campaigns.res.headers.get("cache-control") || "").includes("s-maxage=10"),
-  "campaign list uses short CDN cache",
+  (campaigns.res.headers.get("cache-control") || "").includes("public"),
+  "campaign list is marked public-cacheable",
+);
+const campaignsCacheProbe = await request("/api/campaigns");
+assert(
+  servedFromVercelCache(campaignsCacheProbe.res),
+  "campaign list is served from Vercel CDN cache",
 );
 if (!slug && campaigns.res.ok) {
   try {
@@ -64,8 +75,13 @@ if (slug) {
   const campaign = await request("/api/campaigns/" + encodeURIComponent(slug));
   assert(campaign.res.status === 200, "campaign API succeeds");
   assert(
-    (campaign.res.headers.get("cache-control") || "").includes("s-maxage=5"),
-    "campaign API uses short CDN cache",
+    (campaign.res.headers.get("cache-control") || "").includes("public"),
+    "campaign API is marked public-cacheable",
+  );
+  const campaignCacheProbe = await request("/api/campaigns/" + encodeURIComponent(slug));
+  assert(
+    servedFromVercelCache(campaignCacheProbe.res),
+    "campaign API is served from Vercel CDN cache",
   );
   if (campaign.res.ok) {
     let publicCampaign;
