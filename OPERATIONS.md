@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-O hardening de banco e aplicação já foi publicado em produção com o checkout financeiro bloqueado por `FINANCIAL_PRODUCTION_APPROVED=false`. As 42 migrations registradas estão aplicadas. `PAYMENT_PROVIDER=manual` e `ASAAS_ENV=sandbox` permanecem como configuração conservadora.
+O hardening de banco e aplicação já foi publicado em produção com o checkout financeiro bloqueado por `FINANCIAL_PRODUCTION_APPROVED=false`. As 43 migrations versionadas no repositório estão aplicadas. `PAYMENT_PROVIDER=manual` e `ASAAS_ENV=sandbox` permanecem como configuração conservadora.
 
 O deployment atual passou pela CI e pelo smoke operacional. Isso valida a implantação técnica; não substitui homologação financeira, jurídica ou de restauração.
 
@@ -48,7 +48,7 @@ Após incidente, troca de acesso ou revisão periódica:
 4. revogar a credencial anterior;
 5. registrar data e responsável, nunca o valor da chave.
 
-O código atual não utiliza mais `RIFATRACK_INTERNAL_API_SECRET`. A variável legada deve ser removida da Vercel quando a limpeza operacional for feita.
+O código atual não utiliza `RIFATRACK_INTERNAL_API_SECRET`; a variável legada foi removida do ambiente Production da Vercel. Não a recrie nem restaure deployments antigos que dependam do protocolo aposentado.
 
 ## Backups e restauração
 

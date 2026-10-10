@@ -19,7 +19,7 @@ jobs:
           test -n "$APP_URL" && test -n "$CRON_SECRET"
           curl --fail-with-body --max-time 55 -H "Authorization: Bearer $CRON_SECRET" "$APP_URL/api/internal/maintenance"
   smoke:
-    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && github.event.deployment_status.environment == 'Production')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

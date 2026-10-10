@@ -8,10 +8,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   const { slug } = await params;
   if (!/^[a-z0-9-]{2,80}$/.test(slug))
     return NextResponse.json({ error: "Campanha inválida" }, { status: 400 });
-  const { data, error } = await supabaseInternal().rpc("public_draw_verification", {
-    p_slug: slug,
-  });
-  if (error || !data)
-    return NextResponse.json({ error: "Transparência indisponível" }, { status: 404 });
-  return NextResponse.json(data, { headers: { "Cache-Control": "no-store", Pragma: "no-cache" } });
+  try {
+    const { data, error } = await supabaseInternal().rpc("public_draw_verification", {
+      p_slug: slug,
+    });
+    if (error || !data)
+      return NextResponse.json({ error: "Transparência indisponível" }, { status: 404 });
+    return NextResponse.json(data, {
+      headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" },
+    });
+  } catch {
+    return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
+  }
 }
