@@ -26,6 +26,10 @@ assert(!health.res.headers.get("x-powered-by"), "framework header hidden");
 
 const campaigns = await request("/api/campaigns");
 assert(campaigns.res.status === 200, "campaign list API succeeds");
+assert(
+  (campaigns.res.headers.get("cache-control") || "").includes("s-maxage=10"),
+  "campaign list uses short CDN cache",
+);
 if (!slug && campaigns.res.ok) {
   try {
     const rows = JSON.parse(campaigns.text);
@@ -59,6 +63,35 @@ if (slug) {
   assert(second.res.headers.get("content-security-policy") !== csp, "nonce rotates per request");
   const campaign = await request("/api/campaigns/" + encodeURIComponent(slug));
   assert(campaign.res.status === 200, "campaign API succeeds");
+  assert(
+    (campaign.res.headers.get("cache-control") || "").includes("s-maxage=5"),
+    "campaign API uses short CDN cache",
+  );
+  if (campaign.res.ok) {
+    let publicCampaign;
+    try {
+      publicCampaign = JSON.parse(campaign.text);
+    } catch {
+      assert(false, "campaign API returns valid JSON");
+    }
+    if (publicCampaign && typeof publicCampaign === "object") {
+      assert(
+        !Object.prototype.hasOwnProperty.call(publicCampaign, "seller_whatsapp"),
+        "campaign API omits top-level seller contact",
+      );
+      assert(
+        !Object.prototype.hasOwnProperty.call(publicCampaign, "finalized_by"),
+        "campaign API omits operator identity",
+      );
+      assert(
+        !Array.isArray(publicCampaign.sellers) ||
+          publicCampaign.sellers.every(
+            (seller) => !Object.prototype.hasOwnProperty.call(seller, "whatsapp"),
+          ),
+        "campaign API omits seller directory contact details",
+      );
+    }
+  }
 } else {
   console.log("INFO  no active campaign discovered; campaign-specific checks skipped");
 }

@@ -8,7 +8,9 @@ export async function GET(req: Request) {
   try {
     const { data, error } = await supabaseInternal().rpc("public_active_campaigns");
     if (error) throw error;
-    return NextResponse.json(data ?? [], { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(data ?? [], {
+      headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" },
+    });
   } catch {
     return NextResponse.json({ error: "Serviço indisponível" }, { status: 503 });
   }
