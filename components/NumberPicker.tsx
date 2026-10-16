@@ -94,10 +94,26 @@ export default function NumberPicker({
       ) : (
         <>
           <div className="number-picker-range">
-            <span>Exibindo {((page * pageSize) + 1).toLocaleString("pt-BR")}–{Math.min((page + 1) * pageSize, numbers.length).toLocaleString("pt-BR")} de {numbers.length.toLocaleString("pt-BR")}</span>
+            <span>
+              Exibindo {(page * pageSize + 1).toLocaleString("pt-BR")}–
+              {Math.min((page + 1) * pageSize, numbers.length).toLocaleString("pt-BR")} de{" "}
+              {numbers.length.toLocaleString("pt-BR")}
+            </span>
             <div className="flex gap-2">
-              <Button variant="secondary" disabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))}>Anterior</Button>
-              <Button variant="secondary" disabled={page + 1 >= pageCount} onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}>Próxima</Button>
+              <Button
+                variant="secondary"
+                disabled={page === 0}
+                onClick={() => setPage((current) => Math.max(0, current - 1))}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={page + 1 >= pageCount}
+                onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+              >
+                Próxima
+              </Button>
             </div>
           </div>
           <div
@@ -128,7 +144,8 @@ export default function NumberPicker({
         </>
       )}
       <p className="text-xs ui-muted">
-        Mostrando até {pageSize} números por vez para manter a página rápida. A seleção só é garantida após a reserva; a disponibilidade é atualizada a cada 20 segundos.
+        Mostrando até {pageSize} números por vez para manter a página rápida. A seleção só é
+        garantida após a reserva; a disponibilidade é atualizada a cada 20 segundos.
       </p>
     </div>
   );
