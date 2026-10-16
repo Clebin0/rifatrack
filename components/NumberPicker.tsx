@@ -23,6 +23,8 @@ export default function NumberPicker({
 }: Props) {
   const [search, setSearch] = useState("");
   const [found, setFound] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const pageSize = 100;
   const numbers = useMemo(
     () => availableNumbers(total, new Set([...unavailable, ...sold, ...reserved])),
     [total, unavailable, sold, reserved],
@@ -31,13 +33,20 @@ export default function NumberPicker({
   const target = Number(search);
   const invalid = Boolean(search) && (!/^\d+$/.test(search) || target < 1 || target > total);
   const foundAvailable = found !== null && numbers.includes(found);
+  const pageCount = Math.max(1, Math.ceil(numbers.length / pageSize));
+  const visibleNumbers = numbers.slice(page * pageSize, (page + 1) * pageSize);
+  useEffect(() => {
+    if (found !== null && foundAvailable) {
+      setPage(Math.floor(numbers.indexOf(found) / pageSize));
+    }
+  }, [found, foundAvailable, numbers, pageSize]);
   useEffect(() => {
     if (found !== null && foundAvailable) {
       document
         .getElementById(`available-number-${found}`)
         ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-  }, [found, foundAvailable]);
+  }, [found, foundAvailable, page]);
   return (
     <div className="space-y-4">
       <p className="text-sm ui-muted">
@@ -74,7 +83,7 @@ export default function NumberPicker({
             : "não está disponível. Escolha outro número."}
         </p>
       )}
-      <div className="flex justify-between items-center gap-3 text-sm">
+      <div className="number-picker-summary">
         <span className="ui-muted">{numbers.length.toLocaleString("pt-BR")} disponíveis</span>
         <span className="font-semibold text-emerald-400">✓ {selected.length} selecionados</span>
       </div>
@@ -84,12 +93,35 @@ export default function NumberPicker({
         </p>
       ) : (
         <>
+          <div className="number-picker-range">
+            <span>
+              Exibindo {(page * pageSize + 1).toLocaleString("pt-BR")}–
+              {Math.min((page + 1) * pageSize, numbers.length).toLocaleString("pt-BR")} de{" "}
+              {numbers.length.toLocaleString("pt-BR")}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                disabled={page === 0}
+                onClick={() => setPage((current) => Math.max(0, current - 1))}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={page + 1 >= pageCount}
+                onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
           <div
-            className="grid grid-cols-5 sm:grid-cols-10 gap-2"
+            className="number-picker-grid"
             role="group"
-            aria-label="Todos os números disponíveis"
+            aria-label="Números disponíveis nesta página"
           >
-            {numbers.map((n) => (
+            {visibleNumbers.map((n) => (
               <button
                 id={`available-number-${n}`}
                 key={n}
@@ -112,7 +144,8 @@ export default function NumberPicker({
         </>
       )}
       <p className="text-xs ui-muted">
-        A seleção só é garantida após a reserva. A disponibilidade é atualizada a cada 20 segundos.
+        Mostrando até {pageSize} números por vez para manter a página rápida. A seleção só é
+        garantida após a reserva; a disponibilidade é atualizada a cada 20 segundos.
       </p>
     </div>
   );
