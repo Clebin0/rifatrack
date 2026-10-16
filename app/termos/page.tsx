@@ -1,4 +1,3 @@
-import CampaignNotice from "@/components/CampaignNotice";
 import { CHILDRENS_CAMPAIGN as content } from "@/lib/campaign-content";
 
 export const metadata = { title: "Termos de uso | RifaTrack" };
@@ -12,16 +11,6 @@ export default function Terms() {
       </a>
       <h1 className="text-4xl font-bold mt-6">Termos de uso</h1>
       <p className="mt-3 text-zinc-400">Atualizado em {updatedAt} · versão de preparação</p>
-      <CampaignNotice />
-      <div
-        className="mt-6 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-4 text-amber-100"
-        role="alert"
-      >
-        <strong>Leia antes de participar.</strong> Estes termos não tornam a campanha legal por si
-        só, não substituem autorização pública e não eliminam direitos previstos em lei. A campanha
-        está em preparação e as compras permanecem fechadas até a organização concluir a
-        regularização.
-      </div>
       <article className="mt-6 space-y-7 text-zinc-300 leading-7">
         <section>
           <h2 className="text-xl font-bold text-white">1. Quem participa</h2>
