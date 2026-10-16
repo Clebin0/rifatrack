@@ -411,3 +411,21 @@ main.min-h-screen.bg-zinc-950 button:hover:not(:disabled) { filter: brightness(1
   .admin-dashboard > div { padding-left: 1rem; padding-right: 1rem; }
   .admin-dashboard h1 { font-size: 2rem; }
 }
+
+
+/* Order status and Pix checkout */
+.order-status-shell { background: radial-gradient(ellipse at 50% -10%, rgb(34 94 52 / 16%), transparent 52%), #080b09; }
+.order-status-card { padding: clamp(1.2rem, 4vw, 2rem); border-color: #293a2e; background: linear-gradient(145deg, #121a14, #0d120f); box-shadow: 0 22px 65px rgb(0 0 0 / 18%); }
+.order-status-card > h1 { letter-spacing: -.05em; line-height: 1.1; }
+.order-status-card .bg-zinc-950 { background-color: #0a100c; }
+.order-status-card .border-zinc-800, .order-status-card .border-zinc-700 { border-color: #304236; }
+.order-status-card .text-zinc-500 { color: #95a397; }
+.order-status-card button { min-height: 46px; border-radius: .85rem; }
+.order-status-card button:focus-visible { outline: 3px solid #8af0b4; outline-offset: 3px; }
+.order-status-card img { max-width: 100%; height: auto; }
+@media (max-width: 680px) {
+  .order-status-shell { padding: 1.25rem 1rem; }
+  .order-status-card { margin-top: 1.25rem; border-radius: 1.25rem; }
+  .order-status-card h1 { font-size: 1.75rem; overflow-wrap: anywhere; }
+  .order-status-card .font-mono { font-size: 1rem; }
+}
