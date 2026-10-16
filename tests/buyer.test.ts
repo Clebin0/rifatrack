@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import NumberPicker from "@/components/NumberPicker";
 import { orderSchema } from "@/lib/validation";
 describe("buyer number selection", () => {
-  it("renders all available controls for the current campaign and omits unavailable numbers", () => {
+  it("renders a bounded page, reports all available numbers, and omits unavailable numbers", () => {
     const html = renderToStaticMarkup(
       createElement(NumberPicker, {
         total: 400,
@@ -17,7 +17,9 @@ describe("buyer number selection", () => {
         onToggle: () => {},
       }),
     );
-    expect((html.match(/aria-pressed=/g) || []).length).toBe(398);
+    expect((html.match(/aria-pressed=/g) || []).length).toBe(100);
+    expect(html).toContain("398 disponíveis");
+    expect(html).toContain("Exibindo 1–100 de 398");
     expect(html).not.toContain("Número 1:");
     expect(html).not.toContain("Número 2:");
     expect(html).toContain("Número 3: selecionado");

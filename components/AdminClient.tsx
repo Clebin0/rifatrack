@@ -727,7 +727,7 @@ export default function AdminClient() {
     role === "owner" || role === "admin" || role === "financeiro" || role === "auditor";
 
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <main className="admin-dashboard min-h-screen bg-zinc-950">
       <header className="border-b border-zinc-800 sticky top-0 bg-zinc-950/95 backdrop-blur z-20">
         <div className="max-w-7xl mx-auto px-5 py-4 flex justify-between items-center gap-3">
           <div>

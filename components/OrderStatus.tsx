@@ -181,12 +181,12 @@ export default function OrderStatus({ token }: { token: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-5 py-10">
-      <div className="max-w-2xl mx-auto">
+    <main className="order-status-shell min-h-screen bg-zinc-950 px-5 py-10">
+      <div className="order-status-container max-w-2xl mx-auto">
         <a href="/" className="font-black text-xl">
           Rifa<span className="text-emerald-400">Track</span>
         </a>
-        <section className="mt-8 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8">
+        <section className="order-status-card mt-8 bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8">
           {refreshError && (
             <p
               role="alert"

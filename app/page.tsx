@@ -1,10 +1,12 @@
-import { ArrowRight, Gift, HeartHandshake } from "lucide-react";
+import { ArrowRight, Gift, HeartHandshake, ShieldCheck, Sparkles, Ticket } from "lucide-react";
 import { supabaseInternal } from "@/lib/supabase";
 import PublicHeader from "@/components/PublicHeader";
 import Card from "@/components/ui/Card";
 import { moneyBRL } from "@/lib/buyer";
 import { CHILDRENS_CAMPAIGN } from "@/lib/campaign-content";
+
 export const dynamic = "force-dynamic";
+
 type Campaign = {
   name: string;
   slug: string;
@@ -14,6 +16,7 @@ type Campaign = {
   sold_numbers: number;
   ends_at: string | null;
 };
+
 export default async function Home() {
   let campaigns: Campaign[] = [];
   let failed = false;
@@ -28,87 +31,146 @@ export default async function Home() {
   return (
     <>
       <PublicHeader />
-      <main className="max-w-6xl mx-auto px-5 py-10 sm:py-16">
-        <section className="grid md:grid-cols-[1.3fr_1fr] gap-8 items-center">
-          <div>
-            <p className="text-emerald-400 font-semibold flex items-center gap-2 text-sm">
-              <HeartHandshake size={18} /> Campanhas e ações sociais
+      <main className="public-home">
+        <section className="home-hero">
+          <div className="home-hero-copy">
+            <p className="eyebrow">
+              <span className="eyebrow-dot" /> Campanhas com propósito
             </p>
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mt-5 leading-tight">
-              Apoie o Dia das Crianças.
+            <h1>
+              Uma escolha simples.
               <br />
-              <span className="text-emerald-400">Concorra a prêmios.</span>
+              <span>Um impacto real.</span>
             </h1>
-            <p className="text-lg ui-muted mt-6 max-w-lg">
-              A ação beneficia crianças atendidas pela ONG Minha Vida Mudou. Cada número custa R$ 5.
-              Confira os prêmios e escolha seus números.
+            <p className="home-lede">
+              Descubra campanhas, conheça os prêmios e participe com clareza em cada etapa. Sem
+              complicação: você escolhe, acompanha e sabe o que acontece com seu pedido.
             </p>
-            <a className="ui-button ui-button-primary mt-7" href="/campanha/dia-das-criancas">
-              Ver campanha e números <ArrowRight size={18} />
-            </a>
-          </div>
-          <Card className="!p-7">
-            <Gift size={32} className="text-emerald-400 mb-5" />
-            <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-              Dia das Crianças · ação social
-            </p>
-            <h2 className="text-2xl font-bold mt-3">Curso Wizard, vouchers, chocolates e mais</h2>
-            <p className="ui-muted mt-4">
-              Responsável pela campanha: {CHILDRENS_CAMPAIGN.organizer}.
-            </p>
-            <div className="border-t border-zinc-700 mt-5 pt-5 flex justify-between gap-3">
-              <span className="ui-muted">Sorteio informado</span>
-              <strong>{CHILDRENS_CAMPAIGN.drawDate}</strong>
+            <div className="home-actions">
+              <a className="ui-button ui-button-primary" href="#campanhas">
+                Explorar campanhas <ArrowRight size={18} />
+              </a>
+              <a className="home-secondary-link" href="/termos">
+                Como funciona <ArrowRight size={15} />
+              </a>
             </div>
-            {!approved && (
-              <p className="text-sm text-amber-200 mt-4 rounded-xl bg-amber-950 p-3">
-                Campanha em preparação. Compras ainda bloqueadas.
+            <div className="home-value-points">
+              <span>
+                <ShieldCheck size={16} /> Informações transparentes
+              </span>
+              <span>
+                <Ticket size={16} /> Escolha seus números
+              </span>
+            </div>
+          </div>
+          <div className="home-feature-wrap">
+            <div className="home-feature-glow" aria-hidden="true" />
+            <Card className="home-feature-card">
+              <div className="home-feature-top">
+                <span className="home-feature-icon">
+                  <HeartHandshake size={23} />
+                </span>
+                <span className="home-feature-tag">Ação social</span>
+              </div>
+              <p className="home-feature-kicker">EM DESTAQUE</p>
+              <h2>Dia das Crianças</h2>
+              <p className="ui-muted mt-3">
+                Uma campanha para apoiar a ação social da ONG Minha Vida Mudou.
               </p>
-            )}
-            <a
-              className="inline-flex gap-2 items-center underline mt-5"
-              href="/campanha/dia-das-criancas"
-            >
-              Ver todos os prêmios <ArrowRight size={16} />
-            </a>
-          </Card>
-        </section>
-        <section id="campanhas" className="mt-16 scroll-mt-6">
-          <h2 className="text-2xl font-bold">Conheça as campanhas</h2>
-          <p className="ui-muted mt-2 mb-6">
-            Confira as informações e as condições de participação.
-          </p>
-          {failed ? (
-            <Card>
-              <p role="alert">Não foi possível consultar as campanhas agora.</p>
-              <p className="ui-muted mt-2">
-                Tente novamente em alguns instantes ou{" "}
-                <a className="underline" href="/campanha/dia-das-criancas">
-                  acesse a campanha de Dia das Crianças
-                </a>
-                .
+              <div className="home-prize-preview">
+                <span className="home-prize-icon">
+                  <Gift size={21} />
+                </span>
+                <div>
+                  <strong>Prêmios para descobrir</strong>
+                  <p>Curso Wizard, vouchers, chocolates e mais</p>
+                </div>
+              </div>
+              <div className="home-feature-meta">
+                <div>
+                  <span>Valor por número</span>
+                  <strong>R$ 5,00</strong>
+                </div>
+                <div>
+                  <span>Sorteio informado</span>
+                  <strong>{CHILDRENS_CAMPAIGN.drawDate}</strong>
+                </div>
+              </div>
+              <a
+                className="ui-button ui-button-primary w-full mt-5"
+                href="/campanha/dia-das-criancas"
+              >
+                Ver campanha <ArrowRight size={17} />
+              </a>
+              <p className="home-organizer">
+                Organização informada: {CHILDRENS_CAMPAIGN.organizer}
               </p>
             </Card>
+          </div>
+          <div className="home-hero-index" aria-hidden="true">
+            <span>01</span>
+            <span className="home-index-line" />
+            <span>PROPÓSITO · PARTICIPAÇÃO · TRANSPARÊNCIA</span>
+          </div>
+        </section>
+
+        <section id="campanhas" className="home-campaigns">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">
+                <Sparkles size={15} /> ENCONTRE SUA CAMPANHA
+              </p>
+              <h2>
+                Feito para participar
+                <br className="sm:hidden" /> sem dúvidas.
+              </h2>
+            </div>
+            <p className="ui-muted section-description">
+              Leia os detalhes, veja as condições e escolha com todas as informações à mão.
+            </p>
+          </div>
+          {failed ? (
+            <Card className="home-empty-state">
+              <p className="font-semibold">Não foi possível carregar as campanhas.</p>
+              <p className="ui-muted mt-2">
+                Tente novamente em instantes ou consulte a campanha em destaque.
+              </p>
+              <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
+                Abrir campanha <ArrowRight size={16} />
+              </a>
+            </Card>
           ) : !campaigns.length ? (
-            <Card>
-              <p>Nenhuma campanha aberta para novas participações.</p>
-              <a className="underline inline-block mt-3" href="/campanha/dia-das-criancas">
-                Consultar a campanha de Dia das Crianças
+            <Card className="home-empty-state">
+              <span className="home-empty-icon">
+                <Ticket size={22} />
+              </span>
+              <h3 className="text-lg font-bold mt-4">Novas campanhas em breve</h3>
+              <p className="ui-muted mt-2">
+                Enquanto isso, consulte a campanha de Dia das Crianças e suas informações.
+              </p>
+              <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
+                Consultar campanha <ArrowRight size={16} />
               </a>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {campaigns.map((c) => (
-                <Card key={c.slug}>
-                  <p className="text-sm text-emerald-400">
-                    {approved ? "Participações abertas" : "Em preparação"}
-                  </p>
-                  <h3 className="text-2xl font-bold mt-2">{c.name}</h3>
-                  <p className="ui-muted text-sm mt-3 line-clamp-3">
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {campaigns.map((c, index) => (
+                <Card key={c.slug} className="home-campaign-card">
+                  <div className="home-campaign-card-top">
+                    <span className="home-campaign-number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="home-campaign-status">
+                      <span />
+                      {approved ? "Participações abertas" : "Em preparação"}
+                    </span>
+                  </div>
+                  <h3>{c.name}</h3>
+                  <p className="ui-muted mt-3 line-clamp-3">
                     {c.description || "Confira os prêmios e as informações da campanha."}
                   </p>
-                  <div className="flex justify-between mt-6 text-sm">
-                    <span className="ui-muted">Por número</span>
+                  <div className="home-campaign-price">
+                    <span>Por número</span>
                     <strong>{moneyBRL(c.price_cents)}</strong>
                   </div>
                   {c.ends_at && (
@@ -123,31 +185,48 @@ export default async function Home() {
                     className="ui-button ui-button-secondary w-full mt-5"
                     href={`/campanha/${c.slug}`}
                   >
-                    Ver campanha <ArrowRight size={16} />
+                    Ver detalhes <ArrowRight size={16} />
                   </a>
                 </Card>
               ))}
             </div>
           )}
         </section>
-        <section aria-label="Como funciona" className="grid sm:grid-cols-3 gap-5 mt-14">
+
+        <section className="home-steps" aria-label="Como funciona">
+          <div className="home-step-intro">
+            <p className="eyebrow">CLARO DO INÍCIO AO FIM</p>
+            <h2>
+              Três passos.
+              <br />
+              <span>Você no controle.</span>
+            </h2>
+          </div>
           {[
-            ["1", "Confira a campanha", "Leia os prêmios, o organizador e as regras."],
-            ["2", "Escolha e reserve", "Selecione os números e confira seus dados."],
-            ["3", "Acompanhe seu pedido", "Guarde o link. Consulte pagamento e resultado."],
+            ["01", "Conheça", "Confira os prêmios, a organização e as regras antes de participar."],
+            ["02", "Escolha", "Selecione os números disponíveis e confira o valor do pedido."],
+            ["03", "Acompanhe", "Guarde o link do pedido e consulte o status do pagamento."],
           ].map(([n, title, description]) => (
-            <div key={n}>
-              <p className="text-emerald-400 font-bold">{n.padStart(2, "0")}</p>
-              <h3 className="font-bold mt-2">{title}</h3>
-              <p className="text-sm ui-muted mt-2">{description}</p>
+            <div className="home-step" key={n}>
+              <span>{n}</span>
+              <h3>{title}</h3>
+              <p className="ui-muted">{description}</p>
             </div>
           ))}
         </section>
-        <footer className="border-t border-zinc-700 mt-14 pt-6 flex flex-wrap gap-5 text-sm ui-muted">
-          <a href="/termos">Termos e regras</a>
-          <a href="/privacidade">Privacidade</a>
-          <a href="/vendedor/login">Área do vendedor</a>
-          <a href="/admin/login">Área da organização</a>
+
+        <footer className="home-footer">
+          <a href="/" className="text-lg font-extrabold tracking-tight">
+            Rifa<span className="text-emerald-400">Track</span>
+          </a>
+          <p>Participação clara. Informação em primeiro lugar.</p>
+          <nav aria-label="Links do rodapé">
+            <a href="/termos">Termos e regras</a>
+            <a href="/privacidade">Privacidade</a>
+            <a href="/vendedor/login">Área do vendedor</a>
+            <a href="/admin/login">Área da organização</a>
+          </nav>
+          <span className="home-footer-copy">© {new Date().getFullYear()} RifaTrack</span>
         </footer>
       </main>
     </>

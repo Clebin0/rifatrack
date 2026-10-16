@@ -213,8 +213,8 @@ export default function CampaignExperience({
   return (
     <>
       <PublicHeader />
-      <main className="max-w-6xl mx-auto px-5 pt-8 pb-32 lg:pb-12">
-        <div className="mt-8">
+      <main className="campaign-shell max-w-7xl mx-auto px-5 sm:px-7 pt-8 pb-32 lg:pb-12">
+        <section className="campaign-hero mt-8">
           <p className="text-emerald-400 text-sm font-semibold">
             {campaign.finalized_at
               ? "Campanha finalizada"
@@ -231,7 +231,7 @@ export default function CampaignExperience({
             {campaign.description ||
               "Escolha os números. Preencha seus dados. Acompanhe o pagamento."}
           </p>
-        </div>
+        </section>
         {slug === "dia-das-criancas" && (
           <p className="text-sm ui-muted mt-5" role="timer" aria-live="off">
             {drawRemaining
@@ -313,8 +313,8 @@ export default function CampaignExperience({
             </button>
           </div>
         )}
-        <section className="grid lg:grid-cols-[1fr_350px] gap-6 items-start">
-          <Card id="number-picker" className="scroll-mt-6">
+        <section className="campaign-workspace grid lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+          <Card id="number-picker" className="number-picker-card scroll-mt-6">
             <div className="flex justify-between items-start gap-3 mb-5">
               <div>
                 <p className="text-xs text-emerald-400 font-semibold">ETAPA 1 DE 2</p>
@@ -358,7 +358,7 @@ export default function CampaignExperience({
               onToggle={toggle}
             />
           </Card>
-          <Card id="buyer-summary" className="lg:sticky lg:top-6 scroll-mt-5">
+          <Card id="buyer-summary" className="buyer-summary-card lg:sticky lg:top-24 scroll-mt-5">
             {!salesOpen ? (
               <>
                 <h2 className="text-xl font-bold">
@@ -457,7 +457,7 @@ export default function CampaignExperience({
           <a href="/">Outras campanhas</a>
         </footer>
       </main>
-      <div className="lg:hidden fixed bottom-0 inset-x-0 ui-header !border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center gap-4 z-30">
+      <div className="mobile-purchase-bar lg:hidden fixed bottom-0 inset-x-0 ui-header !border-t p-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex items-center gap-4 z-30">
         <div className="flex-1">
           <p className="text-xs ui-muted">
             {salesOpen ? `${selected.length} número(s)` : "Novas compras bloqueadas"}
