@@ -5,7 +5,6 @@ import { RefreshCw } from "lucide-react";
 import type { BuyerCampaign } from "@/lib/campaign-types";
 import { moneyBRL, reconcileSelection } from "@/lib/buyer";
 import PublicHeader from "./PublicHeader";
-import CampaignNotice from "./CampaignNotice";
 import CampaignFacts from "./CampaignFacts";
 import CampaignCommunity from "./CampaignCommunity";
 import NumberPicker from "./NumberPicker";
@@ -215,7 +214,6 @@ export default function CampaignExperience({
     <>
       <PublicHeader />
       <main className="max-w-6xl mx-auto px-5 pt-8 pb-32 lg:pb-12">
-        {slug === "dia-das-criancas" && <CampaignNotice />}
         <div className="mt-8">
           <p className="text-emerald-400 text-sm font-semibold">
             {campaign.finalized_at
