@@ -1,5 +1,5 @@
 export const metadata = { title: "Privacidade | RifaTrack" };
-const updatedAt = "06/10/2026";
+const updatedAt = "05/11/2026";
 
 export default function Privacy() {
   return (
@@ -16,9 +16,7 @@ export default function Privacy() {
         <strong>Identificação ainda pendente.</strong> A organização precisa publicar nome ou razão
         social, documento, endereço, e, quando aplicável, o encarregado. O canal indicado para
         atendimento e privacidade é{" "}
-        <a className="underline" href="mailto:canal de privacidade ainda n?o publicado">
-          canal de privacidade ainda n?o publicado
-        </a>
+        <span>canal de atendimento e privacidade a divulgar</span>
         .
       </div>
       <article className="mt-6 space-y-7 text-zinc-300 leading-7">
@@ -30,10 +28,7 @@ export default function Privacy() {
             de identificação. A RifaTrack atua como provedora de tecnologia e pode operar dados
             conforme as instruções e serviços contratados. Solicitações de privacidade devem ser
             enviadas a
-            <a href="mailto:canal de privacidade ainda n?o publicado" className="underline text-emerald-300">
-              {" "}
-              canal de privacidade ainda n?o publicado
-            </a>
+            <span>canal de atendimento e privacidade a divulgar</span>
             . A organização também mantém o perfil
             <a
               href="https://www.instagram.com/atleticasemacao/"
@@ -111,9 +106,7 @@ export default function Privacy() {
           </p>
           <p className="mt-3">
             Envie sua solicitação a{" "}
-            <a className="underline text-emerald-300" href="mailto:canal de privacidade ainda n?o publicado">
-              canal de privacidade ainda n?o publicado
-            </a>
+            <span>canal de atendimento e privacidade a divulgar</span>
             , indicando o direito que deseja exercer. Não envie senhas ou códigos de autenticação. A
             organização poderá solicitar somente os dados necessários para verificar sua identidade,
             por canal privado.
