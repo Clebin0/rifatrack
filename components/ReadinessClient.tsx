@@ -104,10 +104,8 @@ export default function ReadinessClient() {
           <section className="rounded-2xl border border-amber-600 p-5 space-y-3">
             <h2 className="text-xl font-bold">Dados da organização e regulamento</h2>
             <p>
-              Responsável indicada: Respons?vel legal ainda n?o identificada formalmente. Atendimento e privacidade:{" "}
-              <a className="underline" href="mailto:canal de privacidade ainda n?o publicado">
-                canal de privacidade ainda n?o publicado
-              </a>
+              Responsável indicada: Organiza??o respons?vel: identidade jur?dica ainda n?o informada formalmente. Atendimento e privacidade:{" "}
+              <span>canal de atendimento e privacidade a divulgar</span>
               . Ainda faltam documento e endereço; autorização e enquadramento; extração e
               correspondência dos números; ordem dos dez prêmios, suplência e entrega. A data
               informada do sorteio é 12/10; a ação presencial é 17/10.

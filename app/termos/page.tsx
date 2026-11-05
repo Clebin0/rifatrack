@@ -1,7 +1,7 @@
 import { CHILDRENS_CAMPAIGN as content } from "@/lib/campaign-content";
 
 export const metadata = { title: "Termos de uso | RifaTrack" };
-const updatedAt = "06/10/2026";
+const updatedAt = "05/11/2026";
 
 export default function Terms() {
   return (
@@ -22,9 +22,7 @@ export default function Terms() {
             <strong>{content.beneficiary}</strong>. A organização, e não a RifaTrack, responde pela
             autorização, divulgação, arrecadação, sorteio, prêmios e entrega. O atendimento é feito
             por{" "}
-            <a className="underline text-emerald-300" href="mailto:canal de privacidade ainda n?o publicado">
-              canal de privacidade ainda n?o publicado
-            </a>
+            <span>canal de atendimento e privacidade a divulgar</span>
             . A identidade jurídica, documento e endereço ainda precisam ser confirmados antes da
             abertura.
           </p>
@@ -127,10 +125,7 @@ export default function Terms() {
             </a>
             . Não tente interferir em autenticação, reservas, pagamentos ou resultados. Para
             atendimento, use
-            <a className="underline text-emerald-300" href="mailto:canal de privacidade ainda n?o publicado">
-              {" "}
-              canal de privacidade ainda n?o publicado
-            </a>
+            <span>canal de atendimento e privacidade a divulgar</span>
             . A organização também está em
             <a className="underline text-emerald-300" href={content.contact}>
               {" "}
