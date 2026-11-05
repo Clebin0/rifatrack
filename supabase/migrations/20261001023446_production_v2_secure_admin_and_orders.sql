@@ -52,7 +52,7 @@ create table if not exists audit_logs(
 insert into app_settings(key,value_hash) values
 -- Public snapshot: bootstrap disabled; provision real secrets only in a private environment.
 ('bootstrap_admin','0000000000000000000000000000000000000000000000000000000000000000'),
-('internal_api_secret','0000000000000000000000000000000000000000000000000000000000000000')
+('internal_api_secret','disabled')
 on conflict(key) do update set value_hash=excluded.value_hash;
 
 insert into campaign_sellers(campaign_id,seller_id,goal)
