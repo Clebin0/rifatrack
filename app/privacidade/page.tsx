@@ -15,9 +15,7 @@ export default function Privacy() {
       >
         <strong>Identificação ainda pendente.</strong> A organização precisa publicar nome ou razão
         social, documento, endereço, e, quando aplicável, o encarregado. O canal indicado para
-        atendimento e privacidade é{" "}
-        <span>canal de atendimento e privacidade a divulgar</span>
-        .
+        atendimento e privacidade é <span>canal de atendimento e privacidade a divulgar</span>.
       </div>
       <article className="mt-6 space-y-7 text-zinc-300 leading-7">
         <section>
@@ -27,9 +25,8 @@ export default function Privacy() {
             Silva. Antes de abrir compras, deve confirmar quem é o controlador e publicar seus dados
             de identificação. A RifaTrack atua como provedora de tecnologia e pode operar dados
             conforme as instruções e serviços contratados. Solicitações de privacidade devem ser
-            enviadas a
-            <span>canal de atendimento e privacidade a divulgar</span>
-            . A organização também mantém o perfil
+            enviadas a<span>canal de atendimento e privacidade a divulgar</span>. A organização
+            também mantém o perfil
             <a
               href="https://www.instagram.com/atleticasemacao/"
               className="underline text-emerald-300"
@@ -105,9 +102,8 @@ export default function Privacy() {
             .
           </p>
           <p className="mt-3">
-            Envie sua solicitação a{" "}
-            <span>canal de atendimento e privacidade a divulgar</span>
-            , indicando o direito que deseja exercer. Não envie senhas ou códigos de autenticação. A
+            Envie sua solicitação a <span>canal de atendimento e privacidade a divulgar</span>,
+            indicando o direito que deseja exercer. Não envie senhas ou códigos de autenticação. A
             organização poderá solicitar somente os dados necessários para verificar sua identidade,
             por canal privado.
           </p>

@@ -21,10 +21,8 @@ export default function Terms() {
             <strong> {content.organizer}</strong>, com valores destinados à ação na{" "}
             <strong>{content.beneficiary}</strong>. A organização, e não a RifaTrack, responde pela
             autorização, divulgação, arrecadação, sorteio, prêmios e entrega. O atendimento é feito
-            por{" "}
-            <span>canal de atendimento e privacidade a divulgar</span>
-            . A identidade jurídica, documento e endereço ainda precisam ser confirmados antes da
-            abertura.
+            por <span>canal de atendimento e privacidade a divulgar</span>. A identidade jurídica,
+            documento e endereço ainda precisam ser confirmados antes da abertura.
           </p>
         </section>
         <section>
@@ -125,8 +123,7 @@ export default function Terms() {
             </a>
             . Não tente interferir em autenticação, reservas, pagamentos ou resultados. Para
             atendimento, use
-            <span>canal de atendimento e privacidade a divulgar</span>
-            . A organização também está em
+            <span>canal de atendimento e privacidade a divulgar</span>. A organização também está em
             <a className="underline text-emerald-300" href={content.contact}>
               {" "}
               @atleticasemacao
