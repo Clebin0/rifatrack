@@ -1,13 +1,12 @@
 export const CHILDRENS_CAMPAIGN = {
-  organizer: "Organiza??o respons?vel n?o identificada formalmente",
+  organizer: "Organização responsável não identificada formalmente",
   initiative: "Atléticas em Ação",
   beneficiary: "ONG Minha Vida Mudou",
-  drawDate: "12/10/2026 às 18h",
+  drawDate: "12/10/2026 às 18h (data passada)",
   drawAt: "2026-10-12T18:00:00-03:00",
   method: "Loteria Federal",
   contact: "https://www.instagram.com/atleticasemacao/",
   actionDate: "17/10/2026 (data passada)",
-  address: "Rua Verônica Tribek Moro, 493 · Cidade Industrial de Curitiba",
   universities: ["UniOpet", "UniCesumar", "Dom Bosco", "Tuiuti"],
   partners: [
     "Club do Zeca",

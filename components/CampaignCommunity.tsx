@@ -10,11 +10,6 @@ const artwork = [
     alt: "Arte com os dez prêmios da rifa solidária, incluindo caneca Patronos, curso Wizard, vouchers, chocolates e bebidas.",
   },
   {
-    file: "acao-social.jpg",
-    title: "Onde e quando acontece",
-    alt: "Arte da ação social: 17/10, Rua Verônica Tribek Moro, 493, Cidade Industrial de Curitiba, ONG Minha Vida Mudou.",
-  },
-  {
     file: "programacao.jpg",
     title: "Um dia de alegria",
     alt: "Programação da ação: kits de doces, lanches, personagens e brinquedos infláveis.",
@@ -111,9 +106,9 @@ export default function CampaignCommunity() {
       </Card>
 
       <Card>
-        <h2 className="text-2xl font-bold">A ação social acontece em 17/10</h2>
+        <h2 className="text-2xl font-bold">Registro da ação social</h2>
         <p className="ui-muted mt-3">
-          {campaign.beneficiary} · {campaign.address}.
+          {campaign.beneficiary}. O local não é divulgado neste registro público.
         </p>
         <p className="text-sm ui-muted mt-2">
           Esta é a data do evento presencial. O sorteio foi informado para {campaign.drawDate}; a
