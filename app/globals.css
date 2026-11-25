@@ -472,6 +472,11 @@ textarea:focus-visible {
   font-size: 0.7rem;
   font-weight: 750;
 }
+.home-feature-tag.is-preparing {
+  border-color: #594a24;
+  background: #241f12;
+  color: #f3d98a;
+}
 .home-feature-kicker {
   margin-top: 2rem;
   font-size: 0.68rem;
@@ -484,6 +489,7 @@ textarea:focus-visible {
   font-size: clamp(1.8rem, 3vw, 2.45rem);
   font-weight: 780;
   letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
 }
 .home-prize-preview {
   display: flex;
@@ -529,6 +535,33 @@ textarea:focus-visible {
 }
 .home-feature-meta strong {
   font-size: 0.9rem;
+}
+.campaign-draw-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  max-width: 46rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid #31523b;
+  border-radius: 1rem;
+  background: linear-gradient(120deg, #132119, #0c130e);
+}
+.campaign-draw-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid #31523b;
+  border-radius: 0.7rem;
+  color: #9af0ba;
+  background: #172b1d;
+}
+.campaign-draw-title {
+  margin: 0 0 0.25rem;
+  color: #e8f4eb;
+  font-size: 0.9rem;
+  font-weight: 750;
 }
 .home-organizer {
   margin-top: 1rem;
@@ -610,11 +643,18 @@ textarea:focus-visible {
   border-radius: 99px;
   background: #75d998;
 }
+.home-campaign-status.is-preparing {
+  color: #f3d98a;
+}
+.home-campaign-status.is-preparing > span {
+  background: #e7bb55;
+}
 .home-campaign-card h3 {
   margin-top: 1.5rem;
   font-size: 1.35rem;
   font-weight: 750;
   letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
 }
 .home-campaign-price {
   display: flex;

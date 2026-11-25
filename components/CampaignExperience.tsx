@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { Clock3, RefreshCw } from "lucide-react";
 import type { BuyerCampaign } from "@/lib/campaign-types";
 import { moneyBRL, reconcileSelection } from "@/lib/buyer";
 import PublicHeader from "./PublicHeader";
@@ -122,6 +122,7 @@ export default function CampaignExperience({
   const drawRemaining = Math.max(0, Date.parse(CHILDRENS_CAMPAIGN.drawAt) - now);
   const drawDays = Math.floor(drawRemaining / 86400000);
   const drawHours = Math.floor((drawRemaining % 86400000) / 3600000);
+  const drawMinutes = Math.floor((drawRemaining % 3600000) / 60000);
   function toggle(n: number) {
     if (!salesOpen || unavailable.has(n)) return;
     const current = selectedRef.current;
@@ -232,13 +233,23 @@ export default function CampaignExperience({
               "Escolha os números. Preencha seus dados. Acompanhe o pagamento."}
           </p>
         </section>
-        {slug === "dia-das-criancas" && (
-          <p className="text-sm ui-muted mt-5" role="timer" aria-live="off">
-            {drawRemaining
-              ? `Faltam ${drawDays} dias e ${drawHours} horas para a data informada do sorteio.`
-              : "A data informada do sorteio foi alcançada. Aguarde a publicação do resultado."}
-          </p>
-        )}
+        {slug === "dia-das-criancas" && !campaign.draw_result ? (
+          <aside className="campaign-draw-notice mt-5" aria-labelledby="campaign-draw-heading">
+            <span className="campaign-draw-icon" aria-hidden="true">
+              <Clock3 size={17} />
+            </span>
+            <div>
+              <h2 id="campaign-draw-heading" className="campaign-draw-title">
+                {drawRemaining ? "Data informada do sorteio" : "Resultado ainda não publicado"}
+              </h2>
+              <p className="ui-muted text-sm">
+                {drawRemaining
+                  ? `Faltam ${drawDays} dias, ${drawHours} horas e ${drawMinutes} minutos para ${CHILDRENS_CAMPAIGN.drawDate}.`
+                  : `A data informada (${CHILDRENS_CAMPAIGN.drawDate}) já passou. O resultado ainda não foi publicado.`}
+              </p>
+            </div>
+          </aside>
+        ) : null}
         <a href="#number-picker" className="ui-button ui-button-primary mt-5">
           {salesOpen ? "Escolher meus números" : "Ver números"}
         </a>
