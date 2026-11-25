@@ -82,6 +82,7 @@ await write(
   })),
   "id",
 );
+await write(client, "campaign_update_subscribers", e.campaign_update_subscribers || [], "id");
 console.log(
   "Restauração de dados concluída. Recrie/revincule contas Auth, confira comprovantes do Storage e rotacione segredos antes de promover o ambiente.",
 );

@@ -15,9 +15,10 @@ function fixture() {
     "financial_cases",
     "notification_outbox",
     "order_payer_declarations",
+    "campaign_update_subscribers",
   ];
   return {
-    schema_version: 3,
+    schema_version: 4,
     counts: Object.fromEntries(names.map((name) => [name, 0])),
     entities: Object.fromEntries(names.map((name) => [name, []])),
   };
@@ -30,9 +31,15 @@ it("rejects incomplete and truncated operational backups", () => {
 });
 it("keeps version 2 backups readable without payer declarations", () => {
   const old = fixture();
+  old.schema_version = 3;
+  delete old.counts.campaign_update_subscribers;
+  delete old.entities.campaign_update_subscribers;
+  expect(validateBackup(old)).toBe(old);
   old.schema_version = 2;
   delete old.counts.order_payer_declarations;
   delete old.entities.order_payer_declarations;
+  delete old.counts.campaign_update_subscribers;
+  delete old.entities.campaign_update_subscribers;
   expect(validateBackup(old)).toBe(old);
 });
 it("blocks a production restore even with a trailing slash or different URL path", () => {
@@ -76,7 +83,7 @@ it("decrypts the authenticated backup and rejects a tampered file or wrong passw
       data: data.toString("base64"),
     };
     await fs.writeFile(file, JSON.stringify(envelope));
-    expect((await decryptBackup(file, password)).schema_version).toBe(3);
+    expect((await decryptBackup(file, password)).schema_version).toBe(4);
     await expect(decryptBackup(file, "wrong-password")).rejects.toThrow();
     data[0] ^= 1;
     await fs.writeFile(file, JSON.stringify({ ...envelope, data: data.toString("base64") }));

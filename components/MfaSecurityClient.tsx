@@ -16,6 +16,7 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
   const [secret, setSecret] = useState("");
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
+  const [accountEmail, setAccountEmail] = useState("");
   const [busy, setBusy] = useState(false);
 
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -38,6 +39,7 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
       location.href = area === "admin" ? "/admin/login" : "/vendedor/login";
       return;
     }
+    setAccountEmail(session.session.user.email || "");
     const [aal, list] = await Promise.all([
       client.auth.mfa.getAuthenticatorAssuranceLevel(),
       client.auth.mfa.listFactors(),
@@ -80,7 +82,7 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
       factorId,
     });
     if (challengeError) {
-      setMessage(challengeError.message);
+      setMessage("Não foi possível iniciar a verificação. Atualize a página e tente novamente.");
       setBusy(false);
       return;
     }
@@ -121,7 +123,7 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
       factorId: verified.id,
     });
     if (challengeError) {
-      setMessage(challengeError.message);
+      setMessage("Não foi possível iniciar a verificação. Atualize a página e tente novamente.");
       setBusy(false);
       return;
     }
@@ -151,6 +153,11 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
 
   const verified = factors.length > 0;
   const aal2 = current === "aal2";
+  const stepTitle = aal2
+    ? "Autenticação confirmada"
+    : verified
+      ? "Etapa 2 de 2 · Confirme o código"
+      : "Etapa 1 de 2 · Configure o autenticador";
 
   return (
     <main className="min-h-screen bg-zinc-950 grid place-items-center p-5">
@@ -158,20 +165,33 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
         <a href="/" className="font-black text-xl">
           Rifa<span className="text-emerald-400">Track</span>
         </a>
+        {accountEmail && (
+          <p className="mt-3 text-sm text-zinc-400">
+            Conta: <b className="text-zinc-200">{accountEmail}</b>
+          </p>
+        )}
         <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-emerald-950 border border-emerald-800 text-emerald-300 grid place-items-center">
               <ShieldCheck />
             </div>
             <div>
-              <p className="text-xs font-bold text-emerald-400 uppercase">Segurança obrigatória</p>
-              <h1 className="text-2xl font-black">Autenticação em duas etapas</h1>
+              <p className="text-xs font-bold text-emerald-400 uppercase">
+                {area === "admin" ? "Acesso seguro à organização" : "Acesso seguro ao portal"}
+              </p>
+              <h1 className="text-2xl font-black">{stepTitle}</h1>
             </div>
           </div>
           <p className="text-zinc-300 text-sm mt-4">
             {recovering
               ? "Confirme o código do aplicativo autenticador que você já configurou. Depois você voltará para escolher a nova senha; não precisa solicitar outro e-mail."
-              : "Confirme o código do aplicativo autenticador para entrar com segurança."}
+              : aal2
+                ? area === "admin"
+                  ? "Sua identidade foi confirmada. A lateral do painel já está liberada."
+                  : "Sua identidade foi confirmada. Você pode continuar para o portal."
+                : verified
+                  ? "Digite o código atual de seis dígitos do seu aplicativo. Depois da confirmação, você volta ao painel e a navegação lateral será liberada automaticamente."
+                  : "Antes de abrir o painel, configure um aplicativo autenticador. Depois confirme o primeiro código para concluir a ativação."}
           </p>
 
           {aal2 && (
@@ -234,11 +254,13 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
                 Abra seu aplicativo autenticador e informe o código atual.
               </p>
               <input
+                aria-label="Código de seis dígitos do autenticador"
                 autoFocus
                 required
                 inputMode="numeric"
                 pattern="[0-9]{6}"
                 maxLength={6}
+                autoComplete="one-time-code"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                 placeholder="Código de 6 dígitos"
@@ -248,7 +270,11 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
                 disabled={busy || code.length !== 6}
                 className="w-full bg-emerald-400 text-emerald-950 rounded-xl p-3 font-black disabled:opacity-40"
               >
-                Verificar segundo fator
+                {busy
+                  ? "Conferindo código…"
+                  : area === "admin"
+                    ? "Confirmar e abrir o painel"
+                    : "Confirmar e abrir o portal"}
               </button>
             </form>
           )}
@@ -272,7 +298,11 @@ export default function MfaSecurityClient({ area, defaultReturn }: Props) {
               de trocar ou perder o principal.
             </p>
           )}
-          {message && <p className="mt-4 text-sm text-zinc-300">{message}</p>}
+          {message && (
+            <p className="mt-4 text-sm text-zinc-300" role="status" aria-live="polite">
+              {message}
+            </p>
+          )}
         </section>
       </div>
     </main>

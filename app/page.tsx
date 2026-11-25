@@ -51,7 +51,13 @@ export default async function Home() {
             <div className="home-actions">
               <a
                 className="ui-button ui-button-primary"
-                href={featuredCampaign ? `/campanha/${featuredCampaign.slug}` : "#campanhas"}
+                href={
+                  featuredCampaign
+                    ? `/campanha/${featuredCampaign.slug}`
+                    : failed
+                      ? "#campanhas"
+                      : "/novidades"
+                }
               >
                 {featuredCampaign
                   ? "Ver campanha"
@@ -157,7 +163,7 @@ export default async function Home() {
                   Atualizar página <ArrowRight size={17} />
                 </a>
               ) : (
-                <a className="ui-button ui-button-secondary w-full mt-5" href="#campanhas">
+                <a className="ui-button ui-button-secondary w-full mt-5" href="/novidades">
                   Acompanhar novidades <ArrowRight size={17} />
                 </a>
               )}
@@ -210,6 +216,9 @@ export default async function Home() {
                 A ação de Dia das Crianças já terminou. As informações da campanha de Natal serão
                 divulgadas quando estiverem confirmadas.
               </p>
+              <a className="ui-button ui-button-primary w-full mt-5" href="/novidades">
+                Receber aviso da campanha de Natal <ArrowRight size={16} />
+              </a>
               <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
                 Consultar campanha encerrada <ArrowRight size={16} />
               </a>
