@@ -234,7 +234,9 @@ export default function CampaignExperience({
           </h1>
           <p className="ui-muted mt-4 max-w-2xl text-lg">
             {campaign.description ||
-              "Escolha os números. Preencha seus dados. Acompanhe o pagamento."}
+              (archived
+                ? "Consulte as informações e os números da ação encerrada."
+                : "Escolha os números. Preencha seus dados. Acompanhe o pagamento.")}
           </p>
         </section>
         {slug === "dia-das-criancas" && !campaign.draw_result ? (
