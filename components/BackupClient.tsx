@@ -18,6 +18,7 @@ const entities = [
   "financial_cases",
   "notification_outbox",
   "order_payer_declarations",
+  "campaign_update_subscribers",
 ] as const;
 
 function toBase64(bytes: Uint8Array) {
@@ -94,7 +95,7 @@ export default function BackupClient() {
       counts: unknown;
       entities: Record<string, unknown[]>;
     } = {
-      schema_version: 3,
+      schema_version: 4,
       generated_at: new Date().toISOString(),
       source: "RifaTrack",
       counts,

@@ -30,6 +30,86 @@ export async function securityCases(db) {
       );
       assert.equal(denied.n, 0, `${role} cannot call financial/internal RPCs`);
     }
+    assert.equal(
+      (
+        await q(
+          "select has_table_privilege('anon','public.campaign_update_subscribers','select') allowed",
+        )
+      ).allowed,
+      false,
+      "public visitors cannot read campaign update subscribers",
+    );
+    assert.equal(
+      (
+        await q(
+          "select has_table_privilege('authenticated','public.campaign_update_subscribers','select') allowed",
+        )
+      ).allowed,
+      false,
+      "signed-in users cannot read campaign update subscribers",
+    );
+    const natal = await q(
+      "insert into campaigns(name,slug,description,price_cents,total_numbers,status) values('Campanha de Natal','natal-sql-test','Detalhes confirmados',500,10,'draft') returning id",
+    );
+    const optedIn = await q(
+      "insert into campaign_update_subscribers(campaign_key,email) values('natal','christmas-opted-in@example.org') returning id,unsubscribe_token",
+    );
+    await db.query(
+      "insert into campaign_update_subscribers(campaign_key,email,unsubscribed_at) values('natal','christmas-opted-out@example.org',now())",
+    );
+    await db.query("update campaigns set status='active' where id=$1", [natal.id]);
+    assert.equal(
+      (
+        await q(
+          "select count(*)::int n from notification_outbox where template='campaign_announcement'",
+        )
+      ).n,
+      1,
+      "activating a Christmas campaign queues one message for active subscribers only",
+    );
+    await db.query("update campaigns set status='active' where id=$1", [natal.id]);
+    assert.equal(
+      (
+        await q(
+          "select count(*)::int n from notification_outbox where template='campaign_announcement'",
+        )
+      ).n,
+      1,
+      "repeated activation does not duplicate the announcement",
+    );
+    await db.query(
+      "insert into campaign_update_subscribers(campaign_key,email) values('natal','christmas-late@example.org')",
+    );
+    assert.equal(
+      (
+        await q(
+          "select count(*)::int n from notification_outbox where template='campaign_announcement'",
+        )
+      ).n,
+      2,
+      "subscribing after publication queues the announcement once",
+    );
+    assert.equal(
+      (
+        await q(
+          "select payload->>'unsubscribe_token' token from notification_outbox where template='campaign_announcement' and recipient='christmas-opted-in@example.org'",
+        )
+      ).token,
+      optedIn.unsubscribe_token,
+      "announcement contains its private opt-out token",
+    );
+    await db.query(
+      "insert into campaigns(name,slug,price_cents,total_numbers,status) values('Campanha de Inverno','inverno-sql-test',500,10,'active')",
+    );
+    assert.equal(
+      (
+        await q(
+          "select count(*)::int n from notification_outbox where template='campaign_announcement'",
+        )
+      ).n,
+      2,
+      "non-Christmas campaigns do not queue this announcement",
+    );
     const campaign = await q(
       "insert into campaigns(name,slug,price_cents,total_numbers,status) values('SQL Test','sql-security-test',500,10,'active') returning id",
     );

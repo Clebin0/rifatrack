@@ -375,6 +375,36 @@ export type Database = {
           },
         ];
       };
+      campaign_update_subscribers: {
+        Row: {
+          campaign_key: string;
+          consented_at: string;
+          created_at: string;
+          email: string;
+          id: string;
+          unsubscribe_token: string;
+          unsubscribed_at: string | null;
+        };
+        Insert: {
+          campaign_key: string;
+          consented_at?: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          unsubscribe_token?: string;
+          unsubscribed_at?: string | null;
+        };
+        Update: {
+          campaign_key?: string;
+          consented_at?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          unsubscribe_token?: string;
+          unsubscribed_at?: string | null;
+        };
+        Relationships: [];
+      };
       orders: {
         Row: {
           amount_cents: number;

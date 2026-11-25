@@ -13,14 +13,27 @@ export const coreEntities = [
   "payment_events",
 ];
 export function validateBackup(backup) {
-  if (!backup || ![1, 2, 3].includes(backup.schema_version) || !backup.entities || !backup.counts)
+  if (
+    !backup ||
+    ![1, 2, 3, 4].includes(backup.schema_version) ||
+    !backup.entities ||
+    !backup.counts
+  )
     throw new Error("Schema de backup não suportado.");
   const required =
-    backup.schema_version === 3
-      ? [...coreEntities, "financial_cases", "notification_outbox", "order_payer_declarations"]
-      : backup.schema_version === 2
-        ? [...coreEntities, "financial_cases", "notification_outbox"]
-        : coreEntities;
+    backup.schema_version === 4
+      ? [
+          ...coreEntities,
+          "financial_cases",
+          "notification_outbox",
+          "order_payer_declarations",
+          "campaign_update_subscribers",
+        ]
+      : backup.schema_version === 3
+        ? [...coreEntities, "financial_cases", "notification_outbox", "order_payer_declarations"]
+        : backup.schema_version === 2
+          ? [...coreEntities, "financial_cases", "notification_outbox"]
+          : coreEntities;
   for (const name of required) {
     const rows = backup.entities[name],
       count = backup.counts[name];

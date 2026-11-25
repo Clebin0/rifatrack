@@ -42,6 +42,10 @@ export default function Privacy() {
           <ul className="list-disc pl-5 space-y-1">
             <li>nome, telefone e e-mail informado pelo comprador;</li>
             <li>
+              e-mail informado voluntariamente para receber um aviso único sobre a publicação da
+              campanha de Natal;
+            </li>
+            <li>
               para contas RifaTrack: nome, e-mail, dados de autenticação e sessão gerenciados pelo
               Supabase Auth e informações de perfil declaradas pela pessoa, como tipo de
               participação, cargo ou função, atlética e universidade;
@@ -73,6 +77,11 @@ export default function Privacy() {
             As informações de perfil são fornecidas pela própria pessoa para exibição e
             personalização da conta. O tipo de participação, cargo, atlética e universidade não
             definem autorização de acesso aos portais internos.
+          </p>
+          <p className="mt-3">
+            O e-mail inscrito para novidades da campanha de Natal será usado apenas para essa
+            comunicação e mantido até o envio do aviso ou o cancelamento da inscrição. Cada e-mail
+            inclui uma opção para cancelar o recebimento.
           </p>
         </section>
         <section>

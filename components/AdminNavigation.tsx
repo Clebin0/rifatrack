@@ -16,6 +16,14 @@ const links = [
   ["/admin/backup", "Backup", ["owner"]],
   ["/admin/seguranca", "Segurança", ["owner", "admin", "operador", "financeiro", "auditor"]],
 ] as const;
+
+export function adminNavigationLabel(pathname: string) {
+  return (
+    links.find(([href]) => pathname === href || pathname.startsWith(href + "/"))?.[1] ??
+    "Área da organização"
+  );
+}
+
 export default function AdminNavigation({ role }: { role: string }) {
   const pathname = usePathname();
   return (

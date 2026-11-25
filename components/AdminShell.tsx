@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { getMfaLevel } from "@/lib/mfa-browser";
-import AdminNavigation from "./AdminNavigation";
+import AdminNavigation, { adminNavigationLabel } from "./AdminNavigation";
 import ThemeToggle from "./ThemeToggle";
 export default function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState("");
   const [verifiedAdminAccess, setVerifiedAdminAccess] = useState(false);
+  const currentPage = adminNavigationLabel(pathname);
   const login = pathname === "/admin/login" || pathname === "/admin/redefinir-senha";
   useEffect(() => {
     if (login) return;
@@ -36,6 +38,10 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     };
   }, [login]);
   if (login) return children;
+  async function signOut() {
+    await supabaseBrowser().auth.signOut();
+    location.replace("/admin/login");
+  }
   return (
     <div className={verifiedAdminAccess ? "lg:pl-64" : undefined}>
       {verifiedAdminAccess && (
@@ -52,14 +58,48 @@ export default function AdminShell({ children }: { children: ReactNode }) {
               </a>
               <ThemeToggle />
             </div>
+            <button
+              type="button"
+              onClick={signOut}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl border border-zinc-800 px-4 py-3 text-sm ui-muted hover:bg-zinc-900"
+            >
+              <LogOut size={16} /> Sair
+            </button>
           </aside>
-          <div className="lg:hidden ui-header px-5 py-4">
-            <details>
-              <summary className="cursor-pointer font-bold">Menu da organização</summary>
-              <div className="mt-4">
-                <AdminNavigation role={role} />
-              </div>
-            </details>
+          <div className="lg:hidden sticky top-0 z-30 ui-header px-4 py-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <a href="/admin" className="font-extrabold">
+                Rifa<span className="text-emerald-400">Track</span>
+              </a>
+              <p className="text-xs ui-muted truncate">{currentPage}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <details className="relative">
+                <summary className="cursor-pointer rounded-xl border border-zinc-800 px-3 py-2 text-sm font-bold">
+                  Menu
+                </summary>
+                <div className="absolute right-0 top-full mt-2 w-72 max-h-[75vh] overflow-y-auto rounded-2xl border border-zinc-800 ui-header p-3 shadow-2xl">
+                  <AdminNavigation role={role} />
+                  <a
+                    href="/"
+                    className="mt-2 block rounded-xl px-4 py-3 text-sm ui-muted hover:bg-zinc-900"
+                  >
+                    Ver site
+                  </a>
+                  <div className="mt-2 flex justify-end px-3 py-2">
+                    <ThemeToggle />
+                  </div>
+                </div>
+              </details>
+              <button
+                type="button"
+                onClick={signOut}
+                aria-label="Sair da área administrativa"
+                className="inline-flex items-center gap-1 rounded-xl border border-zinc-800 px-3 py-2 text-sm font-bold"
+              >
+                <LogOut size={16} /> Sair
+              </button>
+            </div>
           </div>
         </>
       )}

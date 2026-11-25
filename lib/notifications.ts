@@ -4,7 +4,12 @@ type NotificationItem = {
   id: string;
   claim_token: string;
   recipient: string;
-  template: "order_reserved" | "payment_received" | "reservation_expired" | "seller_sale";
+  template:
+    | "order_reserved"
+    | "payment_received"
+    | "reservation_expired"
+    | "seller_sale"
+    | "campaign_announcement";
   payload: Record<string, unknown>;
 };
 
@@ -42,6 +47,22 @@ function render(item: NotificationItem) {
       subject: `Reserva expirada · ${p.campaign_name || "RifaTrack"}`,
       html: `<h2>Reserva expirada</h2><p>Olá, ${esc(p.buyer_name)}.</p><p>O pedido <b>${esc(p.payment_reference)}</b> expirou sem confirmação de pagamento. Os números foram liberados novamente.</p><p><a href="${esc(base + "/campanha/" + p.campaign_slug)}">Voltar à campanha</a></p>`,
     };
+  if (item.template === "campaign_announcement") {
+    const slug = String(p.campaign_slug || "");
+    const token = String(p.unsubscribe_token || "");
+    const campaignUrl = base + "/campanha/" + encodeURIComponent(slug);
+    const unsubscribeUrl =
+      base + "/api/campaign-updates/unsubscribe?token=" + encodeURIComponent(token);
+    const campaignName = String(p.campaign_name || "Campanha de Natal")
+      .replace(/[\r\n\t]/g, " ")
+      .slice(0, 120);
+    const description = p.campaign_description ? `<p>${esc(p.campaign_description)}</p>` : "";
+    return {
+      subject: `Detalhes publicados: ${campaignName} · RifaTrack`,
+      html: `<h2>Os detalhes da campanha foram publicados</h2><p>Você pediu para receber um aviso quando as informações da campanha de Natal estivessem disponíveis.</p><h3>${esc(campaignName)}</h3>${description}<p><a href="${esc(campaignUrl)}">Ver detalhes e regras no RifaTrack</a></p><hr><p style="font-size:12px;color:#666">Este é o aviso solicitado por você. <a href="${esc(unsubscribeUrl)}">Cancelar avisos</a>.</p>`,
+      unsubscribeUrl,
+    };
+  }
   return {
     subject: `Venda confirmada · ${p.campaign_name || "RifaTrack"}`,
     html: `<h2>Nova venda confirmada</h2><p>Olá, ${esc(p.seller_name)}.</p><p>O pedido <b>${esc(p.payment_reference)}</b> foi confirmado.</p><p>Comprador: <b>${esc(p.buyer_name)}</b><br>Números: <b>${esc(numbers)}</b><br>Valor: <b>${esc(money(Number(p.amount_cents)))}</b></p><p><a href="${esc(base + "/vendedor")}">Abrir portal do vendedor</a></p>`,
@@ -57,6 +78,11 @@ async function sendOne(item: NotificationItem) {
     from = process.env.NOTIFICATION_FROM_EMAIL;
   if (!apiKey || !from) throw new Error("notification_provider_not_configured");
   const content = render(item);
+  const headers: Record<string, string> = {};
+  if (item.template === "campaign_announcement") {
+    headers["List-Unsubscribe"] = `<${content.unsubscribeUrl}>`;
+    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+  }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -69,6 +95,7 @@ async function sendOne(item: NotificationItem) {
       to: [item.recipient],
       subject: content.subject,
       html: content.html,
+      ...(Object.keys(headers).length ? { headers } : {}),
     }),
     signal: AbortSignal.timeout(8000),
     cache: "no-store",

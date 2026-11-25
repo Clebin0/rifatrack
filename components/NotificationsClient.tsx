@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Mail, RefreshCw, Send } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { ensureSession } from "@/lib/mfa-browser";
+import { ensureMfa } from "@/lib/mfa-browser";
 
 type Item = {
   id: string;
@@ -27,7 +27,7 @@ export default function NotificationsClient() {
   const [configured, setConfigured] = useState<boolean | null>(null);
   async function load() {
     setLoading(true);
-    if (!(await ensureSession("admin", "/admin/notificacoes"))) {
+    if (!(await ensureMfa("admin", "/admin/notificacoes"))) {
       setLoading(false);
       return;
     }
@@ -54,6 +54,7 @@ export default function NotificationsClient() {
   }, []);
   async function processQueue() {
     setMessage("");
+    if (!(await ensureMfa("admin", "/admin/notificacoes"))) return;
     const sb = supabaseBrowser();
     const { data: s } = await sb.auth.getSession();
     const token = s.session?.access_token;
