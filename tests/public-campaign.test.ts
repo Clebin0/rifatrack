@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import { sanitizePublicCampaign } from "../lib/public-campaign";
 
 describe("Public campaign projection", () => {
-  it("removes operator identity and top-level seller contact", () => {
+  it("removes operator identity, seller contact, and payment destination", () => {
     const result = sanitizePublicCampaign({
       slug: "campaign-test",
       finalized_by: "private-operator@example.invalid",
       seller_whatsapp: "5511999999999",
+      pix_key: "private-pix-key",
+      pix_receiver: "Private Receiver",
     });
 
     expect(result).toEqual({ slug: "campaign-test" });

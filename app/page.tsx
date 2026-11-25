@@ -27,6 +27,7 @@ export default async function Home() {
   } catch {
     failed = true;
   }
+  const featuredCampaign = campaigns[0] ?? null;
   const approved = !process.env.VERCEL_ENV || process.env.FINANCIAL_PRODUCTION_APPROVED === "true";
   return (
     <>
@@ -47,8 +48,11 @@ export default async function Home() {
               complicação: você escolhe, acompanha e sabe o que acontece com seu pedido.
             </p>
             <div className="home-actions">
-              <a className="ui-button ui-button-primary" href="#campanhas">
-                Explorar campanhas <ArrowRight size={18} />
+              <a
+                className="ui-button ui-button-primary"
+                href={featuredCampaign ? `/campanha/${featuredCampaign.slug}` : "#campanhas"}
+              >
+                {featuredCampaign ? "Ver campanha" : "Explorar campanhas"} <ArrowRight size={18} />
               </a>
               <a className="home-secondary-link" href="/termos">
                 Como funciona <ArrowRight size={15} />
@@ -70,41 +74,92 @@ export default async function Home() {
                 <span className="home-feature-icon">
                   <HeartHandshake size={23} />
                 </span>
-                <span className="home-feature-tag">Ação social</span>
+                <span className={`home-feature-tag${!approved ? " is-preparing" : ""}`}>
+                  {featuredCampaign
+                    ? approved
+                      ? "Participações abertas"
+                      : "Em preparação"
+                    : failed
+                      ? "Atualize a página"
+                      : "Acompanhe por aqui"}
+                </span>
               </div>
-              <p className="home-feature-kicker">EM DESTAQUE</p>
-              <h2>Dia das Crianças</h2>
+              <p className="home-feature-kicker">
+                {featuredCampaign
+                  ? "CAMPANHA EM DESTAQUE"
+                  : failed
+                    ? "CAMPANHAS INDISPONÍVEIS"
+                    : "NENHUMA CAMPANHA ABERTA"}
+              </p>
+              <h2>
+                {featuredCampaign?.name ??
+                  (failed ? "Não conseguimos carregar as campanhas" : "Novas campanhas em breve")}
+              </h2>
               <p className="ui-muted mt-3">
-                Uma campanha para apoiar a ação social da ONG Minha Vida Mudou.
+                {featuredCampaign?.description ||
+                  (featuredCampaign
+                    ? "Confira os prêmios, as regras e as informações da campanha."
+                    : failed
+                      ? "Não conseguimos confirmar se há campanhas abertas. Atualize a página para tentar novamente."
+                      : "No momento não há participações abertas. Volte em breve para conhecer as próximas campanhas.")}
               </p>
               <div className="home-prize-preview">
                 <span className="home-prize-icon">
                   <Gift size={21} />
                 </span>
                 <div>
-                  <strong>Prêmios para descobrir</strong>
-                  <p>Curso Wizard, vouchers, chocolates e mais</p>
+                  <strong>
+                    {featuredCampaign
+                      ? "Prêmios e regras"
+                      : failed
+                        ? "Tente novamente em instantes"
+                        : "Informação em primeiro lugar"}
+                  </strong>
+                  <p>
+                    {featuredCampaign
+                      ? "Consulte os detalhes e as condições informadas pela organização."
+                      : failed
+                        ? "A disponibilidade não pôde ser consultada agora."
+                        : "As campanhas aparecem aqui quando estiverem disponíveis."}
+                  </p>
                 </div>
               </div>
-              <div className="home-feature-meta">
-                <div>
-                  <span>Valor por número</span>
-                  <strong>R$ 5,00</strong>
+              {featuredCampaign ? (
+                <div className="home-feature-meta">
+                  <div>
+                    <span>Valor por número</span>
+                    <strong>{moneyBRL(featuredCampaign.price_cents)}</strong>
+                  </div>
+                  <div>
+                    <span>Números vendidos</span>
+                    <strong>
+                      {featuredCampaign.sold_numbers.toLocaleString("pt-BR")} de{" "}
+                      {featuredCampaign.total_numbers.toLocaleString("pt-BR")}
+                    </strong>
+                  </div>
                 </div>
-                <div>
-                  <span>Sorteio informado</span>
-                  <strong>{CHILDRENS_CAMPAIGN.drawDate}</strong>
-                </div>
-              </div>
-              <a
-                className="ui-button ui-button-primary w-full mt-5"
-                href="/campanha/dia-das-criancas"
-              >
-                Ver campanha <ArrowRight size={17} />
-              </a>
-              <p className="home-organizer">
-                Organização informada: {CHILDRENS_CAMPAIGN.organizer}
-              </p>
+              ) : null}
+              {featuredCampaign ? (
+                <a
+                  className="ui-button ui-button-primary w-full mt-5"
+                  href={`/campanha/${featuredCampaign.slug}`}
+                >
+                  Ver campanha <ArrowRight size={17} />
+                </a>
+              ) : failed ? (
+                <a className="ui-button ui-button-secondary w-full mt-5" href="/">
+                  Atualizar página <ArrowRight size={17} />
+                </a>
+              ) : (
+                <a className="ui-button ui-button-secondary w-full mt-5" href="#campanhas">
+                  Ver campanhas <ArrowRight size={17} />
+                </a>
+              )}
+              {featuredCampaign?.slug === "dia-das-criancas" ? (
+                <p className="home-organizer">
+                  Organização informada: {CHILDRENS_CAMPAIGN.organizer}
+                </p>
+              ) : null}
             </Card>
           </div>
           <div className="home-hero-index" aria-hidden="true">
@@ -133,10 +188,10 @@ export default async function Home() {
             <Card className="home-empty-state">
               <p className="font-semibold">Não foi possível carregar as campanhas.</p>
               <p className="ui-muted mt-2">
-                Tente novamente em instantes ou consulte a campanha em destaque.
+                Tente atualizar a página ou consulte as informações da campanha anterior.
               </p>
               <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
-                Abrir campanha <ArrowRight size={16} />
+                Ver campanha anterior <ArrowRight size={16} />
               </a>
             </Card>
           ) : !campaigns.length ? (
@@ -146,10 +201,11 @@ export default async function Home() {
               </span>
               <h3 className="text-lg font-bold mt-4">Novas campanhas em breve</h3>
               <p className="ui-muted mt-2">
-                Enquanto isso, consulte a campanha de Dia das Crianças e suas informações.
+                Consulte as informações da campanha anterior ou volte em breve para ver novas
+                oportunidades.
               </p>
               <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
-                Consultar campanha <ArrowRight size={16} />
+                Ver campanha anterior <ArrowRight size={16} />
               </a>
             </Card>
           ) : (
@@ -160,7 +216,7 @@ export default async function Home() {
                     <span className="home-campaign-number">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <span className="home-campaign-status">
+                    <span className={`home-campaign-status${approved ? "" : " is-preparing"}`}>
                       <span />
                       {approved ? "Participações abertas" : "Em preparação"}
                     </span>
