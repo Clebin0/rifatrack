@@ -4,6 +4,7 @@ export function sanitizePublicCampaign(campaign: Record<string, unknown>): Recor
   const {
     seller_whatsapp: _sellerWhatsapp,
     finalized_by: _finalizedBy,
+    stored_status: _storedStatus,
     pix_key: _pixKey,
     pix_receiver: _pixReceiver,
     sellers,

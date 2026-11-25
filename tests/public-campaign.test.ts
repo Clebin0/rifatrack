@@ -48,8 +48,12 @@ describe("Public campaign projection", () => {
   });
 
   it("reports the ended children's campaign as closed in its public detail", () => {
-    expect(sanitizePublicCampaign({ slug: "dia-das-criancas", status: "active" }).status).toBe(
-      "closed",
-    );
+    const result = sanitizePublicCampaign({
+      slug: "dia-das-criancas",
+      status: "active",
+      stored_status: "active",
+    });
+    expect(result.status).toBe("closed");
+    expect(result).not.toHaveProperty("stored_status");
   });
 });
