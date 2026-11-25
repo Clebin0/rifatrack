@@ -48,6 +48,15 @@ export async function securityCases(db) {
       false,
       "signed-in users cannot read campaign update subscribers",
     );
+    assert.equal(
+      (
+        await q(
+          "select permissive,qual,with_check from pg_policies where schemaname='public' and tablename='campaign_update_subscribers' and policyname='campaign_update_subscribers_deny_direct_access'",
+        )
+      )?.permissive,
+      "RESTRICTIVE",
+      "a restrictive deny policy prevents future permissive policies from exposing subscribers",
+    );
     const natal = await q(
       "insert into campaigns(name,slug,description,price_cents,total_numbers,status) values('Campanha de Natal','natal-sql-test','Detalhes confirmados',500,10,'draft') returning id",
     );
