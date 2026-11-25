@@ -1,5 +1,5 @@
 export const metadata = { title: "Privacidade | RifaTrack" };
-const updatedAt = "05/11/2026";
+const updatedAt = "25/11/2026";
 
 export default function Privacy() {
   return (
@@ -41,6 +41,11 @@ export default function Privacy() {
           <h2 className="text-xl font-bold text-white">2. Dados coletados</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>nome, telefone e e-mail informado pelo comprador;</li>
+            <li>
+              para contas RifaTrack: nome, e-mail, dados de autenticação e sessão gerenciados pelo
+              Supabase Auth e informações de perfil declaradas pela pessoa, como tipo de
+              participação, cargo ou função, atlética e universidade;
+            </li>
             <li>números, pedido, vendedor, valor e status de pagamento;</li>
             <li>
               nome declarado do pagador e referência da transação quando a conta é de terceiro;
@@ -63,6 +68,11 @@ export default function Privacy() {
             obrigação legal, exercício regular de direitos e legítimo interesse de segurança, sempre
             com necessidade e proporcionalidade. Consentimento não substitui definição da base
             adequada.
+          </p>
+          <p className="mt-3">
+            As informações de perfil são fornecidas pela própria pessoa para exibição e
+            personalização da conta. O tipo de participação, cargo, atlética e universidade não
+            definem autorização de acesso aos portais internos.
           </p>
         </section>
         <section>

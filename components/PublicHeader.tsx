@@ -15,8 +15,13 @@ export default function PublicHeader() {
           </span>
         </a>
         <nav aria-label="Navegação principal" className="public-nav">
-          <a href="/#campanhas">Campanhas</a>
+          <a href="/#campanhas" className="public-nav-campaigns">
+            Campanhas
+          </a>
           <a href="/termos">Como funciona</a>
+          <a href="/acesso" className="public-nav-login">
+            Entrar
+          </a>
           <ThemeToggle />
           <a href="/#campanhas" className="public-nav-cta">
             Participar <ArrowRight size={15} />

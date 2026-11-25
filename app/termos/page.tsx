@@ -1,7 +1,7 @@
 import { CHILDRENS_CAMPAIGN as content } from "@/lib/campaign-content";
 
 export const metadata = { title: "Termos de uso | RifaTrack" };
-const updatedAt = "05/11/2026";
+const updatedAt = "25/11/2026";
 
 export default function Terms() {
   return (
@@ -132,7 +132,16 @@ export default function Terms() {
           </p>
         </section>
         <section>
-          <h2 className="text-xl font-bold text-white">8. Aceite e alterações</h2>
+          <h2 className="text-xl font-bold text-white">8. Conta e perfil</h2>
+          <p>
+            A conta RifaTrack permite criar e editar um perfil com tipo de participação, cargo ou
+            função, atlética e universidade informados pela própria pessoa. Essas informações são
+            autodeclaradas e não concedem acesso à área da organização ou ao portal de vendedores.
+            Esses acessos continuam dependendo de convite ou autorização separados.
+          </p>
+        </section>
+        <section>
+          <h2 className="text-xl font-bold text-white">9. Aceite e alterações</h2>
           <p>
             Ao continuar, a pessoa confirma ter pelo menos 18 anos e ter lido estes termos.
             Alterações relevantes serão publicadas antes de nova reserva. Em caso de conflito,

@@ -346,6 +346,14 @@ textarea:focus-visible {
   font-weight: 750;
   text-decoration: none;
 }
+.public-nav-login {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.public-nav-login:hover {
+  color: #9af0ba;
+}
 .public-home {
   max-width: 1440px;
   margin: 0 auto;
@@ -804,6 +812,9 @@ main.min-h-screen.bg-zinc-950 button:hover:not(:disabled) {
     font-size: 0.8rem;
   }
   .public-nav > a[href="/termos"] {
+    display: none;
+  }
+  .public-nav-campaigns {
     display: none;
   }
   .public-nav-cta {

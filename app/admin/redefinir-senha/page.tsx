@@ -64,7 +64,9 @@ export default function ResetPasswordPage() {
       setPassword("");
       setConfirm("");
       await auth.signOut({ scope: "local" });
-      location.replace("/admin/login?password=updated");
+      const returnTo = new URLSearchParams(location.search).get("returnTo");
+      const destination = returnTo === "/acesso" ? "/acesso" : "/admin/login";
+      location.replace(destination + "?password=updated");
     } catch {
       setMessage("Não foi possível conectar. Tente novamente quando a conexão voltar.");
     } finally {
