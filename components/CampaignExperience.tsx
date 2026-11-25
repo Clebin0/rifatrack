@@ -13,7 +13,7 @@ import Button from "./ui/Button";
 import Card from "./ui/Card";
 import { useUI } from "./ui/UIProvider";
 import Loading from "@/app/loading";
-import { CHILDRENS_CAMPAIGN } from "@/lib/campaign-content";
+import { CHILDRENS_CAMPAIGN, isArchivedCampaign } from "@/lib/campaign-content";
 export default function CampaignExperience({
   slug,
   salesApproved = true,
@@ -111,7 +111,9 @@ export default function CampaignExperience({
   const unavailable = useMemo(() => new Set(campaign?.unavailable || []), [campaign]);
   const sold = useMemo(() => new Set(campaign?.sold || []), [campaign]);
   const reserved = useMemo(() => new Set(campaign?.reserved || []), [campaign]);
+  const archived = isArchivedCampaign(slug);
   const closed = Boolean(
+    archived ||
     campaign?.deadline_reached ||
     campaign?.finalized_at ||
     campaign?.status !== "active" ||
@@ -217,13 +219,15 @@ export default function CampaignExperience({
       <main className="campaign-shell max-w-7xl mx-auto px-5 sm:px-7 pt-8 pb-32 lg:pb-12">
         <section className="campaign-hero mt-8">
           <p className="text-emerald-400 text-sm font-semibold">
-            {campaign.finalized_at
-              ? "Campanha finalizada"
-              : !salesApproved
-                ? "Campanha em preparação"
-                : closed
-                  ? "Participações encerradas"
-                  : "Escolha seus números"}
+            {archived
+              ? "Ação encerrada"
+              : campaign.finalized_at
+                ? "Campanha finalizada"
+                : !salesApproved
+                  ? "Campanha em preparação"
+                  : closed
+                    ? "Participações encerradas"
+                    : "Escolha seus números"}
           </p>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mt-3 max-w-3xl">
             {campaign.name}
@@ -251,7 +255,7 @@ export default function CampaignExperience({
           </aside>
         ) : null}
         <a href="#number-picker" className="ui-button ui-button-primary mt-5">
-          {salesOpen ? "Escolher meus números" : "Ver números"}
+          {salesOpen ? "Escolher meus números" : archived ? "Consultar números" : "Ver números"}
         </a>
 
         <div className="flex flex-wrap gap-3 text-sm mt-5 mb-5">
@@ -328,12 +332,18 @@ export default function CampaignExperience({
           <Card id="number-picker" className="number-picker-card scroll-mt-6">
             <div className="flex justify-between items-start gap-3 mb-5">
               <div>
-                <p className="text-xs text-emerald-400 font-semibold">ETAPA 1 DE 2</p>
-                <h2 className="text-2xl font-bold mt-2">Escolha seus números</h2>
+                <p className="text-xs text-emerald-400 font-semibold">
+                  {archived ? "CAMPANHA ENCERRADA" : "ETAPA 1 DE 2"}
+                </p>
+                <h2 className="text-2xl font-bold mt-2">
+                  {archived ? "Números da campanha" : "Escolha seus números"}
+                </h2>
                 <p className="text-sm ui-muted mt-2">
                   {salesOpen
                     ? "Toque em um número livre para escolher. Toque de novo para remover."
-                    : "Consulte os números disponíveis. As reservas ainda estão fechadas."}
+                    : archived
+                      ? "A ação terminou. Os números abaixo ficam disponíveis apenas para consulta."
+                      : "Consulte os números disponíveis. As reservas ainda estão fechadas."}
                 </p>
                 <p className="text-sm ui-muted mt-2">
                   {Math.max(0, campaign.total_numbers - unavailable.size)} disponíveis ·{" "}
@@ -373,13 +383,24 @@ export default function CampaignExperience({
             {!salesOpen ? (
               <>
                 <h2 className="text-xl font-bold">
-                  {!salesApproved ? "Campanha em preparação" : "Reservas encerradas"}
+                  {archived
+                    ? "Ação encerrada"
+                    : !salesApproved
+                      ? "Campanha em preparação"
+                      : "Reservas encerradas"}
                 </h2>
                 <p className="text-sm ui-muted mt-3">
-                  {!salesApproved
-                    ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha."
-                    : "Não é possível criar novas reservas nesta campanha."}
+                  {archived
+                    ? "A ação de Dia das Crianças terminou. A próxima campanha será de Natal; os detalhes serão divulgados quando estiverem confirmados."
+                    : !salesApproved
+                      ? "As compras estão bloqueadas enquanto a organização conclui as pendências da campanha."
+                      : "Não é possível criar novas reservas nesta campanha."}
                 </p>
+                {archived ? (
+                  <a href="/" className="ui-button ui-button-secondary w-full mt-4">
+                    Acompanhar campanha de Natal
+                  </a>
+                ) : null}
                 <a href="/termos" className="underline text-sm inline-block mt-4">
                   Consultar as regras
                 </a>

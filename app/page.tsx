@@ -3,7 +3,7 @@ import { supabaseInternal } from "@/lib/supabase";
 import PublicHeader from "@/components/PublicHeader";
 import Card from "@/components/ui/Card";
 import { moneyBRL } from "@/lib/buyer";
-import { CHILDRENS_CAMPAIGN } from "@/lib/campaign-content";
+import { CHILDRENS_CAMPAIGN, getVisibleCampaigns } from "@/lib/campaign-content";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +27,8 @@ export default async function Home() {
   } catch {
     failed = true;
   }
-  const featuredCampaign = campaigns[0] ?? null;
+  const visibleCampaigns = getVisibleCampaigns(campaigns);
+  const featuredCampaign = visibleCampaigns[0] ?? null;
   const approved = !process.env.VERCEL_ENV || process.env.FINANCIAL_PRODUCTION_APPROVED === "true";
   return (
     <>
@@ -52,7 +53,12 @@ export default async function Home() {
                 className="ui-button ui-button-primary"
                 href={featuredCampaign ? `/campanha/${featuredCampaign.slug}` : "#campanhas"}
               >
-                {featuredCampaign ? "Ver campanha" : "Explorar campanhas"} <ArrowRight size={18} />
+                {featuredCampaign
+                  ? "Ver campanha"
+                  : failed
+                    ? "Explorar campanhas"
+                    : "Acompanhar novidades"}{" "}
+                <ArrowRight size={18} />
               </a>
               <a className="home-secondary-link" href="/termos">
                 Como funciona <ArrowRight size={15} />
@@ -81,7 +87,7 @@ export default async function Home() {
                       : "Em preparação"
                     : failed
                       ? "Atualize a página"
-                      : "Acompanhe por aqui"}
+                      : "Próxima campanha"}
                 </span>
               </div>
               <p className="home-feature-kicker">
@@ -89,11 +95,11 @@ export default async function Home() {
                   ? "CAMPANHA EM DESTAQUE"
                   : failed
                     ? "CAMPANHAS INDISPONÍVEIS"
-                    : "NENHUMA CAMPANHA ABERTA"}
+                    : "PRÓXIMA CAMPANHA"}
               </p>
               <h2>
                 {featuredCampaign?.name ??
-                  (failed ? "Não conseguimos carregar as campanhas" : "Novas campanhas em breve")}
+                  (failed ? "Não conseguimos carregar as campanhas" : "Campanha de Natal")}
               </h2>
               <p className="ui-muted mt-3">
                 {featuredCampaign?.description ||
@@ -101,7 +107,7 @@ export default async function Home() {
                     ? "Confira os prêmios, as regras e as informações da campanha."
                     : failed
                       ? "Não conseguimos confirmar se há campanhas abertas. Atualize a página para tentar novamente."
-                      : "No momento não há participações abertas. Volte em breve para conhecer as próximas campanhas.")}
+                      : "A ação de Dia das Crianças terminou. A próxima campanha será de Natal; os detalhes serão divulgados quando estiverem confirmados.")}
               </p>
               <div className="home-prize-preview">
                 <span className="home-prize-icon">
@@ -113,14 +119,14 @@ export default async function Home() {
                       ? "Prêmios e regras"
                       : failed
                         ? "Tente novamente em instantes"
-                        : "Informação em primeiro lugar"}
+                        : "Detalhes em breve"}
                   </strong>
                   <p>
                     {featuredCampaign
                       ? "Consulte os detalhes e as condições informadas pela organização."
                       : failed
                         ? "A disponibilidade não pôde ser consultada agora."
-                        : "As campanhas aparecem aqui quando estiverem disponíveis."}
+                        : "Preço, prêmios, regulamento e data serão publicados quando estiverem confirmados."}
                   </p>
                 </div>
               </div>
@@ -152,7 +158,7 @@ export default async function Home() {
                 </a>
               ) : (
                 <a className="ui-button ui-button-secondary w-full mt-5" href="#campanhas">
-                  Ver campanhas <ArrowRight size={17} />
+                  Acompanhar novidades <ArrowRight size={17} />
                 </a>
               )}
               {featuredCampaign?.slug === "dia-das-criancas" ? (
@@ -188,29 +194,29 @@ export default async function Home() {
             <Card className="home-empty-state">
               <p className="font-semibold">Não foi possível carregar as campanhas.</p>
               <p className="ui-muted mt-2">
-                Tente atualizar a página ou consulte as informações da campanha anterior.
+                Tente atualizar a página. A próxima campanha anunciada será de Natal.
               </p>
               <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
-                Ver campanha anterior <ArrowRight size={16} />
+                Consultar campanha encerrada <ArrowRight size={16} />
               </a>
             </Card>
-          ) : !campaigns.length ? (
+          ) : !visibleCampaigns.length ? (
             <Card className="home-empty-state">
               <span className="home-empty-icon">
                 <Ticket size={22} />
               </span>
-              <h3 className="text-lg font-bold mt-4">Novas campanhas em breve</h3>
+              <h3 className="text-lg font-bold mt-4">Próxima campanha: Natal</h3>
               <p className="ui-muted mt-2">
-                Consulte as informações da campanha anterior ou volte em breve para ver novas
-                oportunidades.
+                A ação de Dia das Crianças já terminou. As informações da campanha de Natal serão
+                divulgadas quando estiverem confirmadas.
               </p>
               <a className="ui-button ui-button-secondary mt-5" href="/campanha/dia-das-criancas">
-                Ver campanha anterior <ArrowRight size={16} />
+                Consultar campanha encerrada <ArrowRight size={16} />
               </a>
             </Card>
           ) : (
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {campaigns.map((c, index) => (
+              {visibleCampaigns.map((c, index) => (
                 <Card key={c.slug} className="home-campaign-card">
                   <div className="home-campaign-card-top">
                     <span className="home-campaign-number">

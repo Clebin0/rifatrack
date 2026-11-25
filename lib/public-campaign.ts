@@ -1,3 +1,5 @@
+import { publicCampaignStatus } from "./campaign-content";
+
 export function sanitizePublicCampaign(campaign: Record<string, unknown>): Record<string, unknown> {
   const {
     seller_whatsapp: _sellerWhatsapp,
@@ -18,6 +20,11 @@ export function sanitizePublicCampaign(campaign: Record<string, unknown>): Recor
 
   return {
     ...publicCampaign,
+    ...(typeof publicCampaign.status === "string"
+      ? {
+          status: publicCampaignStatus(String(publicCampaign.slug ?? ""), publicCampaign.status),
+        }
+      : {}),
     ...(publicSellers === undefined ? {} : { sellers: publicSellers }),
   };
 }

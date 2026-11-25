@@ -1,3 +1,17 @@
+export const ARCHIVED_CAMPAIGN_SLUGS = ["dia-das-criancas"] as const;
+
+export function isArchivedCampaign(slug: string) {
+  return (ARCHIVED_CAMPAIGN_SLUGS as readonly string[]).includes(slug);
+}
+
+export function getVisibleCampaigns<T extends { slug: string }>(campaigns: readonly T[]) {
+  return campaigns.filter((campaign) => !isArchivedCampaign(campaign.slug));
+}
+
+export function publicCampaignStatus(slug: string, status: string) {
+  return isArchivedCampaign(slug) ? "closed" : status;
+}
+
 export const CHILDRENS_CAMPAIGN = {
   organizer: "Organização responsável não identificada formalmente",
   initiative: "Atléticas em Ação",
