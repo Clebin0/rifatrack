@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getVisibleCampaigns } from "../lib/campaign-content";
 import { sanitizePublicCampaign } from "../lib/public-campaign";
 
 describe("Public campaign projection", () => {
@@ -35,5 +36,24 @@ describe("Public campaign projection", () => {
       slug: "campaign-test",
       sellers: [],
     });
+  });
+
+  it("keeps the ended children's action out of open campaign listings", () => {
+    expect(
+      getVisibleCampaigns([
+        { slug: "dia-das-criancas", name: "Ação encerrada" },
+        { slug: "campanha-de-natal", name: "Natal" },
+      ]),
+    ).toEqual([{ slug: "campanha-de-natal", name: "Natal" }]);
+  });
+
+  it("reports the ended children's campaign as closed in its public detail", () => {
+    const result = sanitizePublicCampaign({
+      slug: "dia-das-criancas",
+      status: "active",
+      stored_status: "active",
+    });
+    expect(result.status).toBe("closed");
+    expect(result).not.toHaveProperty("stored_status");
   });
 });
